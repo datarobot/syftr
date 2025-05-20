@@ -105,12 +105,17 @@ pre-commit install
 
 ### Citation
 If you use this code in your research please cite the following [publicaton](https://arxiv.org).
-```
-TODO: ADD LINK HERE
+
+```bibtex
+@article{syftr2025,
+  title={syftr: Pareto-Optimal Generative AI},
+  author={Conway, Alexander and Dey, Debadeepta and Hackmann, Stefan and Hausknecht, Matthew and Schmidt, Michael and Steadman, Mark and Volynets, Nick},
+  booktitle={Proceedings of the International Conference on Automated Machine Learning (AutoML)},
+  year={2025},
+}
 ```
 
 ### Contributing
-When contributing to this repository, please first discuss the change you wish to make via issue,
-email, or any other method with the owners of this repository before making a change, especially if it is a substantial change.
+Please read our [contributing guide](/CONTRIBUTING) for details on how to contribute to the project. We welcome contributions in the form of bug reports, feature requests, and pull requests.
 
 Please note we have a [code of conduct](/CODE_OF_CONDUCT.md), please follow it in all your interactions with the project.
