@@ -2,6 +2,7 @@ import socket
 from multiprocessing import Pool
 
 from benchmarking.hotpot_qa import HotpotQA
+
 from syftr.huggingface_helper import get_embedding_model
 from syftr.storage import PartitionMap
 from syftr.studies import StudyConfig

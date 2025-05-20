@@ -67,6 +67,7 @@ def _prepare_working_dir() -> str:
 
 def _prepare_modules():
     import benchmarking
+
     import syftr
 
     return [syftr, benchmarking]
