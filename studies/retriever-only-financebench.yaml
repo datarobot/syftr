@@ -1,0 +1,129 @@
+name: "v7-retriever-only-financebench"
+dataset:
+  dataset_dir: partitioned
+  description: Financial dataset that contains everything about finance, including
+    real-world financial documents, SEC filings, earning reports, call transcripts,
+    and much more. It has all the financial live data, historical data, just about
+    everything about finance, for instance, definitions and explanations of financial
+    term, insights on company revenues, mergers, founders, or stock performance, details
+    on financial laws, compliance, or government policies, information required to
+    evaluate finance risk, and information about banking operations, credit systems,
+    or loan structures.
+  examples_data_path: examples
+  grounding_data_path: aryn_html
+  load_examples_timeout_s: 3600
+  load_grounding_data_timeout_s: 3600
+  partition_map:
+    holdout: holdout
+    sample: pepsi
+    test: test
+    train: train
+  path_root: octo-syftr-benchmarking-data
+  storage_options:
+    cache_check: 60
+    cache_storage: benchmarking/data/cache
+    check_files: true
+    expiry_time: 2592000
+    protocol: filecache
+    same_names: true
+    target_protocol: s3
+  storage_partitions:
+  - sample
+  - train
+  - test
+  - holdout
+  xname: financebench_hf
+evaluation:
+  mode: retriever
+  raise_on_exception: false
+  use_tracing_metrics: false
+reuse_study: true
+toy_mode: false
+search_space:
+  additional_context_enabled:
+  - true
+  - false
+  additional_context:
+    num_nodes_max: 20
+    num_nodes_min: 2
+  hyde_enabled:
+  - true
+  - false
+  hyde:
+    llms:
+    - anthropic-haiku-35
+    - gemini-flash
+    - gpt-4o-mini
+    - llama-33-70B
+    - mistral-large
+    - phi-4
+    - o3-mini
+  response_synthesizer_llms:
+    - gpt-4o-mini
+  rag_retriever:
+    embedding_models:
+    - BAAI/bge-small-en-v1.5
+    - BAAI/bge-large-en-v1.5
+    - thenlper/gte-large
+    - mixedbread-ai/mxbai-embed-large-v1
+    - WhereIsAI/UAE-Large-V1
+    - avsolatorio/GIST-large-Embedding-v0
+    - w601sxs/b1ade-embed
+    - Labib11/MUG-B-1.6
+    - sentence-transformers/all-MiniLM-L12-v2
+    - sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+    - BAAI/bge-base-en-v1.5
+    - FinLang/finance-embeddings-investopedia
+    - baconnier/Finance2_embedding_small_en-V1.5
+    fusion:
+      fusion_modes:
+      - simple
+      - reciprocal_rerank
+      - relative_score
+      - dist_based_score
+    hybrid:
+      bm25_weight_max: 0.9
+      bm25_weight_min: 0.1
+      bm25_weight_step: 0.1
+    methods:
+    - dense
+    - sparse
+    - hybrid
+    query_decomposition_enabled:
+    - true
+    - false
+    query_decomposition:
+      llm_names:
+      - anthropic-haiku-35
+      - gemini-flash
+      - gpt-4o-mini
+      - llama-33-70B
+      - mistral-large
+      - phi-4
+      - o3-mini
+      num_queries_max: 20
+      num_queries_min: 2
+      num_queries_step: 2
+  splitter:
+    chunk_overlap_frac_max: 0.75
+    chunk_overlap_frac_min: 0.0
+    chunk_overlap_frac_step: 0.25
+    chunk_max_exp: 12
+    chunk_min_exp: 9
+    methods:
+    - html
+    - recursive
+    - sentence
+    - token    
+optimization:
+  baselines: []
+  cpus_per_trial: 5
+  embedding_device: cuda
+  # use_hf_embedding_models: true
+  gpus_per_trial: 0.2
+  max_concurrent_trials: 40
+  num_eval_samples: 500
+  num_retries_unique_params: 10
+  num_trials: 2000
+  objective_1_name: retriever_recall
+  objective_2_name: retriever_context_length

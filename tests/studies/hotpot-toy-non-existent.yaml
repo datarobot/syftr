@@ -1,0 +1,18 @@
+name: "hotpot-dev-toy-non-existent"
+dataset:
+  xname: "hotpotqa_hf"
+  subset: "dev"
+  partition_map:
+    test: "sample"
+
+reuse_study: false
+toy_mode: true
+
+optimization:
+  baselines: []
+  cpus_per_trial: 1
+  gpus_per_trial: 0
+  max_concurrent_trials: 1
+  num_eval_samples: 4
+  num_retries_unique_params: 10
+  num_trials: 36

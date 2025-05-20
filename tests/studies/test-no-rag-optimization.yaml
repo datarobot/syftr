@@ -1,0 +1,23 @@
+name: test-no-rag-optimization
+
+dataset:
+  xname: "hotpotqa_hf"
+  subset: "train_hard"
+
+toy_mode: true
+reuse_study: false
+
+search_space:
+  rag_modes:
+  - no_rag
+
+optimization:
+  max_concurrent_trials: 8
+  cpus_per_trial: 1
+  num_random_trials: 0
+  seeder_timeout: 3600
+  num_eval_samples: 10
+  num_trials: 10
+  use_individual_baselines: false
+  use_variations_of_baselines: false
+  use_pareto_baselines: false

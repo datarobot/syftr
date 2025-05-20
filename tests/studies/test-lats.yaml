@@ -1,0 +1,63 @@
+name: "test-lats"
+dataset:
+  xname: "hotpotqa_hf"
+  subset: "dev"
+  partition_map:
+    test: "sample"
+
+reuse_study: false
+toy_mode: true
+
+search_space:
+  lats_rag_agent:
+    max_rollouts_max: 5
+    max_rollouts_min: 2
+    max_rollouts_step: 1
+    num_expansions_max: 3
+    num_expansions_min: 2
+    num_expansions_step: 1
+
+optimization:
+  baselines:
+    - rag_mode: lats_rag_agent
+      template_name: default
+      response_synthesizer_llm: gemini-flash2
+      rag_embedding_model: BAAI/bge-small-en-v1.5
+      rag_method: dense
+      rag_top_k: 6
+      splitter_method: sentence
+      splitter_chunk_exp: 9
+      splitter_chunk_overlap_frac: 0.25
+      reranker_enabled: false
+      hyde_enabled: false
+      additional_context_enabled: false
+      lats_num_expansions: 2
+      lats_max_rollouts: 2
+      rag_query_decomposition_enabled: false
+    - rag_mode: lats_rag_agent
+      template_name: concise
+      response_synthesizer_llm: anthropic-haiku-35
+      rag_embedding_model: BAAI/bge-small-en-v1.5
+      rag_method: dense
+      rag_top_k: 20
+      splitter_method: sentence
+      splitter_chunk_exp: 9
+      splitter_chunk_overlap_frac: 0.25
+      reranker_enabled: false
+      hyde_enabled: false
+      additional_context_enabled: false
+      lats_num_expansions: 2
+      lats_max_rollouts: 2
+      rag_query_decomposition_enabled: false
+
+  cpus_per_trial: 5
+  max_concurrent_trials: 2
+  num_eval_samples: 10
+  num_retries_unique_params: 10
+  num_trials: 0
+  seeder_timeout: 3600
+  use_toy_baselines: false
+  use_individual_baselines: false
+  use_variations_of_baselines: false
+  use_pareto_baselines: false
+  raise_on_invalid_baseline: true

@@ -1,0 +1,36 @@
+name: Unit Tests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, reopened, synchronize]
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: ">=0.4.24"
+          enable-cache: true
+          cache-local-path: /home/runner/work/_temp/setup-uv-cache
+
+      - name: Install project
+        run: uv sync --frozen --extra dev
+        env:
+          UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+
+      # Run the tests
+      - name: Run unit tests
+        run: uv run pytest -svv tests/unit/
+        env:
+          SYFTR_AZURE_INFERENCE_MISTRAL__API_KEY: ${{ secrets.SYFTR_AZURE_INFERENCE_MISTRAL__API_KEY }}
+          SYFTR_AZURE_INFERENCE_LLAMA__API_KEY: ${{ secrets.SYFTR_AZURE_INFERENCE_LLAMA__API_KEY }}
+          SYFTR_AZURE_INFERENCE__API_KEY: ${{ secrets.SYFTR_AZURE_INFERENCE__API_KEY }}
+          SYFTR_AZURE_OAI__API_KEY: ${{ secrets.SYFTR_AZURE_OAI__API_KEY }}
+          SYFTR_GCP_VERTEX__CREDENTIALS: ${{ secrets.SYFTR_GCP_VERTEX__CREDENTIALS }}
+          UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache

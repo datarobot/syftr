@@ -1,0 +1,72 @@
+dataset:
+  dataset_dir: partitioned
+  examples_data_path: examples
+  grounding_data_path: grounding_data
+  partition_map:
+    holdout: holdout
+    sample: sample
+    test: test
+    train: train
+  path_root: octo-syftr-benchmarking-data
+  storage_options:
+    cache_check: 60
+    cache_storage: benchmarking/data/cache
+    check_files: true
+    expiry_time: 2592000
+    protocol: filecache
+    same_names: true
+    target_protocol: s3
+  storage_partitions:
+  - sample
+  - train
+  - test
+  - holdout
+  subset: movie
+  xname: synthetic_crag_hf
+evaluation:
+  mode: consensus
+  raise_on_exception: false
+  use_tracing_metrics: false
+name: test-synthetic-crag
+optimization:
+  baselines: []
+  cpus_per_trial: 3
+  gpus_per_trial: 0
+  max_concurrent_trials: 3
+  max_trial_cost: 10.0
+  num_eval_batch: 20
+  num_eval_samples: 3
+  num_random_trials: 0
+  num_retries_unique_params: 100
+  num_trials: 0
+  num_warmup_steps_pareto: 2
+  obj1_zscore: 1.645
+  obj2_zscore: 1.645
+  objective_1_name: accuracy
+  objective_2_name: llm_cost_mean
+  pareto_eval_success_rate: 0.9
+  pareto_pruner_success_rate: 0.9
+  raise_on_failed_trial: false
+  raise_on_invalid_baseline: false
+  seeder_timeout: 3600.0
+  skip_existing: true
+  use_agent_baselines: true
+  use_hf_embedding_models: false
+  use_individual_baselines: false
+  use_pareto_baselines: false
+  use_pareto_pruner: false
+  use_cost_pruner: false
+  use_runtime_pruner: false
+  use_toy_baselines: false
+  use_variations_of_baselines: false
+pareto: null
+reuse_study: false
+timeouts:
+  embedding_max_time: 28800
+  embedding_min_chunks_to_process: 100
+  embedding_min_time_to_process: 120
+  embedding_timeout_active: true
+  eval_timeout: 3600
+  onnx_timeout: 600
+  single_eval_timeout: 3000
+toy_mode: false

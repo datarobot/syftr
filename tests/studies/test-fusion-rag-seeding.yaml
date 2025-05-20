@@ -1,0 +1,39 @@
+name: test-fusion-rag-seeding
+
+dataset:
+  xname: "hotpotqa_hf"
+  subset: "train_hard"
+
+toy_mode: true
+reuse_study: false
+
+optimization:
+  baselines:
+    - rag_mode: rag
+      response_synthesizer_llm: gpt-4o-mini
+      template_name: default
+      rag_top_k: 2
+      rag_method: hybrid
+      rag_embedding_model: BAAI/bge-small-en-v1.5
+      rag_fusion_mode: simple
+      rag_hybrid_bm25_weight: 0.5
+      splitter_method: sentence
+      splitter_chunk_exp: 10
+      splitter_chunk_overlap_frac: 0.25
+      reranker_enabled: false
+      hyde_enabled: false
+      additional_context_enabled: false
+      rag_query_decomposition_enabled: true
+      rag_query_decomposition_llm_name: gpt-4o-mini
+      rag_query_decomposition_num_queries: 2
+
+  max_concurrent_trials: 1
+  cpus_per_trial: 2
+  num_random_trials: 0
+  seeder_timeout: 3600
+  num_eval_samples: 10
+  num_trials: 0
+  use_individual_baselines: false
+  use_variations_of_baselines: false
+  use_pareto_baselines: false
+  raise_on_invalid_baseline: true

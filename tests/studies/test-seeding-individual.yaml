@@ -1,0 +1,19 @@
+name: test-seeding-individual
+
+dataset:
+  xname: "hotpotqa_hf"
+  subset: "train_hard"
+
+toy_mode: false
+reuse_study: false
+
+optimization:
+  max_concurrent_trials: 2
+  cpus_per_trial: 5
+  num_random_trials: 0
+  seeder_timeout: 3600
+  num_eval_samples: 10
+  num_trials: 0
+  use_individual_baselines: true
+  use_variations_of_baselines: false
+  use_pareto_baselines: false

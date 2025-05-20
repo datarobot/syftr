@@ -1,0 +1,29 @@
+name: financebench-pepsi
+dataset:
+  xname: financebench_hf
+  partition_map:
+    test: pepsi
+
+search_space:
+  response_synthesizer_llms:
+    - gpt-4o-mini
+    - anthropic-haiku-35
+    - gemini-flash
+  reranker:
+    llms:
+    - gpt-4o-mini
+    - anthropic-haiku-35
+    - gemini-flash
+  hyde:
+    llms:
+    - gpt-4o-mini
+    - anthropic-haiku-35
+    - gemini-flash
+
+optimization:
+  cpus_per_trial: 2
+  trial_timeout_seconds: 60
+  max_concurrent_trials: 5
+  num_retries_unique_params: 10
+  num_trials: 15
+reuse_study: false

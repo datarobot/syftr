@@ -1,0 +1,616 @@
+dataset:
+  load_examples_timeout_s: 3600
+  load_grounding_data_timeout_s: 3600
+  partition_map:
+    holdout: holdout
+    sample: sample
+    test: test
+    train: train
+  storage_partitions:
+  - sample
+  - train
+  - test
+  - holdout
+  subset: music
+  xname: crag_hf
+evaluation:
+  llms:
+  - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+  - Qwen/Qwen2.5
+  - google/gemma-3-27b-it
+  - nvidia/Llama-3_3-Nemotron-Super-49B
+  min_reporting_success_rate: 0.5
+  mode: random
+  raise_on_exception: false
+  use_tracing_metrics: false
+name: rank1--alex--crag_hf-music
+optimization:
+  baselines:
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: BAAI/bge-base-en-v1.5
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 3
+    reranker_enabled: false
+    response_synthesizer_llm: deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    splitter_chunk_exp: 8
+    splitter_chunk_overlap_frac: 0.45
+    splitter_chunk_size: 256
+    splitter_method: recursive
+    template_name: concise
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: TencentBAC/Conan-embedding-v1
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 1
+    reranker_enabled: false
+    response_synthesizer_llm: google/gemma-3-27b-it
+    splitter_chunk_exp: 7
+    splitter_chunk_overlap_frac: 0.13
+    splitter_chunk_size: 128
+    splitter_method: recursive
+    template_name: CoT
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 2
+    reranker_enabled: false
+    response_synthesizer_llm: google/gemma-3-27b-it
+    splitter_chunk_exp: 7
+    splitter_chunk_overlap_frac: 0.03
+    splitter_chunk_size: 128
+    splitter_method: recursive
+    template_name: CoT
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: BAAI/bge-multilingual-gemma2
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 3
+    reranker_enabled: false
+    response_synthesizer_llm: google/gemma-3-27b-it
+    splitter_chunk_exp: 9
+    splitter_chunk_overlap_frac: 0.02
+    splitter_chunk_size: 512
+    splitter_method: recursive
+    template_name: CoT
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: Linq-AI-Research/Linq-Embed-Mistral
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 6
+    reranker_enabled: false
+    response_synthesizer_llm: Qwen/Qwen2.5
+    splitter_chunk_exp: 9
+    splitter_chunk_overlap_frac: 0.45
+    splitter_chunk_size: 512
+    splitter_method: recursive
+    template_name: concise
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: Linq-AI-Research/Linq-Embed-Mistral
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 8
+    reranker_enabled: false
+    response_synthesizer_llm: Qwen/Qwen2.5
+    splitter_chunk_exp: 10
+    splitter_chunk_overlap_frac: 0.13
+    splitter_chunk_size: 1024
+    splitter_method: recursive
+    template_name: default
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: BAAI/bge-multilingual-gemma2
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 1
+    reranker_enabled: false
+    response_synthesizer_llm: microsoft/Phi-4-multimodal-instruct
+    splitter_chunk_exp: 7
+    splitter_chunk_overlap_frac: 0.0
+    splitter_chunk_size: 128
+    splitter_method: recursive
+    template_name: concise
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: Linq-AI-Research/Linq-Embed-Mistral
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 1
+    reranker_enabled: false
+    response_synthesizer_llm: microsoft/Phi-4-multimodal-instruct
+    splitter_chunk_exp: 8
+    splitter_chunk_overlap_frac: 0.44
+    splitter_chunk_size: 256
+    splitter_method: recursive
+    template_name: concise
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: BAAI/bge-multilingual-gemma2
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 7
+    reranker_enabled: false
+    response_synthesizer_llm: deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    splitter_chunk_exp: 8
+    splitter_chunk_overlap_frac: 0.32
+    splitter_chunk_size: 256
+    splitter_method: recursive
+    template_name: default
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: Snowflake/snowflake-arctic-embed-l-v2.0
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 4
+    reranker_enabled: false
+    response_synthesizer_llm: google/gemma-3-27b-it
+    splitter_chunk_exp: 7
+    splitter_chunk_overlap_frac: 0.26
+    splitter_chunk_size: 128
+    splitter_method: recursive
+    template_name: CoT
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: Linq-AI-Research/Linq-Embed-Mistral
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 9
+    reranker_enabled: false
+    response_synthesizer_llm: deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    splitter_chunk_exp: 7
+    splitter_chunk_overlap_frac: 0.32
+    splitter_chunk_size: 128
+    splitter_method: recursive
+    template_name: default
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: Snowflake/snowflake-arctic-embed-l-v2.0
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 1
+    reranker_enabled: false
+    response_synthesizer_llm: microsoft/Phi-4-multimodal-instruct
+    splitter_chunk_exp: 7
+    splitter_chunk_overlap_frac: 0.08
+    splitter_chunk_size: 128
+    splitter_method: recursive
+    template_name: concise
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: Linq-AI-Research/Linq-Embed-Mistral
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 6
+    reranker_enabled: false
+    response_synthesizer_llm: Qwen/Qwen2.5
+    splitter_chunk_exp: 8
+    splitter_chunk_overlap_frac: 0.45
+    splitter_chunk_size: 256
+    splitter_method: recursive
+    template_name: default
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: TencentBAC/Conan-embedding-v1
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 1
+    reranker_enabled: false
+    response_synthesizer_llm: microsoft/Phi-4-multimodal-instruct
+    splitter_chunk_exp: 7
+    splitter_chunk_overlap_frac: 0.08
+    splitter_chunk_size: 128
+    splitter_method: recursive
+    template_name: concise
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: Linq-AI-Research/Linq-Embed-Mistral
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 2
+    reranker_enabled: false
+    response_synthesizer_llm: google/gemma-3-27b-it
+    splitter_chunk_exp: 7
+    splitter_chunk_overlap_frac: 0.13
+    splitter_chunk_size: 128
+    splitter_method: sentence
+    template_name: CoT
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: Linq-AI-Research/Linq-Embed-Mistral
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 1
+    reranker_enabled: false
+    response_synthesizer_llm: deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    splitter_chunk_exp: 8
+    splitter_chunk_overlap_frac: 0.31
+    splitter_chunk_size: 256
+    splitter_method: recursive
+    template_name: CoT
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: BAAI/bge-multilingual-gemma2
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 3
+    reranker_enabled: false
+    response_synthesizer_llm: Qwen/Qwen2.5
+    splitter_chunk_exp: 10
+    splitter_chunk_overlap_frac: 0.13
+    splitter_chunk_size: 1024
+    splitter_method: recursive
+    template_name: default
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: Linq-AI-Research/Linq-Embed-Mistral
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 1
+    reranker_enabled: false
+    response_synthesizer_llm: microsoft/Phi-4-multimodal-instruct
+    splitter_chunk_exp: 8
+    splitter_chunk_overlap_frac: 0.08
+    splitter_chunk_size: 256
+    splitter_method: recursive
+    template_name: concise
+  - additional_context_enabled: false
+    few_shot_enabled: false
+    hyde_enabled: false
+    rag_embedding_model: TencentBAC/Conan-embedding-v1
+    rag_method: dense
+    rag_mode: rag
+    rag_query_decomposition_enabled: false
+    rag_top_k: 1
+    reranker_enabled: false
+    response_synthesizer_llm: microsoft/Phi-4-multimodal-instruct
+    splitter_chunk_exp: 7
+    splitter_chunk_overlap_frac: 0.13
+    splitter_chunk_size: 128
+    splitter_method: recursive
+    template_name: concise
+  baselines_cycle_llms: false
+  blocks:
+  - components:
+    - rag_retriever
+    - splitter
+    - additional_context
+    - few_shot_retriever
+    - hyde
+    - reranker
+    - rag_modes
+    - sub_question_rag
+    - critique_rag_agent
+    - lats_rag_agent
+    - react_rag_agent
+    - response_synthesizer_llms
+    - template_names
+    name: global
+    num_trials: 1000
+  cpus_per_trial: 1
+  embedding_device: onnx-cpu
+  gpus_per_trial: 0.0
+  max_concurrent_trials: 5
+  max_eval_failure_rate: 0.5
+  max_trial_cost: 40.0
+  method: expanding
+  num_eval_batch: 5
+  num_eval_samples: 500
+  num_prompt_optimization_batch: 50
+  num_random_trials: 0
+  num_retries_unique_params: 100
+  num_trials: 0
+  num_warmup_steps_costout: 2
+  num_warmup_steps_pareto: 30
+  num_warmup_steps_timeout: 3
+  obj1_zscore: 1.645
+  obj2_zscore: 1.645
+  objective_1_name: accuracy
+  objective_2_name: llm_cost_mean
+  pareto_eval_success_rate: 0.9
+  pareto_pruner_success_rate: 0.9
+  raise_on_failed_trial: false
+  raise_on_invalid_baseline: false
+  rate_limiter_max_coros: 5
+  rate_limiter_period: 60
+  sampler: tpe
+  seeder_timeout: null
+  shuffle_baselines: true
+  shuffle_blocks: false
+  skip_existing: true
+  use_agent_baselines: false
+  use_cost_pruner: true
+  use_hf_embedding_models: false
+  use_individual_baselines: false
+  use_pareto_baselines: false
+  use_pareto_pruner: false
+  use_runtime_pruner: true
+  use_toy_baselines: false
+  use_variations_of_baselines: false
+pareto: null
+recreate_study: false
+reuse_study: true
+search_space:
+  additional_context:
+    num_nodes_max: 20
+    num_nodes_min: 2
+  additional_context_enabled:
+  - false
+  critique_rag_agent:
+    critique_agent_llms:
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - anthropic-haiku-35
+    - google/gemma-3-27b-it
+    - gpt-4o-mini
+    - o3-mini
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    - Qwen/Qwen2.5
+    - gemini-flash
+    - microsoft/Phi-4-multimodal-instruct
+    max_iterations_max: 11
+    max_iterations_min: 10
+    reflection_agent_llms:
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - anthropic-haiku-35
+    - google/gemma-3-27b-it
+    - gpt-4o-mini
+    - o3-mini
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    - Qwen/Qwen2.5
+    - gemini-flash
+    - microsoft/Phi-4-multimodal-instruct
+    subquestion_engine_llms:
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - anthropic-haiku-35
+    - google/gemma-3-27b-it
+    - gpt-4o-mini
+    - o3-mini
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    - Qwen/Qwen2.5
+    - gemini-flash
+    - microsoft/Phi-4-multimodal-instruct
+    subquestion_response_synthesizer_llms:
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - anthropic-haiku-35
+    - google/gemma-3-27b-it
+    - gpt-4o-mini
+    - o3-mini
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    - Qwen/Qwen2.5
+    - gemini-flash
+    - microsoft/Phi-4-multimodal-instruct
+  few_shot_enabled:
+  - false
+  few_shot_retriever:
+    embedding_models:
+    - FinLang/finance-embeddings-investopedia
+    - BAAI/bge-small-en-v1.5
+    - BAAI/bge-multilingual-gemma2
+    - BAAI/bge-large-en-v1.5
+    - Snowflake/snowflake-arctic-embed-l-v2.0
+    - w601sxs/b1ade-embed
+    - sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+    - mixedbread-ai/mxbai-embed-large-v1
+    - avsolatorio/GIST-large-Embedding-v0
+    - Labib11/MUG-B-1.6
+    - WhereIsAI/UAE-Large-V1
+    - baconnier/Finance2_embedding_small_en-V1.5
+    - amentaphd/snowflake-artic-embed-l
+    - TencentBAC/Conan-embedding-v1
+    - sentence-transformers/all-MiniLM-L12-v2
+    - thenlper/gte-large
+    - BAAI/bge-base-en-v1.5
+    - Qwen/Qwen2.5-Omni-7B
+    - Linq-AI-Research/Linq-Embed-Mistral
+    top_k:
+      kmax: 20
+      kmin: 2
+      log: false
+      step: 1
+  hyde:
+    llms:
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - anthropic-haiku-35
+    - google/gemma-3-27b-it
+    - gpt-4o-mini
+    - o3-mini
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    - Qwen/Qwen2.5
+    - gemini-flash
+    - microsoft/Phi-4-multimodal-instruct
+  hyde_enabled:
+  - false
+  lats_rag_agent:
+    max_rollouts_max: 5
+    max_rollouts_min: 2
+    max_rollouts_step: 1
+    num_expansions_max: 3
+    num_expansions_min: 2
+    num_expansions_step: 1
+  non_search_space_params:
+  - enforce_full_evaluation
+  - retrievers
+  rag_modes:
+  - rag
+  rag_retriever:
+    embedding_models:
+    - BAAI/bge-small-en-v1.5
+    - thenlper/gte-large
+    - mixedbread-ai/mxbai-embed-large-v1
+    - sentence-transformers/all-MiniLM-L12-v2
+    - sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+    - BAAI/bge-base-en-v1.5
+    - BAAI/bge-large-en-v1.5
+    - TencentBAC/Conan-embedding-v1
+    - Linq-AI-Research/Linq-Embed-Mistral
+    - Snowflake/snowflake-arctic-embed-l-v2.0
+    - BAAI/bge-multilingual-gemma2
+    fusion:
+      fusion_modes:
+      - simple
+      - reciprocal_rerank
+      - relative_score
+      - dist_based_score
+    hybrid:
+      bm25_weight_max: 0.9
+      bm25_weight_min: 0.1
+      bm25_weight_step: 0.1
+    methods:
+    - dense
+    - sparse
+    query_decomposition:
+      llm_names:
+      - microsoft/Phi-4-multimodal-instruct
+      - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+      - Qwen/Qwen2.5
+      - google/gemma-3-27b-it
+      - nvidia/Llama-3_3-Nemotron-Super-49B
+      num_queries_max: 5
+      num_queries_min: 5
+      num_queries_step: 1
+    query_decomposition_enabled:
+    - true
+    - false
+    top_k:
+      kmax: 10
+      kmin: 1
+      log: false
+      step: 1
+  react_rag_agent:
+    max_iterations_max: 11
+    max_iterations_min: 10
+    subquestion_engine_llms:
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - anthropic-haiku-35
+    - google/gemma-3-27b-it
+    - gpt-4o-mini
+    - o3-mini
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    - Qwen/Qwen2.5
+    - gemini-flash
+    - microsoft/Phi-4-multimodal-instruct
+    subquestion_response_synthesizer_llms:
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - anthropic-haiku-35
+    - google/gemma-3-27b-it
+    - gpt-4o-mini
+    - o3-mini
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    - Qwen/Qwen2.5
+    - gemini-flash
+    - microsoft/Phi-4-multimodal-instruct
+  reranker:
+    llms:
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - anthropic-haiku-35
+    - google/gemma-3-27b-it
+    - gpt-4o-mini
+    - o3-mini
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    - Qwen/Qwen2.5
+    - gemini-flash
+    - microsoft/Phi-4-multimodal-instruct
+    top_k:
+      kmax: 128
+      kmin: 2
+      log: true
+      step: 1
+  reranker_enabled:
+  - false
+  response_synthesizer_llms:
+  - microsoft/Phi-4-multimodal-instruct
+  - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+  - Qwen/Qwen2.5
+  - google/gemma-3-27b-it
+  - nvidia/Llama-3_3-Nemotron-Super-49B
+  splitter:
+    chunk_max_exp: 10
+    chunk_min_exp: 7
+    chunk_overlap_frac_max: 0.5
+    chunk_overlap_frac_min: 0.0
+    chunk_overlap_frac_step: 0.01
+    methods:
+    - recursive
+    - sentence
+  sub_question_rag:
+    subquestion_engine_llms:
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - anthropic-haiku-35
+    - google/gemma-3-27b-it
+    - gpt-4o-mini
+    - o3-mini
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    - Qwen/Qwen2.5
+    - gemini-flash
+    - microsoft/Phi-4-multimodal-instruct
+    subquestion_response_synthesizer_llms:
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - anthropic-haiku-35
+    - google/gemma-3-27b-it
+    - gpt-4o-mini
+    - o3-mini
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    - Qwen/Qwen2.5
+    - gemini-flash
+    - microsoft/Phi-4-multimodal-instruct
+  template_names:
+  - default
+  - concise
+  - CoT
+timeouts:
+  embedding_max_time: 28800
+  embedding_min_chunks_to_process: 100
+  embedding_min_time_to_process: 120
+  embedding_timeout_active: true
+  eval_timeout: 36000
+  onnx_timeout: 600
+  single_eval_timeout: 7200
+toy_mode: false
+transfer_learning:
+  embedding_model: BAAI/bge-large-en-v1.5
+  max_fronts: 2
+  max_total: 100
+  studies: []
+  success_rate: 0.9

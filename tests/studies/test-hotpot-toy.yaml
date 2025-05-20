@@ -1,0 +1,20 @@
+name: "test-hotpot-dev-toy"
+dataset:
+  xname: "hotpotqa_hf"
+  subset: "dev"
+  partition_map:
+    test: "sample"
+
+reuse_study: false
+toy_mode: true
+
+evaluation:
+  raise_on_exception: true
+
+optimization:
+  cpus_per_trial: 5
+  max_concurrent_trials: 2
+  num_eval_samples: 10
+  num_retries_unique_params: 10
+  num_trials: 2
+  use_hf_embedding_models: false

@@ -1,0 +1,149 @@
+name: "test-tools-anthropic-haiku-35"
+dataset:
+  xname: "hotpotqa_hf"
+  subset: "dev"
+  partition_map:
+    test: "sample"
+
+reuse_study: false
+toy_mode: false
+
+optimization:
+  baselines:
+  - rag_mode: react_rag_agent
+    template_name: default
+    max_iterations: 10
+    response_synthesizer_llm: anthropic-haiku-35
+    subquestion_engine_llm: anthropic-haiku-35
+    subquestion_response_synthesizer_llm: anthropic-haiku-35
+    rag_method: hybrid
+    rag_fusion_mode: simple
+    rag_embedding_model: BAAI/bge-small-en-v1.5
+    rag_top_k: 4
+    rag_hybrid_bm25_weight: 0.5
+    rag_query_decomposition_enabled: true
+    rag_query_decomposition_llm_name: anthropic-haiku-35
+    rag_query_decomposition_num_queries: 10
+    splitter_method: sentence
+    splitter_chunk_exp: 9
+    splitter_chunk_overlap_frac: 0.25
+    reranker_enabled: false
+    hyde_enabled: false
+    additional_context_enabled: false
+  - rag_mode: critique_rag_agent
+    template_name: default
+    response_synthesizer_llm: anthropic-haiku-35
+    subquestion_engine_llm: anthropic-haiku-35
+    subquestion_response_synthesizer_llm: anthropic-haiku-35
+    critique_agent_llm: anthropic-haiku-35
+    reflection_agent_llm: anthropic-haiku-35
+    max_iterations: 10
+    rag_method: dense
+    rag_top_k: 8
+    rag_embedding_model: BAAI/bge-small-en-v1.5
+    rag_query_decomposition_enabled: false
+    splitter_method: sentence
+    splitter_chunk_exp: 9
+    splitter_chunk_overlap_frac: 0.25
+    reranker_enabled: false
+    hyde_enabled: false
+    additional_context_enabled: false
+  - rag_embedding_model: BAAI/bge-small-en-v1.5
+    template_name: default
+    response_synthesizer_llm: anthropic-haiku-35
+    subquestion_engine_llm: anthropic-haiku-35
+    subquestion_response_synthesizer_llm: anthropic-haiku-35
+    rag_mode: sub_question_rag
+    rag_method: dense
+    rag_top_k: 6
+    splitter_method: sentence
+    splitter_chunk_exp: 9
+    splitter_chunk_overlap_frac: 0.25
+    reranker_enabled: false
+    hyde_enabled: false
+    additional_context_enabled: false
+    rag_query_decomposition_enabled: false
+  - rag_embedding_model: BAAI/bge-small-en-v1.5
+    template_name: CoT
+    response_synthesizer_llm: anthropic-haiku-35
+    subquestion_engine_llm: anthropic-haiku-35
+    subquestion_response_synthesizer_llm: anthropic-haiku-35
+    rag_mode: sub_question_rag
+    rag_method: dense
+    rag_top_k: 6
+    splitter_method: sentence
+    splitter_chunk_exp: 9
+    splitter_chunk_overlap_frac: 0.25
+    reranker_enabled: false
+    hyde_enabled: false
+    additional_context_enabled: false
+    rag_query_decomposition_enabled: false
+  - rag_embedding_model: BAAI/bge-small-en-v1.5
+    template_name: concise
+    response_synthesizer_llm: anthropic-haiku-35
+    subquestion_engine_llm: anthropic-haiku-35
+    subquestion_response_synthesizer_llm: anthropic-haiku-35
+    rag_mode: sub_question_rag
+    rag_method: dense
+    rag_top_k: 6
+    splitter_method: sentence
+    splitter_chunk_exp: 9
+    splitter_chunk_overlap_frac: 0.25
+    reranker_enabled: false
+    hyde_enabled: false
+    additional_context_enabled: false
+    rag_query_decomposition_enabled: false
+
+  cpus_per_trial: 5
+  max_concurrent_trials: 2
+  num_eval_samples: 1
+  num_retries_unique_params: 10
+  num_trials: 0
+  use_pareto_pruner: false
+  use_cost_pruner: false
+  use_runtime_pruner: false
+  seeder_timeout: 3600
+  use_individual_baselines: false
+  use_variations_of_baselines: false
+  use_pareto_baselines: false
+  raise_on_invalid_baseline: true
+
+search_space:
+  response_synthesizer_llms:
+  - anthropic-haiku-35
+  critique_rag_agent:
+    critique_agent_llms:
+    - anthropic-haiku-35
+    reflection_agent_llms:
+    - anthropic-haiku-35
+    subquestion_engine_llms:
+    - anthropic-haiku-35
+    subquestion_response_synthesizer_llms:
+    - anthropic-haiku-35
+  non_search_space_params:
+  - enforce_full_evaluation
+  - retrievers
+  rag_modes:
+  - no_rag
+  - lats_rag_agent
+  - rag
+  - react_rag_agent
+  - critique_rag_agent
+  - sub_question_rag
+  rag_retriever:
+    query_decomposition:
+      llm_names:
+      - anthropic-haiku-35
+  react_rag_agent:
+    subquestion_engine_llms:
+    - anthropic-haiku-35
+    subquestion_response_synthesizer_llms:
+    - anthropic-haiku-35
+  reranker:
+    llms:
+    - anthropic-haiku-35
+  sub_question_rag:
+    subquestion_engine_llms:
+    - anthropic-haiku-35
+    subquestion_response_synthesizer_llms:
+    - anthropic-haiku-35

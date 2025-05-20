@@ -1,0 +1,36 @@
+name: test-seeding-violation
+
+dataset:
+  xname: "hotpotqa_hf"
+  subset: "train_hard"
+
+toy_mode: true
+reuse_study: false
+
+optimization:
+  baselines:
+    - response_synthesizer_llm: gpt-4o-mini
+      rag_mode: no_rag
+      template_name: default
+    - rag_mode: rag
+      template_name: default
+      response_synthesizer_llm: gpt-4o-mini
+      splitter_method: token
+      rag_embedding_model: BAAI/bge-small-en-v1.5
+      splitter_chunk_exp: 10
+      splitter_chunk_overlap_frac: 0.25
+      rag_method: dense
+      rag_top_k: 5
+      rag_query_decomposition_enabled: false
+      reranker_enabled: false
+      hyde_enabled: false
+      additional_context_enabled: false
+  
+  max_concurrent_trials: 2
+  cpus_per_trial: 5
+  num_random_trials: 0
+  seeder_timeout: 3600
+  num_eval_samples: 10
+  num_trials: 0
+  raise_on_invalid_baseline: true
+  

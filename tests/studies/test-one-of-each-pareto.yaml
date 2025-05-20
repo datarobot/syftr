@@ -1,0 +1,184 @@
+name: "test-one-of-each"
+dataset:
+  xname: "hotpotqa_hf"
+  subset: "dev"
+  partition_map:
+    test: "sample"
+
+reuse_study: false
+toy_mode: true
+
+pareto:
+  name: test-one-of-each-holdout
+  optimization__skip_existing: true
+  optimization__num_eval_samples: 10
+
+optimization:
+  baselines:
+    - rag_mode: no_rag
+      template_name: default
+      response_synthesizer_llm: gpt-4o-mini
+    - template_name: default
+      response_synthesizer_llm: gpt-4o-mini
+      rag_mode: rag
+      rag_method: dense
+      rag_embedding_model: sentence-transformers/all-MiniLM-L12-v2
+      rag_top_k: 2
+      splitter_method: sentence
+      splitter_chunk_exp: 9
+      splitter_chunk_overlap_frac: 0.25
+      reranker_enabled: false
+      hyde_enabled: false
+      additional_context_enabled: false
+      rag_query_decomposition_enabled: false
+    - template_name: default
+      response_synthesizer_llm: gpt-4o-mini
+      rag_mode: rag
+      rag_embedding_model: sentence-transformers/all-MiniLM-L12-v2
+      rag_method: hybrid
+      rag_fusion_mode: simple
+      rag_top_k: 4
+      rag_hybrid_bm25_weight: 0.5
+      rag_query_decomposition_enabled: true
+      rag_query_decomposition_llm_name: gemini-flash2
+      rag_query_decomposition_num_queries: 10
+      splitter_method: sentence
+      splitter_chunk_exp: 9
+      splitter_chunk_overlap_frac: 0.25
+      reranker_enabled: false
+      hyde_enabled: false
+      additional_context_enabled: false
+    - rag_embedding_model: BAAI/bge-small-en-v1.5
+      template_name: few-shot
+      response_synthesizer_llm: gpt-4o-mini
+      rag_mode: rag
+      rag_method: dense
+      rag_top_k: 20
+      splitter_method: sentence
+      splitter_chunk_exp: 9
+      splitter_chunk_overlap_frac: 0.25
+      few_shot_enabled: true
+      few_shot_embedding_model: "BAAI/bge-small-en-v1.5"
+      few_shot_top_k: 3
+      reranker_enabled: false
+      hyde_enabled: false
+      additional_context_enabled: false
+      rag_query_decomposition_enabled: false
+    - template_name: default
+      response_synthesizer_llm: gpt-4o-mini
+      rag_mode: rag
+      rag_method: dense
+      rag_embedding_model: BAAI/bge-small-en-v1.5
+      rag_top_k: 20
+      splitter_method: sentence
+      splitter_chunk_exp: 9
+      splitter_chunk_overlap_frac: 0.25
+      reranker_enabled: false
+      hyde_enabled: false
+      additional_context_enabled: false
+      rag_query_decomposition_enabled: false
+    - template_name: CoT
+      response_synthesizer_llm: gpt-4o-mini
+      rag_mode: rag
+      rag_method: dense
+      rag_embedding_model: BAAI/bge-small-en-v1.5
+      rag_top_k: 20
+      splitter_method: token
+      splitter_chunk_exp: 9
+      splitter_chunk_overlap_frac: 0.25
+      reranker_top_k: 3
+      reranker_enabled: true
+      reranker_llm_name: gpt-4o-mini
+      hyde_enabled: false
+      additional_context_enabled: false
+      rag_query_decomposition_enabled: false
+    - template_name: concise
+      response_synthesizer_llm: gpt-4o-mini
+      rag_mode: rag
+      rag_method: dense
+      rag_embedding_model: BAAI/bge-small-en-v1.5
+      rag_top_k: 20
+      splitter_method: recursive
+      splitter_chunk_exp: 9
+      splitter_chunk_overlap_frac: 0.25
+      hyde_llm_name: gemini-flash
+      reranker_enabled: false
+      hyde_enabled: true
+      additional_context_enabled: false
+      rag_query_decomposition_enabled: false
+    - template_name: default
+      response_synthesizer_llm: gpt-4o-mini
+      rag_mode: rag
+      rag_method: sparse
+      splitter_method: sentence
+      splitter_chunk_exp: 9
+      splitter_chunk_overlap_frac: 0.25
+      rag_top_k: 2
+      reranker_enabled: false
+      hyde_enabled: false
+      additional_context_enabled: false
+      rag_query_decomposition_enabled: false
+    - template_name: default
+      response_synthesizer_llm: gemini-flash
+      subquestion_engine_llm: gemini-flash
+      subquestion_response_synthesizer_llm: gemini-flash
+      rag_mode: react_rag_agent
+      rag_method: hybrid
+      rag_fusion_mode: reciprocal_rerank
+      rag_embedding_model: BAAI/bge-small-en-v1.5
+      rag_top_k: 4
+      rag_hybrid_bm25_weight: 0.5
+      rag_query_decomposition_enabled: true
+      rag_query_decomposition_llm_name: gemini-flash
+      rag_query_decomposition_num_queries: 10
+      splitter_method: sentence
+      splitter_chunk_exp: 9
+      splitter_chunk_overlap_frac: 0.25
+      reranker_enabled: false
+      hyde_enabled: false
+      additional_context_enabled: false
+    - rag_embedding_model: BAAI/bge-small-en-v1.5
+      template_name: default
+      subquestion_response_synthesizer_llm: gemini-flash
+      sub_question_response_synthesizer_llm: gemini-flash
+      rag_mode: sub_question_rag
+      rag_method: dense
+      rag_top_k: 6
+      splitter_method: sentence
+      splitter_chunk_exp: 9
+      splitter_chunk_overlap_frac: 0.25
+      reranker_enabled: false
+      hyde_enabled: false
+      additional_context_enabled: false
+      rag_query_decomposition_enabled: false
+    - template_name: default
+      response_synthesizer_llm: gemini-flash
+      subquestion_engine_llm: gemini-flash
+      subquestion_response_synthesizer_llm: gemini-flash
+      critique_agent_llm: gemini-flash
+      reflection_agent_llm: gemini-flash
+      rag_mode: critique_rag_agent
+      rag_method: dense
+      rag_top_k: 8
+      rag_embedding_model: BAAI/bge-small-en-v1.5
+      splitter_method: sentence
+      splitter_chunk_exp: 9
+      splitter_chunk_overlap_frac: 0.25
+      reranker_enabled: false
+      hyde_enabled: false
+      additional_context_enabled: false
+      rag_query_decomposition_enabled: false
+
+  cpus_per_trial: 5
+  max_concurrent_trials: 2
+  num_eval_samples: 10
+  num_retries_unique_params: 10
+  num_trials: 0
+  use_pareto_pruner: false
+  use_cost_pruner: false
+  use_runtime_pruner: false
+  seeder_timeout: 3600
+  use_individual_baselines: false
+  use_variations_of_baselines: false
+  use_pareto_baselines: false
+  raise_on_invalid_baseline: true

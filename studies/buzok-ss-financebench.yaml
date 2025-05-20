@@ -1,0 +1,85 @@
+# Attempt to make a similar search space to what's available in buzok
+name: "buzok-ss-financebench-rag-only-04"
+dataset:
+  xname: "financebench_hf"
+
+reuse_study: true
+
+optimization:
+  cpus_per_trial: 1
+  gpus_per_trial: 0.0
+  max_concurrent_trials: 50
+  num_eval_samples: 100
+  num_retries_unique_params: 10
+  num_trials: 3000
+
+evaluation:
+  mode: "random"
+  llms:
+    - "deepseek-ai/DeepSeek-R1-Distill-Llama-70B"
+    - "Qwen/Qwen2.5"
+    - "google/gemma-3-27b-it"
+    - "nvidia/Llama-3_3-Nemotron-Super-49B"
+
+search_space:
+  rag_modes:
+    - "rag"
+  template_names:
+    - "default"
+    - "concise"
+    - "CoT"
+  response_synthesizer_llms:
+    - &llm1 "deepseek-ai/DeepSeek-R1-Distill-Llama-70B"
+    - &llm2 "Qwen/Qwen2.5"
+    - &llm3 "google/gemma-3-27b-it"
+    - &llm4 "nvidia/Llama-3_3-Nemotron-Super-49B"
+    - &llm5 "microsoft/Phi-4-multimodal-instruct"
+  rag_retriever:
+    name: rag
+    methods:
+      - dense
+      - sparse
+    query_decomposition_enabled: [true, false]
+    query_decomposition:
+      llm_names:
+        - *llm1
+        - *llm2
+        - *llm3
+        - *llm4
+        - *llm5
+      num_queries: [5]
+    embedding_models:
+    - &embed1 "BAAI/bge-small-en-v1.5"
+    - &embed2 "thenlper/gte-large"
+    - &embed3 "mixedbread-ai/mxbai-embed-large-v1"
+    - &embed8 "sentence-transformers/all-MiniLM-L12-v2"
+    - &embed9 "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+    - &embed10 "BAAI/bge-base-en-v1.5"
+    - &embed13 "BAAI/bge-large-en-v1.5"
+    - &embed16 "TencentBAC/Conan-embedding-v1"
+    - &embed17 "Linq-AI-Research/Linq-Embed-Mistral"
+    - &embed18 "Snowflake/snowflake-arctic-embed-l-v2.0"
+    - &embed19 "BAAI/bge-multilingual-gemma2"
+    top_k:
+      kmin: 1
+      kmax: 10
+      # kmax: 128
+      log: false
+      step: 1
+  few_shot_enabled:
+    - false
+  additional_context_enabled:
+    - false
+  hyde_enabled:
+    - false
+  reranker_enabled:
+    - false
+  splitter:
+    methods:
+      - recursive
+      - sentence
+    chunk_min_exp: 7
+    chunk_max_exp: 10
+    chunk_overlap_frac_min: 0.0
+    chunk_overlap_frac_max: 0.50
+    chunk_overlap_frac_step: 0.01

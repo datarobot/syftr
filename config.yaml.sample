@@ -1,0 +1,83 @@
+# Example config.yaml for syftr with common locally overridden settings
+# See `syftr/configuration.py::Settings for the full configuration object
+# and instructions on how to configure Syftr
+
+# Azure OpenAI API (optional when using Azure OAI models)
+azure_oai:
+  # Sensitive strings can also be placed in the appropriate file in runtime-secrets/
+  # For example, put this key in a file named runtime-secrets/azure_oai__api_key
+  api_key: "asdf1234"
+  api_url: "https://my-azure-endpoint.openai.azure.com/"
+
+# Google Cloud Platform VertexAI (optional - when using VertexAI)
+gcp_vertex:
+  project_id: "myproject-12345"
+  region: "europe-west1"
+  # Put your GCP credentials file in runtime-secrets/gcp_vertex__credentials
+  # Or place it here:
+  credentials: >
+    {
+      "type": "service_account",
+      "project_id": "myproject-1324",
+      "private_key_id": "",
+      "private_key": "-----BEGIN PRIVATE KEY-----...
+      ...
+    }
+
+# Use any relational DB provider supported by Optuna storage
+postgres:
+  dsn: "postgresql://user:pass@postgresserver:5432/syftr"
+  # Optionally tune conection args.
+  # Sessions must last a long time, so should be resilient to transient network interruptions
+  #
+  # engine_kwargs:
+  #   pool_recycle: 300
+  #   pool_pre_ping: true  # Important for PostgreSQL
+  #   pool_size: 10
+  #   max_overflow: 50
+  #   # https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-PARAMKEYWORDS
+  #   connect_args:
+  #     application_name: syftr
+  #     connect_timeout: 60
+  #     keepalives: 1  # Enable TCP keepalives
+  #     keepalives_idle: 30  # Send keepalives after 30s of idle time
+  #     keepalives_interval: 10  # Resend after 10s if no response
+  #     keepalives_count: 5  # Give up after 5 failed keepalives
+
+paths:
+  tmp_dir: /tmp/syftr
+
+# Instrumentation captures flow tracing information useful for debugging
+# Run `phoenix serve` to launch Arize's open-source trace collection and viewing program,
+# Or use an OTEL compatible endpoint like otel-collector.
+# instrumentation:
+#   tracing_enabled: true
+#   otel_endpoint: http://localhost:6006/v1/traces
+
+# Set local: true to automatically spin up a local Ray instance, or point this
+# to your Ray cluster endpoint. Syftr uses the Ray Jobs Submission API to execute
+# its workloads.
+# ray:
+#   remote_endpoint: "ray://myrayheadnode:10001"
+#   local: false  # Set to False to use the remote cluster
+
+# OpenAI-compatible endpoints listed here will automatically be added to your
+# study search space, unless you have customized your search space LLMs.
+# local_models:
+#   default_api_key: "commonkey"
+#   generative:
+#     - model_name: "microsoft/Phi-4-multimodal-instruct"
+#       api_base: "http://vllmhost:8000/v1"
+#       max_tokens: 2000
+#       context_window: 129072
+#       is_function_calling_model: true
+#       additional_kwargs:
+#         frequency_penalty: 1.0
+#         temperature: 0.1
+#   embedding:
+#     - model_name: "BAAI/bge-small-en-v1.5"
+#       api_base: "http://vllmhost:8001/v1"
+#       additional_kwargs:
+#         extra_body:
+#           truncate_prompt_tokens: 512
+#       api_key: "customapikeyhere"

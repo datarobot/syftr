@@ -1,0 +1,72 @@
+[
+    {
+        "name": "financebench",
+        "accuracy": 0.85,
+        "link": "https://arxiv.org/abs/2404.11792",
+        "dataset": "FinanceBench",
+        "subset": "Public test set (141)",
+        "test_setting": "Full Corpus RAG",
+        "eval_method": "Human eval",
+        "method_name": "OODA Agent"
+    },
+    {
+        "name": "crag_task3",
+        "accuracy": 0.278,
+        "link": "https://arxiv.org/abs/2410.00005",
+        "dataset": "CRAG Task3",
+        "subset": "Finance",
+        "test_setting": "JIT RAG (50 web pages)",
+        "eval_method": "Human eval",
+        "method_name": "db3 team"
+    },
+    {
+        "name": "crag_task3",
+        "accuracy": 0.542,
+        "link": "https://arxiv.org/abs/2410.00005",
+        "dataset": "CRAG Task3",
+        "subset": "Sports",
+        "test_setting": "JIT RAG (50 web pages)",
+        "eval_method": "Human eval",
+        "method_name": "db3 team"
+    },
+    {
+        "name": "crag_task3",
+        "accuracy": 0.41,
+        "link": "https://arxiv.org/abs/2410.00005",
+        "dataset": "CRAG Task3",
+        "subset": "Music",
+        "test_setting": "JIT RAG (50 web pages)",
+        "eval_method": "Human eval",
+        "method_name": "db3 team"
+    },
+    {
+        "name": "crag_task3",
+        "accuracy": 0.384,
+        "link": "https://arxiv.org/abs/2410.00005",
+        "dataset": "CRAG Task3",
+        "subset": "Movie",
+        "test_setting": "JIT RAG (50 web pages)",
+        "eval_method": "Human eval",
+        "method_name": "db3 team"
+    },
+    {
+        "name": "crag_task3",
+        "accuracy": 0.23,
+        "link": "https://arxiv.org/abs/2410.00005",
+        "dataset": "CRAG Task3",
+        "subset": "Open",
+        "test_setting": "JIT RAG (50 web pages)",
+        "eval_method": "Human eval",
+        "method_name": "db3 team"
+    },
+    {
+        "name": "hotpotqa",
+        "accuracy": 0.766,
+        "link": "https://arxiv.org/abs/2412.06975",
+        "dataset": "HotpotQA",
+        "subset": "Dev set (7,000)",
+        "test_setting": "?",
+        "eval_method": null,
+        "method_name": "AutoReason"
+    }
+]

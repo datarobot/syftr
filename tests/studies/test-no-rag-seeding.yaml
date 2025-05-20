@@ -1,0 +1,49 @@
+name: test-no-rag-seeding
+
+dataset:
+  xname: "hotpotqa_hf"
+  subset: "train_hard"
+
+toy_mode: true
+reuse_study: false
+
+optimization:
+  baselines:
+    - response_synthesizer_llm: gpt-4o-mini
+      template_name: default
+      rag_mode: no_rag
+    - response_synthesizer_llm: gpt-4o-mini
+      template_name: CoT
+      rag_mode: no_rag
+    - response_synthesizer_llm: gpt-4o-mini
+      template_name: concise
+      rag_mode: no_rag
+    - response_synthesizer_llm: gemini-flash
+      template_name: default
+      rag_mode: no_rag
+    - response_synthesizer_llm: gemini-flash
+      template_name: CoT
+      rag_mode: no_rag
+    - response_synthesizer_llm: gemini-flash
+      template_name: concise
+      rag_mode: no_rag
+    - response_synthesizer_llm: anthropic-haiku-35
+      template_name: default
+      rag_mode: no_rag
+    - response_synthesizer_llm: anthropic-haiku-35
+      template_name: CoT
+      rag_mode: no_rag
+    - response_synthesizer_llm: anthropic-haiku-35
+      template_name: concise
+      rag_mode: no_rag
+  
+  max_concurrent_trials: 10
+  cpus_per_trial: 1
+  num_random_trials: 0
+  seeder_timeout: 3600
+  num_eval_samples: 10
+  num_trials: 0
+  use_individual_baselines: false
+  use_variations_of_baselines: false
+  use_pareto_baselines: false
+  raise_on_invalid_baseline: true

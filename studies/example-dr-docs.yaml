@@ -1,0 +1,44 @@
+dataset:
+  xname: drdocs_hf
+name: example-dr-docs
+optimization:
+  cpus_per_trial: 1
+  embedding_device: cpu
+  max_concurrent_trials: 4
+  num_eval_batch: 5
+  num_eval_samples: 10
+  num_trials: 10
+recreate_study: true
+reuse_study: false
+search_space:
+  few_shot_enabled:
+  - false
+  hyde_enabled:
+  - false
+  rag_modes:
+  - no_rag
+  - rag
+  rag_retriever:
+    embedding_models:
+    - BAAI/bge-small-en-v1.5
+    - BAAI/bge-large-en-v1.5
+    methods:
+    - dense
+    - sparse
+    query_decomposition_enabled:
+    - false
+    top_k:
+      kmax: 10
+      kmin: 2
+      log: false
+      step: 1
+  reranker_enabled:
+  - false
+  response_synthesizer_llms:
+  - gpt-4o-mini
+  - gpt-35-turbo
+  - gpt-4o-std
+  template_names:
+  - default
+  - concise
+toy_mode: true

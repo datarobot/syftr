@@ -1,0 +1,23 @@
+name: "test-eval-pruning"
+dataset:
+  xname: "hotpotqa_hf"
+  subset: "dev"
+  partition_map:
+    test: "sample"
+
+reuse_study: false
+toy_mode: true
+
+optimization:
+  cpus_per_trial: 5
+  max_concurrent_trials: 2
+  num_eval_batch: 1
+  num_eval_samples: 10
+  num_trials: 2
+  num_warmup_steps_pareto: 0
+  num_warmup_steps_costout: 0
+  use_toy_baselines: false
+
+timeouts:
+  eval_timeout: 0
+

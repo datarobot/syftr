@@ -1,0 +1,32 @@
+name: "test-hotpot-dev-toy"
+dataset:
+  xname: "hotpotqa_hf"
+  subset: "dev"
+  partition_map:
+    test: "sample"
+
+reuse_study: false
+toy_mode: true
+
+search_space:
+  response_synthesizer_llms:
+    - gpt-4o-mini
+    - anthropic-haiku-35
+    - gemini-flash
+  reranker:
+    llms:
+    - gpt-4o-mini
+    - anthropic-haiku-35
+    - gemini-flash
+  hyde:
+    llms:
+    - gpt-4o-mini
+    - anthropic-haiku-35
+    - gemini-flash
+
+optimization:
+  cpus_per_trial: 1
+  max_concurrent_trials: 2
+  num_eval_samples: 4
+  num_retries_unique_params: 10
+  num_trials: 2
