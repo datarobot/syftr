@@ -2,14 +2,14 @@
 # See `syftr/configuration.py::Settings for the full configuration object
 # and instructions on how to configure Syftr
 
-# Azure OpenAI API (optional when using Azure OAI models)
+# Azure OpenAI API (required when using Azure OAI models)
 azure_oai:
   # Sensitive strings can also be placed in the appropriate file in runtime-secrets/
   # For example, put this key in a file named runtime-secrets/azure_oai__api_key
   api_key: "asdf1234"
   api_url: "https://my-azure-endpoint.openai.azure.com/"
 
-# Google Cloud Platform VertexAI (optional - when using VertexAI)
+# Google Cloud Platform VertexAI (required when using VertexAI)
 gcp_vertex:
   project_id: "myproject-12345"
   region: "europe-west1"
@@ -24,7 +24,11 @@ gcp_vertex:
       ...
     }
 
-# Use any relational DB provider supported by Optuna storage
+# HuggingFace Embeddings (required for most experiments)
+hf_embeddings:
+  api_key: "asdf1234"
+
+# Use any relational DB provider supported by Optuna storage (required)
 postgres:
   dsn: "postgresql://user:pass@postgresserver:5432/syftr"
   # Optionally tune conection args.
