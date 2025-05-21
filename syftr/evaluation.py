@@ -47,7 +47,7 @@ from syftr.pruning import CostPruner, ParetoPruner, RuntimePruner
 from syftr.studies import AgentStudyConfig, SearchSpace, StudyConfig
 
 logging.basicConfig(level=logging.WARNING)
-log = logging.getLogger("benchmarking")
+log = logging.getLogger("evaluation")
 log.setLevel(logging.INFO)
 
 dispatcher = instrument.get_dispatcher()
