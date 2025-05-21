@@ -66,11 +66,9 @@ def _prepare_working_dir() -> str:
 
 
 def _prepare_modules():
-    import benchmarking
-
     import syftr
 
-    return [syftr, benchmarking]
+    return [syftr]
 
 
 def get_runtime_env(delete_confirmed: bool = False) -> Dict[str, Any]:
