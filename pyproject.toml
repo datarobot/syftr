@@ -2,6 +2,7 @@
 name = "syftr"
 version = "0.0.1"
 requires-python = ">= 3.12.7,<3.13"
+dynamic=["version"]
 dependencies = [
     "aiolimiter==1.2.1",
     "asyncio==3.4.3",
@@ -158,7 +159,7 @@ ignore_missing_imports = true
 exclude = ['.venv', 'build', 'notebooks', 'scratch']
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "uv-dynamic-versioning"]
 build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
@@ -170,3 +171,8 @@ url = "https://artifactory.devinfra.drdev.io/artifactory/api/pypi/python-1711"
 publish-url = "https://artifactory.devinfra.drdev.io/artifactory/api/pypi/python-1711"
 explicit = true
 
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.uv-dynamic-versioning]
+fallback-version = "0.0.0"
