@@ -41,6 +41,7 @@ from syftr.optuna_helper import (
 )
 from syftr.ray.utils import ray_init
 from syftr.retrievers.build import build_rag_retriever
+from syftr.startup import prepare_worker
 from syftr.studies import (
     RetrieverStudyConfig,
     StudyConfig,
@@ -49,6 +50,8 @@ from syftr.studies import (
 )
 from syftr.templates import get_template
 from syftr.tracing import get_span_exporter, set_tracing_metrics
+
+prepare_worker()
 
 
 def _get_examples(example_retriever: BaseRetriever, query_str: str):

@@ -14,6 +14,7 @@ from syftr.logger import logger
 from syftr.optimization import user_confirm_delete
 from syftr.optuna_helper import get_pareto_flows
 from syftr.ray.submit import get_client, start_study
+from syftr.startup import prepare_worker
 from syftr.storage import (  # noqa
     BrightHF,
     CragTask3HF,
@@ -61,6 +62,8 @@ RECREATE_STUDY = True
 EVAL_MODE: Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
+
+prepare_worker()
 
 blocks = [
     Block(
