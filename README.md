@@ -104,7 +104,7 @@ pre-commit install
 ```
 
 ### Citation
-If you use this code in your research please cite the following [publicaton](https://arxiv.org).
+If you use this code in your research please cite the following [publication](https://arxiv.org).
 
 ```bibtex
 @article{syftr2025,
