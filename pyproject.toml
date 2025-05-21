@@ -163,3 +163,10 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 addopts = "--ignore=scratch"
+
+[[tool.uv.index]]
+name = "datarobot-python-dev"
+url = "https://artifactory.devinfra.drdev.io/artifactory/api/pypi/datarobot-python-dev"
+publish-url = "https://artifactory.devinfra.drdev.io/artifactory/api/pypi/datarobot-python-dev"
+explicit = true
+
