@@ -107,33 +107,33 @@ blocks = [
     # ),
 ]
 
-baseline_studies = [
-    "rank0--rag-and-agents--financebench_hf",
-    "rank1--rag-and-agents--bright_hf",
-    "rank1--rag-and-agents--crag_hf-music",
-    "rank1--rag-and-agents--crag_hf-sports",
-    "rank1--rag-and-agents--drdocs_hf",
-    "rank1--rag-and-agents--financebench_hf",
-    "rank1--rag-and-agents--hotpotqa_hf-train_hard",
-    "rank1--rag-and-agents--infinitebench_hf",
-    "rank1--rag-and-agents--multihoprag_hf",
-    "rank1--rag-and-agents--phantomwikiv050_hf",
-    "rank2--rag-and-agents--bright_hf",
-    "rank2--rag-and-agents--crag_hf-music",
-    "rank2--rag-and-agents--crag_hf-sports",
-    "rank2--rag-and-agents--drdocs_hf",
-    "rank2--rag-and-agents--financebench_hf",
-    "rank2--rag-and-agents--hotpotqa_hf-train_hard",
-    "rank2--rag-and-agents--infinitebench_hf",
-    "rank2--rag-and-agents--multihoprag_hf",
-    "rank2--rag-and-agents--phantomwikiv050_hf",
-]
-baselines = []
-for study in baseline_studies:
-    for flow in get_pareto_flows(study, 0.9):
-        if flow not in baselines:
-            baselines.append(flow)
-print(f"We have {len(baselines)} Pareto-baselines for seeding")
+# baseline_studies = [
+#     "rank0--rag-and-agents--financebench_hf",
+#     "rank1--rag-and-agents--bright_hf",
+#     "rank1--rag-and-agents--crag_hf-music",
+#     "rank1--rag-and-agents--crag_hf-sports",
+#     "rank1--rag-and-agents--drdocs_hf",
+#     "rank1--rag-and-agents--financebench_hf",
+#     "rank1--rag-and-agents--hotpotqa_hf-train_hard",
+#     "rank1--rag-and-agents--infinitebench_hf",
+#     "rank1--rag-and-agents--multihoprag_hf",
+#     "rank1--rag-and-agents--phantomwikiv050_hf",
+#     "rank2--rag-and-agents--bright_hf",
+#     "rank2--rag-and-agents--crag_hf-music",
+#     "rank2--rag-and-agents--crag_hf-sports",
+#     "rank2--rag-and-agents--drdocs_hf",
+#     "rank2--rag-and-agents--financebench_hf",
+#     "rank2--rag-and-agents--hotpotqa_hf-train_hard",
+#     "rank2--rag-and-agents--infinitebench_hf",
+#     "rank2--rag-and-agents--multihoprag_hf",
+#     "rank2--rag-and-agents--phantomwikiv050_hf",
+# ]
+# baselines = []
+# for study in baseline_studies:
+#     for flow in get_pareto_flows(study, 0.9):
+#         if flow not in baselines:
+#             baselines.append(flow)
+# print(f"We have {len(baselines)} Pareto-baselines for seeding")
 
 # baselines = json.load(
 #     open(cfg.paths.results_dir / "silver-bullet-like-flows.json", "r")
@@ -144,7 +144,7 @@ optimization_config = OptimizationConfig(
     # blocks=blocks,
     shuffle_blocks=False,
     num_trials=NUM_TRIALS,
-    baselines=baselines,
+    # baselines=baselines,
     baselines_cycle_llms=False,
     shuffle_baselines=True,
     max_concurrent_trials=20,
