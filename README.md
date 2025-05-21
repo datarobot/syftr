@@ -8,11 +8,23 @@ __syftr__ is an agent optimizer that helps you find the best agentic workflows f
 pip install dr-syftr
 ```
 
-### Runtime configuration
+TODO: How to setup the PostgreSQL server?
+
+
+### Required Credentials
+__syftr__'s examples require the following credentials:
+* Azure OpenAI API key 
+* PostgreSQL server dsn
+* Huggingface API key
+
+To enter these credentials, copy [config.yaml.sample](config.yaml.sample) to `config.yaml` and edit the required portions.
+
+
+### Additional Configuration Options
 __syftr__ uses many components including Ray for job scheduling and PostgreSQL for storing results. In this section we describe how to configure them to run __syftr__ successfully.
 * The main config file of syftr is `config.yaml`. You can specify paths, logging, database and Ray parameters and many others. For detailed instructions and examples, please refer to [config.yaml.sample](config.yaml.sample).
 You can rename this file to `config.yaml` and fill in all necessary details according to your infrastructure.
-* You can specify sensitive credentials including LLM keys in the `runtime-secrets/` directory.
+* Alternatively, you can store credentials including LLM keys in the `runtime-secrets/` directory.
   For example:
   ```bash
   $ cat runtime-secrets/azure_oai__api_key
