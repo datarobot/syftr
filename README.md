@@ -13,7 +13,8 @@ TODO: How to setup the PostgreSQL server?
 
 ### Required Credentials
 __syftr__'s examples require the following credentials:
-* Azure OpenAI API key 
+* Azure OpenAI API key
+* Azure OpenAI endpoint URL (`api_url`)
 * PostgreSQL server dsn
 * Huggingface API key
 
