@@ -113,7 +113,7 @@ class Paths(BaseModel):
     onnx_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "onnx"
     sota_dir: Annotated[Path, Field(validate_default=True)] = data_dir / "sota"
     lock_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "syftr-locks"
-    nltk_dir: Annotated[Path, Field(validate_default=True)] = data_dir / "nltk-data"
+    nltk_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "nltk-data"
 
     @property
     def templates_without_context(self) -> Path:
