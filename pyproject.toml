@@ -1,6 +1,8 @@
 [project]
 name = "syftr"
 requires-python = ">= 3.12.7,<3.13"
+description = "syftr is an agent optimizer that helps you find the best agentic workflows for your budget."
+readme = "README.md"
 dynamic=["version"]
 dependencies = [
     "aiolimiter==1.2.1",
