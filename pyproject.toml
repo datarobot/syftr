@@ -138,7 +138,7 @@ benchmarking = "benchmarking"
 scratch = "scratch"
 
 [tool.ruff]
-exclude = ["scratch", "notebooks", "plotting.py", "examples"]
+exclude = ["notebooks", "plotting.py", "examples"]
 line-length = 88
 indent-width = 4
 lint.select = [
