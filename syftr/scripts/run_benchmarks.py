@@ -55,6 +55,7 @@ from syftr.studies import (  # noqa
 PREFIX = "rank"
 BENCH_NUM = 2
 NUM_TRIALS = 0
+USE_PARETO_BASELINES = False
 RUN_NAME = "rag-and-agents"
 REUSE_STUDY = True
 RECREATE_STUDY = True
@@ -107,6 +108,7 @@ blocks = [
     # ),
 ]
 
+
 baseline_studies = [
     "rank0--rag-and-agents--financebench_hf",
     "rank1--rag-and-agents--bright_hf",
@@ -129,11 +131,12 @@ baseline_studies = [
     "rank2--rag-and-agents--phantomwikiv050_hf",
 ]
 baselines = []
-for study in baseline_studies:
-    for flow in get_pareto_flows(study, 0.9):
-        if flow not in baselines:
-            baselines.append(flow)
-print(f"We have {len(baselines)} Pareto-baselines for seeding")
+if USE_PARETO_BASELINES:
+    for study in baseline_studies:
+        for flow in get_pareto_flows(study, 0.9):
+            if flow not in baselines:
+                baselines.append(flow)
+    print(f"We have {len(baselines)} Pareto-baselines for seeding")
 
 # baselines = json.load(
 #     open(cfg.paths.results_dir / "silver-bullet-like-flows.json", "r")
