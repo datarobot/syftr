@@ -14,7 +14,6 @@ from syftr.logger import logger
 from syftr.optimization import user_confirm_delete
 from syftr.optuna_helper import get_pareto_flows
 from syftr.ray.submit import get_client, start_study
-from syftr.startup import prepare_worker
 from syftr.storage import (  # noqa
     BrightHF,
     CragTask3HF,
@@ -55,15 +54,13 @@ from syftr.studies import (  # noqa
 
 PREFIX = "rank"
 BENCH_NUM = 2
-NUM_TRIALS = 0
+NUM_TRIALS = 50
 RUN_NAME = "rag-and-agents"
 REUSE_STUDY = True
 RECREATE_STUDY = True
 EVAL_MODE: Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-
-prepare_worker()
 
 blocks = [
     Block(
@@ -150,10 +147,10 @@ optimization_config = OptimizationConfig(
     baselines=baselines,
     baselines_cycle_llms=False,
     shuffle_baselines=True,
-    max_concurrent_trials=20,
+    max_concurrent_trials=10,
     num_eval_samples=50,
     num_eval_batch=5,
-    rate_limiter_max_coros=30,
+    rate_limiter_max_coros=20,
     rate_limiter_period=60,
     max_trial_cost=40.0,
     cpus_per_trial=1,

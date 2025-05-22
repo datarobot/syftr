@@ -51,8 +51,6 @@ from syftr.studies import (
 from syftr.templates import get_template
 from syftr.tracing import get_span_exporter, set_tracing_metrics
 
-prepare_worker()
-
 
 def _get_examples(example_retriever: BaseRetriever, query_str: str):
     retrieved_nodes: T.List[NodeWithScore] = example_retriever.retrieve(query_str)
@@ -105,6 +103,7 @@ def evaluate(
     params: T.Dict,
     study_config: StudyConfig,
 ) -> T.Tuple[float, float, T.Dict[str, T.Any], str]:
+    prepare_worker()
     flow_start = datetime.now(timezone.utc).timestamp()
     logger.info("Evaluating flow with config: %s", params)
     flow_json = json.dumps(params)
