@@ -53,7 +53,7 @@ from syftr.studies import (  # noqa
 )
 
 PREFIX = "rank"
-BENCH_NUM = 0
+BENCH_NUM = 1
 NUM_TRIALS = 0
 USE_PARETO_BASELINES = True
 RUN_NAME = "rag-and-agents"
@@ -283,14 +283,14 @@ evaluation = Evaluation(
 datasets = [
     FinanceBenchHF(),
     # -----------------------------------------------
-    # BrightHF(subset="biology"),
-    # CragTask3HF(subset="music"),
-    # CragTask3HF(subset="sports"),
-    # DRDocsHF(),
-    # HotPotQAHF(subset="train_hard"),
-    # InfiniteBenchHF(),
-    # MultiHopRAGHF(),
-    # PhantomWikiv050(),
+    BrightHF(subset="biology"),
+    CragTask3HF(subset="music"),
+    CragTask3HF(subset="sports"),
+    DRDocsHF(),
+    HotPotQAHF(subset="train_hard"),
+    InfiniteBenchHF(),
+    MultiHopRAGHF(),
+    PhantomWikiv050(),
     # -----------------------------------------------
     # BrightHF(subset="earth_science"),
     # BrightHF(subset="economics"),
