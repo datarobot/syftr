@@ -425,10 +425,20 @@ class Postgres(BaseModel):
     }
 
     def get_engine(self) -> Engine:
-        return create_engine(self.dsn.unicode_string(), **self.engine_kwargs)
+         return create_engine(self.dsn.unicode_string(), **self.engine_kwargs)
 
     def get_optuna_storage(self) -> RDBStorage:
-        return RDBStorage(self.dsn.unicode_string(), engine_kwargs=self.engine_kwargs)
+         return RDBStorage(self.dsn.unicode_string(), engine_kwargs=self.engine_kwargs)
+
+
+class SQlite(BaseModel):
+    filename: str = "/Users/nick.volynets/workspace/syftr/example.db"
+
+    def get_engine(self) -> Engine:
+        return create_engine(f"sqlite:///{self.filename}")
+
+    def get_optuna_storage(self) -> RDBStorage:
+        return RDBStorage(f"sqlite:///{self.filename}", engine_kwargs={})
 
 
 class Ray(BaseModel):
