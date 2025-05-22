@@ -32,6 +32,7 @@ You can rename this file to `config.yaml` and fill in all necessary details acco
   asdfasdfasdf12341234
   ```
 * You can also configure syftr with environment variables: `export SYFTR_PATHS__ROOT_DIR=/foo/bar`
+* Currently, we expect syftr to be run from the directory where `config.yaml`, `runtime_secrets`, `/studies/` reside in order to simplify the configuration. However, in future we plan to relax that requirement and make it fully runnable as a library.
 * If the configuration is correct, you should be able to run [`examples/1-welcome.ipynb`](examples/1-welcome.ipynb) without any problems.
 
 ### Quickstart
