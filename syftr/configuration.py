@@ -141,7 +141,7 @@ class Paths(BaseModel):
     def path_exists(cls, path: Path) -> Path:
         path.mkdir(parents=True, exist_ok=True)
         try:
-            path.chmod(0o777)
+            path.chmod(0o775)
         except PermissionError:
             logging.debug(f"PermissionError: Unable to change permissions for {path}.")
         return path
