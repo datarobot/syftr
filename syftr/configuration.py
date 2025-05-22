@@ -88,6 +88,7 @@ S3_TIMEOUT = 3600
 NON_OPENAI_CONTEXT_WINDOW_FACTOR = 0.85
 NDIGITS = 4
 UNSUPPORTED_PARAMS = ["splitter_chunk_size"]
+SYFTR_CONFIG_FILE_ENV_NAME = "SYFTR_CONFIG_FILE"
 
 """
 Namespaced configuration classes.
@@ -503,7 +504,7 @@ class Settings(BaseSettings):
             Path.home() / ".syftr/config.yaml",
             REPO_ROOT / "config.yaml",
             "config.yaml",
-            Path(os.environ.get("SYFTR_CONFIG_FILE", "")),
+            Path(os.environ.get(SYFTR_CONFIG_FILE_ENV_NAME, "")),
         ],
         secrets_dir="runtime-secrets",
         env_file=".env",

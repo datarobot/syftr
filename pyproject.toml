@@ -1,6 +1,6 @@
 [project]
 name = "syftr"
-version = "0.0.1"
+dynamic = ["version"]
 requires-python = ">= 3.12.7,<3.13"
 dependencies = [
     "aiolimiter==1.2.1",
