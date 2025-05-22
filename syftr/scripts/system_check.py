@@ -1,21 +1,21 @@
-import threading
 import queue
+import threading
 from pathlib import Path
+
+from rich.console import Console
+from rich.text import Text
 from sqlalchemy.exc import OperationalError
-from rich.console import Console # Import Console
-from rich.text import Text # Import Text
 
 from syftr import __version__ as version
 from syftr.configuration import SYFTR_CONFIG_FILE_ENV_NAME, cfg
+from syftr.llm import get_llm
 from syftr.optuna_helper import get_study_names
 from syftr.studies import ALL_LLMS
-from syftr.llm import get_llm
 
-console = Console() # Initialize Console
+console = Console()
 
 
 def print_into():
-    # Define the ASCII art string
     ascii_art = rf"""
 Welcome to
  ___  _  _  ____  ____  ____
@@ -32,18 +32,11 @@ Running system check..."""
 
 
 def check_config():
-    # Convert all locations to string and filter out "."
-    # The user's provided code reverses here. Dynaconf loads files in the order provided,
-    # with later files overriding earlier ones. So, if the user wants to show
-    # "earlier taking precedence", the list should be processed as Dynaconf does.
-    # However, the user's code has `reversed()`, so I will keep it to minimize changes.
     file_locations_str = [str(location) for location in reversed(cfg.model_config["yaml_file"])]
     
-    # Get actual file paths for checking, excluding "."
     potential_paths = [Path(loc) for loc in file_locations_str if loc != "."]
     
-    # Let's find files that actually exist from the potential paths
-    existing_config_files = [str(p) for p in potential_paths if p.is_file()] # Use absolute for clarity
+    existing_config_files = [str(p) for p in potential_paths if p.is_file()]
 
     if existing_config_files:
         console.print("Syftr will load configuration from the following files:")
@@ -62,20 +55,12 @@ def check_config():
     
     # If no files were found, guide the user.
     # Show the locations that were checked.
-    # To match user's logic, we base this on the (potentially reversed) file_locations_str
+    # To match user's logic, we base this on the file_locations_str
     checked_locations_display = [str(Path(loc).absolute()) for loc in file_locations_str if loc != "."]
-    if not checked_locations_display and "." in [str(loc) for loc in cfg.model_config["yaml_file"]]: # if only "." was in the original list and it was filtered out
-        # This case needs to handle what to show if the original list was just "." or primarily "."
-        # For simplicity, show the original list from cfg if checked_locations_display is empty.
-         checked_locations_display = [str(Path(loc).absolute()) for loc in cfg.model_config["yaml_file"] if str(loc) != "."]
-         if not checked_locations_display: # If still empty (e.g. original was just ["."])
-             checked_locations_display = [str(Path(".").resolve()) + " (current directory)"]
-
 
     console.print("[yellow]No syftr configuration files (e.g., config.yaml, .syftr.yaml) were found.[/yellow]")
     console.print("Please create a configuration file in one of these locations:")
     
-    # Use a list format for better readability
     for loc in checked_locations_display:
         console.print(f"- {loc}")
         
@@ -93,7 +78,7 @@ def check_database():
         try:
             # hosts() might return a list of dicts or a list of pydantic models
             parsed_hosts = cfg.postgres.dsn.hosts()
-            if parsed_hosts: # Ensure it's not None or empty
+            if parsed_hosts:
                 for host_info in parsed_hosts:
                     if isinstance(host_info, dict):
                         host = host_info.get('host')
@@ -101,7 +86,7 @@ def check_database():
                     elif hasattr(host_info, 'host') and hasattr(host_info, 'port'): # Pydantic model like
                         host = host_info.host
                         port = host_info.port
-                    else: # Fallback if structure is unexpected
+                    else:
                         db_connections.append(f"Unknown host structure: {host_info}")
                         continue
                     
@@ -116,7 +101,7 @@ def check_database():
 
         except Exception as e:
             db_connections.append(f"Could not parse DSN: {cfg.postgres.dsn}. Error: {e}")
-    elif cfg.postgres and cfg.postgres.dsn: # If DSN is a simple string
+    elif cfg.postgres and cfg.postgres.dsn:
         db_connections.append(f"Attempting direct DSN: {cfg.postgres.dsn}")
     else:
         db_connections.append("Postgres DSN not configured.")
@@ -126,17 +111,15 @@ def check_database():
         for conn_info in db_connections:
             console.print(f"- {conn_info}")
     else:
-        # This case should ideally be caught by the DSN parsing logic above,
-        # but as a fallback:
         console.print("- [yellow]No database connection details found in configuration.[/yellow]")
-    console.print() # Add a newline for spacing
+    console.print()
 
     try:
         study_names = get_study_names(".*")
         console.print(f"[green]Database connection successful. We found {len(study_names)} studies.[/green]\n")
-    except OperationalError as e: # Capture the exception as 'e'
+    except OperationalError as e:
         console.print("[bold red]Postgres database connection failed.[/bold red]")
-        console.print(f"[bold red]Error details: {e}[/bold red]") # Print the exception details
+        console.print(f"[bold red]Error details: {e}[/bold red]")
         console.print("[yellow]Please check your database settings and configuration.[/yellow]")
         console.print(Text("""
 Once you have installed PostgreSQL, you can do the following setup from a Linux bash:
@@ -165,11 +148,9 @@ def _check_single_llm_worker(llm_name: str, results_queue: queue.Queue):
     status can be "accessible", "inaccessible", "warning".
     """
     try:
-        # Assuming get_llm is a synchronous function that prepares the LLM instance
         llm_instance = get_llm(llm_name)
         
         # Perform a simple synchronous completion test.
-        # LlamaIndex LLMs usually have a `complete` method for synchronous calls.
         response = llm_instance.complete("Return the text `[OK]' (brackets included) and nothing else \\nothink")
         
         if response and hasattr(response, 'text') and response.text:
@@ -180,7 +161,6 @@ def _check_single_llm_worker(llm_name: str, results_queue: queue.Queue):
     except Exception as e:
         error_type = type(e).__name__
         error_message = str(e).replace('\n', ' ')
-        # Limit the length of the error message in the report
         error_snippet = error_message[:200] + "..." if len(error_message) > 200 else error_message
         results_queue.put((llm_name, "inaccessible", f"{error_type}: {error_snippet}"))
 
@@ -206,7 +186,7 @@ def check_llms():
     console.print(f"Launched {len(threads)} threads for LLM checks. Waiting for completion...")
 
     for thread in threads:
-        thread.join() # Wait for all threads to complete
+        thread.join()
 
     console.print("All LLM check threads completed.")
 
@@ -274,7 +254,6 @@ def check():
             all_passed = False
             # Specific guidance is printed by the check function itself
             console.print(f"[yellow]Check '{check_func.__name__}' failed. Please review the messages above.[/yellow]\n")
-            # No need to print "run again" here, do it once at the end if anything failed.
         else:
             console.print(f"[green]Check '{check_func.__name__}' passed.[/green]\n")
         
