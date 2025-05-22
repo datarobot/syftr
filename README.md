@@ -4,10 +4,21 @@ __syftr__ is an agent optimizer that helps you find the best agentic workflows f
 [Paper](https://arxiv.org) | [Blogpost](https://www.datarobot.com)
 
 ### Installation
+
+As a library:
 ```
 pip install dr-syftr
 ```
 
+In dev mode:
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv venv --python 3.12.7
+source .venv/bin/activate
+uv sync --extra dev
+# Install pre-commit linter and formatter [optional, recommended]
+pre-commit install
+```
 TODO: How to setup the PostgreSQL server?
 
 
@@ -25,15 +36,16 @@ To enter these credentials, copy [config.yaml.sample](config.yaml.sample) to `co
 __syftr__ uses many components including Ray for job scheduling and PostgreSQL for storing results. In this section we describe how to configure them to run __syftr__ successfully.
 * The main config file of syftr is `config.yaml`. You can specify paths, logging, database and Ray parameters and many others. For detailed instructions and examples, please refer to [config.yaml.sample](config.yaml.sample).
 You can rename this file to `config.yaml` and fill in all necessary details according to your infrastructure.
-* Alternatively, you can store credentials including LLM keys in the `runtime-secrets/` directory.
+* You can also configure syftr with environment variables: `export SYFTR_PATHS__ROOT_DIR=/foo/bar`
+* In order to function properly, Ray requires credentials to be stored inin the `runtime-secrets/` directory.
   For example:
   ```bash
   $ cat runtime-secrets/azure_oai__api_key
   asdfasdfasdf12341234
   ```
-* You can also configure syftr with environment variables: `export SYFTR_PATHS__ROOT_DIR=/foo/bar`
-* Currently, we expect syftr to be run from the directory where `config.yaml`, `runtime_secrets`, `/studies/` reside in order to simplify the configuration. However, in future we plan to relax that requirement and make it fully runnable as a library.
-* If the configuration is correct, you should be able to run [`examples/1-welcome.ipynb`](examples/1-welcome.ipynb) without any problems.
+  Make sure you copy them from `config.yaml` before running any studies.
+* Currently there are two main ways to run syftr: by cloning the repo or by installing it as a Python package. When it is cloned as a repo, all config files are already in-place, you just need to rename / fill them in. When it is run as a library, `runtime_secrets' should be in the current working directory, and `config.yaml` should be present in the current working directory, `~/.syftr/config.yaml`,  `/etc/syftr/config.yaml` or be specified in `SYFTR_CONFIG_FILE` environmental variable.
+* When the configuration is correct, you should be able to run [`examples/1-welcome.ipynb`](examples/1-welcome.ipynb) without any problems.
 
 ### Quickstart
 Running syftr study with user API after the configuration:
@@ -106,16 +118,7 @@ local_models:
 Models added in the ``config.yaml`` will be automatically added to the default search space, or you can enable them manually for specific flow components.
 
 
-### Developer setup
-In order to develop syftr, please clone this repo and run:
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-uv venv --python 3.12.7
-source .venv/bin/activate
-uv sync --extra dev
-# Install pre-commit linter and formatter [optional, recommended]
-pre-commit install
-```
+
 
 ### Citation
 If you use this code in your research please cite the following [publicaton](https://arxiv.org).
