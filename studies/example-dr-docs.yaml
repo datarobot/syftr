@@ -3,10 +3,9 @@ dataset:
 name: example-dr-docs
 optimization:
   cpus_per_trial: 1
-  embedding_device: cpu
-  max_concurrent_trials: 4
+  max_concurrent_trials: 10
   num_eval_batch: 5
-  num_eval_samples: 10
+  num_eval_samples: 5
   num_trials: 10
 recreate_study: true
 reuse_study: false
