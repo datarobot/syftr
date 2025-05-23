@@ -83,7 +83,7 @@ dependencies = [
     "sentencepiece",
     "tabulate",
     "trace-opt",
-    "transformers",
+    "transformers==4.48.3",
     "tree-sitter-languages",
     "tree-sitter",
     "types-protobuf",
