@@ -1,6 +1,7 @@
 [project]
 name = "syftr"
 dynamic = ["version"]
+requires-python = ">=3.12.3,<3.13"
 dependencies = [
     "aiolimiter",
     "asyncio",
@@ -90,7 +91,6 @@ dependencies = [
     "types-tabulate",
     "vertexai",
 ]
-
 [tool.hatch.version]
 source = "code"
 path = "syftr/__init__.py"
