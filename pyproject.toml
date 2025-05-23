@@ -138,6 +138,7 @@ dev = [
 syftr = "syftr"
 
 [tool.ruff]
+target-version = "py312"
 exclude = ["scratch", "notebooks", "plotting.py", "examples"]
 line-length = 88
 indent-width = 4
