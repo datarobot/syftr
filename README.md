@@ -1,3 +1,5 @@
+<img src="syftr-logo.jpeg" alt="syftr Logo" width="300" style="border-radius: 8px;" />
+
 # syftr - Efficient Search for Pareto-optimal Flows
 __syftr__ is an agent optimizer that helps you find the best agentic workflows for your budget. You bring your own dataset, compose the search space from models and components you have access to, and syftr finds the best combination of parameters for your budget.
 
