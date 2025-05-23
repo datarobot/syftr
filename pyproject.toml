@@ -59,7 +59,7 @@ dependencies = [
     "maincontentextractor",
     "numba",
     "numpy",
-    "openinference-instrumentation-llama-index",
+    "openinference-instrumentation-llama-index==3.3.1",
     "opentelemetry-exporter-otlp",
     "opentelemetry-sdk",
     "optimum[exporters]>=1.24.0",
@@ -71,12 +71,12 @@ dependencies = [
     "pip",
     "plotly",
     "psycopg2-binary",
-    "pydantic-file-secrets>=0.4.3",
+    "pydantic-file-secrets",
     "pydantic-settings",
     "python-dotenv",
     "python-slugify",
     "rapidfuzz",
-    "ray[client,data,default,serve,tune]>=2.39.0",
+    "ray[client,data,default,serve,tune]",
     "rouge_score",
     "s3fs",
     "scikit-learn",
@@ -89,7 +89,7 @@ dependencies = [
     "types-protobuf",
     "types-pytz",
     "types-tabulate",
-    "vertexai",
+    "vertexai==1.68.0",
 ]
 [tool.hatch.version]
 source = "code"
