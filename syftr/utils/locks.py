@@ -8,7 +8,7 @@ from flock import LOCK_EX, Flock
 
 from syftr.configuration import cfg
 
-LOCKER = pals.Locker("syftr-locks", create_engine_callable=cfg.postgres.get_engine)
+LOCKER = pals.Locker("syftr-locks", create_engine_callable=cfg.database.get_engine)
 
 
 @contextmanager

@@ -67,7 +67,7 @@ import typing as T
 from pathlib import Path
 
 from optuna.storages import RDBStorage
-from pydantic import BaseModel, Field, HttpUrl, PostgresDsn, SecretStr, field_validator
+from pydantic import BaseModel, Field, HttpUrl, SecretStr, field_validator
 from pydantic_file_secrets import FileSecretsSettingsSource
 from pydantic_settings import (
     BaseSettings,
@@ -403,8 +403,8 @@ class Optuna(BaseModel):
     show_progress: bool = True
 
 
-class Postgres(BaseModel):
-    dsn: str = "sqlite:////Users/nick.volynets/workspace/syftr/example.db"
+class Database(BaseModel):
+    dsn: str = "sqlite:////{cfg.tmp_dir}/syftr.db"
     engine_kwargs: T.Dict[str, T.Any] = {
         # https://docs.sqlalchemy.org/en/20/core/pooling.html#setting-pool-recycle
         "pool_recycle": 300,
@@ -489,7 +489,7 @@ class Settings(BaseSettings):
     paths: Paths = Paths()
     plotting: Plotting = Plotting()
     instrumentation: Instrumentation = Instrumentation()
-    postgres: Postgres = Postgres()
+    database: Database = Database()
     storage: Storage = Storage()
     ray: Ray = Ray()
     study_config_file: T.Optional[Path] = None

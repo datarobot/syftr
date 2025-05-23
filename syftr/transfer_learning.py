@@ -58,7 +58,7 @@ def get_examples(study_config: StudyConfig):
     max_total = study_config.transfer_learning.max_total
     success_rate = study_config.transfer_learning.success_rate
 
-    storage = cfg.postgres.get_optuna_storage()
+    storage = cfg.database.get_optuna_storage()
     df_trials = get_completed_trials(
         study=study_names, storage=storage, success_rate=success_rate
     )

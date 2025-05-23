@@ -91,7 +91,7 @@ class Study:
         """
         try:
             study = optuna.load_study(
-                study_name=study_name, storage=cfg.postgres.get_optuna_storage()
+                study_name=study_name, storage=cfg.database.get_optuna_storage()
             )
         except KeyError:
             raise SyftrUserAPIError(f"Cannot find study {study_name} in the database.")
@@ -118,7 +118,7 @@ class Study:
         try:
             _ = optuna.load_study(
                 study_name=self.study_config.name,
-                storage=cfg.postgres.get_optuna_storage(),
+                storage=cfg.database.get_optuna_storage(),
             )
         except KeyError:
             pass
@@ -287,7 +287,7 @@ class Study:
         try:
             optuna.delete_study(
                 study_name=self.study_config.name,
-                storage=cfg.postgres.get_optuna_storage(),
+                storage=cfg.database.get_optuna_storage(),
             )
         except KeyError:
             raise SyftrUserAPIError(

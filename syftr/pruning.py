@@ -128,7 +128,7 @@ class ParetoPruner(SyftrPruner):
         self.directions = ["max", "min"]
         self.num_pareto_points = 1000
         self.success_rate = success_rate
-        self.storage = storage if storage else cfg.postgres.get_optuna_storage()
+        self.storage = storage if storage else cfg.database.get_optuna_storage()
 
     def get_pareto_points(self, trials: pd.DataFrame) -> pd.DataFrame:
         pareto_mask = paretoset(trials[["values_0", "values_1"]], sense=self.directions)
