@@ -7,7 +7,9 @@ from syftr.optuna_helper import get_completed_trials, get_pareto_df
 from syftr.studies import StudyConfig, get_subspace
 
 
-@pytest.mark.xfail(reason="depends on a database state, should fail when a database is empty.")
+@pytest.mark.xfail(
+    reason="depends on a database state, should fail when a database is empty."
+)
 def test_study_initialization():
     success_rate = 0.9
 
