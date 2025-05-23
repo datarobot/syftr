@@ -208,9 +208,7 @@ def real_sparse_retriever(
         "splitter_chunk_exp": 9,
         "splitter_chunk_overlap_frac": 0.5,
     }
-    retriever, docstore = build_rag_retriever(
-        real_dataset_study_config, params, use_cache=False
-    )
+    retriever, docstore = build_rag_retriever(real_dataset_study_config, params)
     return retriever, docstore, real_dataset_study_config
 
 
@@ -230,9 +228,7 @@ def real_dense_retriever(
         "splitter_chunk_exp": 9,
         "splitter_chunk_overlap_frac": 0.5,
     }
-    retriever, docstore = build_rag_retriever(
-        real_dataset_study_config, params, use_cache=False
-    )
+    retriever, docstore = build_rag_retriever(real_dataset_study_config, params)
     return retriever, docstore, real_dataset_study_config
 
 
@@ -251,7 +247,7 @@ def tiny_sparse_retriever(
         "splitter_chunk_exp": 9,
         "splitter_chunk_overlap_frac": 0.5,
     }
-    return build_rag_retriever(tiny_dataset_study_config, params, use_cache=False)
+    return build_rag_retriever(tiny_dataset_study_config, params)
 
 
 @pytest.fixture(scope="session")
@@ -270,7 +266,7 @@ def tiny_dense_retriever(
         "splitter_chunk_exp": 9,
         "splitter_chunk_overlap_frac": 0.5,
     }
-    return build_rag_retriever(tiny_dataset_study_config, params, use_cache=False)
+    return build_rag_retriever(tiny_dataset_study_config, params)
 
 
 @pytest.fixture(scope="session")
@@ -293,9 +289,7 @@ def real_hybrid_retriever(
         "splitter_chunk_exp": 9,
         "splitter_chunk_overlap_frac": 0.5,
     }
-    retriever, docstore = build_rag_retriever(
-        real_dataset_study_config, params, use_cache=False
-    )
+    retriever, docstore = build_rag_retriever(real_dataset_study_config, params)
     return retriever, docstore, real_dataset_study_config
 
 
@@ -379,7 +373,7 @@ def hotpot_sparse_retriever(
         "splitter_chunk_exp": 9,
         "splitter_chunk_overlap_frac": 0.5,
     }
-    return build_rag_retriever(hotpot_toy_study_config, params, use_cache=False)
+    return build_rag_retriever(hotpot_toy_study_config, params)
 
 
 @pytest.fixture(scope="session")
@@ -397,7 +391,7 @@ def hotpot_dense_retriever(
         "splitter_chunk_exp": 9,
         "splitter_chunk_overlap_frac": 0.5,
     }
-    return build_rag_retriever(hotpot_toy_study_config, params, use_cache=False)
+    return build_rag_retriever(hotpot_toy_study_config, params)
 
 
 @pytest.fixture(scope="session")
@@ -414,7 +408,7 @@ def hotpot_dense_retriever_recursive(
         "splitter_chunk_exp": 9,
         "splitter_chunk_overlap_frac": 0.5,
     }
-    return build_rag_retriever(hotpot_toy_study_config, params, use_cache=False)
+    return build_rag_retriever(hotpot_toy_study_config, params)
 
 
 @pytest.fixture(scope="session")
@@ -434,7 +428,7 @@ def hotpot_fusion_retriever(
         "splitter_chunk_exp": 9,
         "splitter_chunk_overlap_frac": 0.5,
     }
-    return build_rag_retriever(hotpot_toy_study_config, params, use_cache=False)
+    return build_rag_retriever(hotpot_toy_study_config, params)
 
 
 @pytest.fixture(scope="session")

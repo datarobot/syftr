@@ -27,7 +27,7 @@ def get_or_build_dense_index(
     transforms: T.List[TransformComponent],
     embedding_model: BaseEmbedding,
     max_chunks: int = 0,
-    use_cache: bool = True,
+    use_cache: bool = False,
 ) -> T.Tuple[VectorStoreIndex, BaseDocumentStore]:
     if use_cache:
         logger.info("Using cache. Acquiring dense index build lock for trial")
