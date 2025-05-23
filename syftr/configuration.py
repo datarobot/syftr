@@ -404,9 +404,7 @@ class Optuna(BaseModel):
 
 
 class Postgres(BaseModel):
-    dsn: PostgresDsn = PostgresDsn(
-        "postgresql://user:pass@localhost:5432/syftr?connect_timeout=60"
-    )
+    dsn: str = "sqlite:////Users/nick.volynets/workspace/syftr/example.db"
     engine_kwargs: T.Dict[str, T.Any] = {
         # https://docs.sqlalchemy.org/en/20/core/pooling.html#setting-pool-recycle
         "pool_recycle": 300,
@@ -425,20 +423,12 @@ class Postgres(BaseModel):
     }
 
     def get_engine(self) -> Engine:
-         return create_engine(self.dsn.unicode_string(), **self.engine_kwargs)
+        kwargs = {} if "sqlite" in self.dsn else self.engine_kwargs
+        return create_engine(self.dsn, **kwargs)
 
     def get_optuna_storage(self) -> RDBStorage:
-         return RDBStorage(self.dsn.unicode_string(), engine_kwargs=self.engine_kwargs)
-
-
-class SQlite(BaseModel):
-    filename: str = "/Users/nick.volynets/workspace/syftr/example.db"
-
-    def get_engine(self) -> Engine:
-        return create_engine(f"sqlite:///{self.filename}")
-
-    def get_optuna_storage(self) -> RDBStorage:
-        return RDBStorage(f"sqlite:///{self.filename}", engine_kwargs={})
+        kwargs = {} if "sqlite" in self.dsn else self.engine_kwargs
+        return RDBStorage(self.dsn, engine_kwargs=kwargs)
 
 
 class Ray(BaseModel):
