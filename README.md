@@ -40,7 +40,7 @@ You can rename this file to `config.yaml` and fill in all necessary details acco
 * If the configuration is correct, you should be able to run [`examples/1-welcome.ipynb`](examples/1-welcome.ipynb) without any problems.
 
 ### Quickstart
-First run `python syftr/scripts/system_check.py` script to validate your credentials and configuration.
+First run `make check` to validate your credentials and configuration.
 Next, try the example Jupyter notebooks located in the [`examples`](/examples) directory.
 Or directly run a __syftr__ study with user API:
 ```python
