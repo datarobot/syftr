@@ -6,10 +6,12 @@ OUTFILE := syftr.txt
 install:
 	@uv pip install -e ".[dev]"
 	@pre-commit install || true
+	@uv lock
 
 upgrade:
 	@uv pip install --upgrade -e ".[dev]"
 	@pre-commit install || true
+	@uv lock
 
 nltk:
 	python -m syftr.startup
