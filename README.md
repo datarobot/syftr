@@ -4,13 +4,6 @@ __syftr__ is an agent optimizer that helps you find the best agentic workflows f
 [Paper](https://arxiv.org) | [Blogpost](https://www.datarobot.com)
 
 ### Installation
-
-As a library:
-```
-pip install dr-syftr
-```
-
-In dev mode:
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv venv --python 3.12.7
