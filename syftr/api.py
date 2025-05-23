@@ -4,6 +4,7 @@ import logging
 import tempfile
 import typing as T
 from enum import Enum
+from functools import cached_property
 from pathlib import Path
 
 import optuna
@@ -126,8 +127,7 @@ class Study:
             job_status = SyftrStudyStatus.COMPLETED
 
         if hasattr(self, "job_id"):
-            client = submit.get_client()
-            job_details = client.get_job_info(self.job_id)
+            job_details = self.client.get_job_info(self.job_id)
             job_status = _RAY_SYFTR_STATUS_MAP[job_details.status]
         elif not job_status:
             job_status = SyftrStudyStatus.INITIALIZED
@@ -184,13 +184,21 @@ class Study:
             output.append({"metrics": flow_metrics, "params": flow_params})
         return output
 
-    def plot_pareto(self):
-        """Plots the Pareto front of a completed study."""
+    @cached_property
+    def client(self):
+        return submit.get_client()
+
+    def plot_pareto(self, save_path: str | Path | None = None):
+        """Generates and optionally displays or saves the Pareto plot."""
         from syftr.plotting.insights import load_studies, pareto_plot_and_table
 
         study_names = [self.study_config.name]
         df, _, _ = load_studies(study_names)
-        pareto_plot_and_table(df, study_names[0])
+        fig, _, _ = pareto_plot_and_table(df, study_names[0])
+
+        if save_path:
+            fig.savefig(save_path, bbox_inches="tight")
+            logger.info(f"Saved Pareto plot to {save_path}")
 
     def wait_for_completion(
         self, timeout: float | None = None, stream_logs: bool = False
@@ -202,38 +210,31 @@ class Study:
             SyftrStudyStatus.RUNNING,
         }:
             raise SyftrUserAPIError(
-                "Study %s currently is not running: %s", current_status
+                f"Study is not running. Current status: {current_status}"
             )
 
         async def _wait_for_status(flag: asyncio.Event):
-            """Periodically check job status and stop + set provided flag if status is completed."""
             while True:
-                current_status = self.status["job_status"]
-                if current_status != SyftrStudyStatus.COMPLETED:
+                if self.status["job_status"] != SyftrStudyStatus.COMPLETED:
                     await asyncio.sleep(WAIT_SECONDS)
                 else:
                     flag.set()
                     break
 
-        flag = asyncio.Event()
-        if stream_logs:
-            client = submit.get_client()
-            log_tailer = client.tail_job_logs(self.job_id)
+        async def _iter_job_logs(job_logs: T.AsyncIterable, flag: asyncio.Event):
+            async for lines in job_logs:
+                print(lines, end="")
+                if flag.is_set():
+                    return
 
-            async def _iter_job_logs(job_logs: T.AsyncIterable, flag: asyncio.Event):
-                """Async function to iter logs until flag is set."""
-                async for lines in job_logs:
-                    print(lines, end="")
-                    if flag.is_set():
-                        return
-
-        async def _wait_for_completion(
-            flog: asyncio.Event, timeout: float | None, stream_logs: bool = False
-        ):
-            """Main async function that handles waiting for status and handling timeout."""
+        async def _wait_for_completion():
+            flag = asyncio.Event()
             tasks = [asyncio.create_task(_wait_for_status(flag))]
+
             if stream_logs:
+                log_tailer = self.client.tail_job_logs(self.job_id)
                 tasks.append(asyncio.create_task(_iter_job_logs(log_tailer, flag)))
+
             await asyncio.wait(tasks, timeout=timeout)
             for t in tasks:
                 try:
@@ -242,29 +243,30 @@ class Study:
                     self.stop()
 
         try:
-            from IPython import get_ipython
-
-            shell = get_ipython().__class__.__name__  # type: ignore
-            if shell == "ZMQInteractiveShell" or shell == "TerminalInteractiveShell":
-                return _wait_for_completion(flag, timeout, stream_logs=stream_logs)
-        except:  # noqa: E722
-            asyncio.run(_wait_for_completion(flag, timeout, stream_logs=stream_logs))
+            asyncio.get_running_loop()
+            # In an interactive (async) context like Jupyter
+            return _wait_for_completion()  # caller is responsible for awaiting
+        except RuntimeError:
+            # In a terminal or sync context
+            asyncio.run(_wait_for_completion())
 
     def run(self):
-        """Run current study according to the configuration.
-
-        Submit study to a Ray cluster and record resulting job ID.
-        """
+        """Run current study."""
+        if self.status["job_status"] == SyftrStudyStatus.RUNNING:
+            raise SyftrUserAPIError(
+                f"Study {self.study_config.name} is already running. Stop it first."
+            )
         cfg.ray.local = False if self.remote else cfg.ray.local
-        client = submit.get_client()
         job_id = submit.start_study(
-            client,
+            self.client,
             self.study_path,
             self.study_config,
             delete_confirmed=True,
             agentic=False,
         )
         self.job_id = job_id
+        dashboard_url = f"{self.client._address}/#/jobs/{job_id}"
+        logger.info(f"Job started at: {dashboard_url}")
 
     def resume(self):
         """Resume the current study according to the configuration."""
@@ -275,8 +277,11 @@ class Study:
         """Stop running study."""
         if not hasattr(self, "job_id"):
             raise SyftrUserAPIError("This study is not running. Run it first.")
-        client = submit.get_client()
-        client.stop_job(self.job_id)
+        try:
+            self.client.stop_job(self.job_id)
+            logger.info(f"Job {self.job_id} stopped.")
+        except Exception as e:
+            raise SyftrUserAPIError(f"Failed to stop job {self.job_id}. Error: {e}")
 
     def delete(self):
         """Remove study records and metadata from Optuna storage."""
@@ -289,6 +294,7 @@ class Study:
                 study_name=self.study_config.name,
                 storage=cfg.postgres.get_optuna_storage(),
             )
+            logger.info(f"Study {self.study_config.name} deleted from the database.")
         except KeyError:
             raise SyftrUserAPIError(
                 f"Study {self.study_config.name} has no study config in the database."

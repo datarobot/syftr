@@ -53,9 +53,9 @@ from syftr.studies import (  # noqa
 )
 
 PREFIX = "rank"
-BENCH_NUM = 2
+BENCH_NUM = 1
 NUM_TRIALS = 0
-USE_PARETO_BASELINES = False
+USE_PARETO_BASELINES = True
 RUN_NAME = "rag-and-agents"
 REUSE_STUDY = True
 RECREATE_STUDY = True
@@ -150,10 +150,10 @@ optimization_config = OptimizationConfig(
     baselines=baselines,
     baselines_cycle_llms=False,
     shuffle_baselines=True,
-    max_concurrent_trials=20,
+    max_concurrent_trials=10,
     num_eval_samples=50,
     num_eval_batch=5,
-    rate_limiter_max_coros=30,
+    rate_limiter_max_coros=20,
     rate_limiter_period=60,
     max_trial_cost=40.0,
     cpus_per_trial=1,
