@@ -20,7 +20,7 @@ dependencies = [
     "html2text",
     "huggingface-hub",
     "ipdb",
-    "kaleido",
+    "kaleido==0.2.1",
     "kneed",
     "langchain",
     "llama-index",
