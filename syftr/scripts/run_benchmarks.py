@@ -331,7 +331,10 @@ assert datasets, "No datasets found. Please check the dataset list."
 
 def _build_study_name(dataset: SyftrQADataset, bench_num: int) -> str:
     dataset_name = dataset.name.replace("/", "-")
-    return f"{PREFIX}{bench_num}--{RUN_NAME}--{dataset_name}"
+    study_name = f"{PREFIX}{bench_num}--{RUN_NAME}--{dataset_name}"
+    if hasattr(dataset, "subset") and dataset.subset:
+        study_name += f"--{dataset.subset}"
+    return study_name
 
 
 def derived_representer(dumper, data):
