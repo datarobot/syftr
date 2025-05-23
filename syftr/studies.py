@@ -1310,7 +1310,7 @@ class OptimizationConfig(BaseModel):
         default=0.0, description="Number of GPUs allocated per trial."
     )
     embedding_device: EmbeddingDeviceType = Field(
-        default="onnx-cpu",
+        default=None,
         description="Device to use for embeddings (e.g., 'cpu', 'cuda', 'onnx-cpu'). Use `None` to auto-detect.",
     )
     use_hf_embedding_models: bool = Field(
