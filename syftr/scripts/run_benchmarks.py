@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-import json  # noqa
 import time
 from copy import deepcopy
 from pathlib import Path
@@ -53,8 +52,8 @@ from syftr.studies import (  # noqa
 )
 
 PREFIX = "rank"
-BENCH_NUM = 1
-NUM_TRIALS = 0
+BENCH_NUM = 0
+NUM_TRIALS = 5
 USE_PARETO_BASELINES = True
 RUN_NAME = "rag-and-agents"
 REUSE_STUDY = True
@@ -283,14 +282,14 @@ evaluation = Evaluation(
 datasets = [
     FinanceBenchHF(),
     # -----------------------------------------------
-    BrightHF(subset="biology"),
-    CragTask3HF(subset="music"),
-    CragTask3HF(subset="sports"),
-    DRDocsHF(),
-    HotPotQAHF(subset="train_hard"),
-    InfiniteBenchHF(),
-    MultiHopRAGHF(),
-    PhantomWikiv050(),
+    # BrightHF(subset="biology"),
+    # CragTask3HF(subset="music"),
+    # CragTask3HF(subset="sports"),
+    # DRDocsHF(),
+    # HotPotQAHF(subset="train_hard"),
+    # InfiniteBenchHF(),
+    # MultiHopRAGHF(),
+    # PhantomWikiv050(),
     # -----------------------------------------------
     # BrightHF(subset="earth_science"),
     # BrightHF(subset="economics"),
