@@ -14,6 +14,10 @@ from syftr.huggingface_helper import get_embedding_model
 from syftr.llm import get_llm
 from syftr.optuna_helper import get_study_names
 from syftr.studies import ALL_LLMS, DEFAULT_EMBEDDING_MODELS
+from syftr.studyconfig_helper import build_example_config
+
+llms = []
+embedding_models = []
 
 console = Console()
 
@@ -216,6 +220,8 @@ def check_llms():
     Reports a summary after all checks are complete.
     This function is synchronous and integrates with the existing synchronous check workflow.
     """
+    global llms  # noqa: PLW0602, PLW0603
+
     console.print("Checking configured Large Language Models (LLMs)...")
 
     console.print(
@@ -299,7 +305,9 @@ def check_llms():
 
     console.print("-" * 60)
 
-    if inaccessible_llms or warning_llms:
+    llms = [a["name"] for a in accessible_llms]
+
+    if not accessible_llms:
         return False
     return True
 
@@ -367,6 +375,8 @@ def _check_single_embedding_worker(model_name: str, results_queue: queue.Queue):
 
 
 def check_embedding_models():
+    global embedding_models  # noqa: PLW0602, PLW0603
+
     console.print("Checking configured Embedding Models...")
     console.print(
         f"Preparing to check {len(DEFAULT_EMBEDDING_MODELS)} model(s) concurrently using threads: {', '.join(DEFAULT_EMBEDDING_MODELS)}"
@@ -449,7 +459,9 @@ def check_embedding_models():
 
     console.print("-" * 60)
 
-    if inaccessible_models or warning_models:
+    embedding_models = [a["name"] for a in accessible_models]
+
+    if not accessible_models:
         return False
     return True
 
@@ -487,6 +499,18 @@ You can run this script again to check your progress after addressing the issues
     console.print("[bold green]All checks passed.[/bold green]")
     console.print("You are good to go!")
     console.print()
+
+    if llms and embedding_models:
+        _, paths = build_example_config(llms, embedding_models)
+        console.print(
+            "We generated an example configuration based on the available models."
+        )
+        console.print("You can edit it and then run it from your project root with:")
+        console.print()
+        console.print(
+            f"[yellow]python -m syftr.ray.submit --study-config {paths[0]}[/yellow]"
+        )
+        console.print()
     return True
 
 
