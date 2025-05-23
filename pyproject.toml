@@ -45,7 +45,7 @@ dependencies = [
     "llama-index-llms-huggingface",
     "llama-index-llms-ollama",
     "llama-index-llms-openai",
-    "llama-index-llms-vertex",
+    "llama-index-llms-vertex==0.4.3",
     "llama-index-llms-vllm",
     "llama-index-multi-modal-llms-openai",
     "llama-index-program-openai",
