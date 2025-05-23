@@ -67,7 +67,8 @@ def _get_dense_index_params_hash(study_config, params, cache_version: int = 3) -
 @contextmanager
 def index_cache_lock(study_config: StudyConfig, params):
     cache_key = _get_dense_index_params_hash(study_config, params)
-    with distributed_lock(cache_key):
+    host_only = not cfg.storage.s3_cache_enabled
+    with distributed_lock(cache_key, host_only=host_only):
         yield cache_key
 
 
