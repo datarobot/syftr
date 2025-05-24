@@ -3,12 +3,17 @@ __syftr__ is an agent optimizer that helps you find the best agentic workflows f
 
 [Paper](https://arxiv.org) | [Blogpost](https://www.datarobot.com)
 
-### Installation
-```
-pip install dr-syftr
-```
 
-TODO: How to setup the PostgreSQL server?
+### Installation
+Please clone the __syftr__ repo and run:
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv venv --python 3.12.7
+source .venv/bin/activate
+uv sync --extra dev
+# Install pre-commit linter and formatter [optional, recommended]
+pre-commit install
+```
 
 
 ### Required Credentials
@@ -35,7 +40,9 @@ You can rename this file to `config.yaml` and fill in all necessary details acco
 * If the configuration is correct, you should be able to run [`examples/1-welcome.ipynb`](examples/1-welcome.ipynb) without any problems.
 
 ### Quickstart
-Running syftr study with user API after the configuration:
+First run `make check` to validate your credentials and configuration.
+Next, try the example Jupyter notebooks located in the [`examples`](/examples) directory.
+Or directly run a __syftr__ study with user API:
 ```python
 from syftr import api
 
@@ -55,7 +62,6 @@ print(s.pareto_flows)
    ...
 ]
 ```
-Please, refer to [`examples`](/examples) directory for more step-by-step examples.
 
 ### Custom LLMs
 In addition to the built-in LLMs, you may enable additional OpenAI-API-compatible API endpoints in the ``config.yaml``.
@@ -104,17 +110,6 @@ local_models:
 
 Models added in the ``config.yaml`` will be automatically added to the default search space, or you can enable them manually for specific flow components.
 
-
-### Developer setup
-In order to develop syftr, please clone this repo and run:
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-uv venv --python 3.12.7
-source .venv/bin/activate
-uv sync --extra dev
-# Install pre-commit linter and formatter [optional, recommended]
-pre-commit install
-```
 
 ### Citation
 If you use this code in your research please cite the following [publicaton](https://arxiv.org).
