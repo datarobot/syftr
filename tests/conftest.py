@@ -1,7 +1,7 @@
 from syftr.huggingface_helper import load_hf_token_into_env
-from syftr.startup import prepare_worker
+from syftr.startup import download_nltk_data
 
-prepare_worker()
+download_nltk_data()
 load_hf_token_into_env()
 
 

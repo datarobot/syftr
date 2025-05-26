@@ -22,7 +22,7 @@ from syftr.studies import StudyConfig
 
 def get_study_names(
     include_regex: T.Union[str, T.List[str]],
-    exclude_regex: T.Union[str, T.List[str]] | None,
+    exclude_regex: T.Optional[T.Union[str, T.List[str]]] = None,
 ) -> T.List[str]:
     exclude_regex = exclude_regex or []
     include_regex = [include_regex] if isinstance(include_regex, str) else include_regex

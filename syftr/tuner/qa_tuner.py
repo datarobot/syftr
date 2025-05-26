@@ -41,6 +41,7 @@ from syftr.optuna_helper import (
 )
 from syftr.ray.utils import ray_init
 from syftr.retrievers.build import build_rag_retriever
+from syftr.startup import prepare_worker
 from syftr.studies import (
     RetrieverStudyConfig,
     StudyConfig,
@@ -102,6 +103,7 @@ def evaluate(
     params: T.Dict,
     study_config: StudyConfig,
 ) -> T.Tuple[float, float, T.Dict[str, T.Any], str]:
+    prepare_worker()
     flow_start = datetime.now(timezone.utc).timestamp()
     logger.info("Evaluating flow with config: %s", params)
     flow_json = json.dumps(params)

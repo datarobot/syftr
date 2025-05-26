@@ -1,4 +1,4 @@
-.PHONY: install upgrade nltk install-kernel-syftr remove-kernel-syftr mypy pre-commit-run unit-tests functional-tests e2e-tests tests rpdb-connect-local aws-login remote-pyenv remote-project ray-clean remote-new-clean-onnx ray-stop ray-start ray-restart remote-new submit- run- ray-submit- ray-run- ray-stop ray-cancel-jobs
+.PHONY: install upgrade nltk install-kernel-syftr remove-kernel-syftr mypy pre-commit-run unit-tests functional-tests e2e-tests tests rpdb-connect-local aws-login remote-pyenv remote-project ray-clean remote-new-clean-onnx ray-stop ray-start ray-restart remote-new submit- run- ray-submit- ray-run- ray-stop ray-cancel-jobs check
 
 export AWS_PROFILE=rd
 OUTFILE := syftr.txt
@@ -6,10 +6,12 @@ OUTFILE := syftr.txt
 install:
 	@uv pip install -e ".[dev]"
 	@pre-commit install || true
+	@uv lock
 
 upgrade:
 	@uv pip install --upgrade -e ".[dev]"
 	@pre-commit install || true
+	@uv lock
 
 nltk:
 	python -m syftr.startup
@@ -112,3 +114,6 @@ tunnel-dashboards:
 		-L 127.0.0.1:8265:localhost:8265 \
 		-L 127.0.0.1:16686:localhost:16686 \
 		jump
+
+check:
+	@python -m syftr.scripts.system_check
