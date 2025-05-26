@@ -32,7 +32,6 @@ __syftr__'s examples require the following credentials:
 
 To enter these credentials, copy [config.yaml.sample](config.yaml.sample) to `config.yaml` and edit the required portions.
 
-
 ## Additional Configuration Options
 
 __syftr__ uses many components including Ray for job scheduling and PostgreSQL for storing results. In this section we describe how to configure them to run __syftr__ successfully.
@@ -49,10 +48,11 @@ You can rename this file to `config.yaml` and fill in all necessary details acco
   ```
 
   Make sure you copy them from `config.yaml` before running any studies.
-* Currently there are two main ways to run syftr: by cloning the repo or by installing it as a Python package. When it is cloned as a repo, all config files are already in-place, you just need to rename / fill them in. When it is run as a library, directory `runtime_secrets' and `config.yaml` should be present in the current working directory, `~/.syftr/config.yaml`,  `/etc/syftr/config.yaml` or be specified in `SYFTR_CONFIG_FILE` environmental variable.
+* Currently there are two main ways to run syftr: by cloning the repo or by installing it as a Python package. When it is cloned as a repo, all config files are already in-place, you just need to rename / fill them in. When it is run as a library, directory `runtime_secrets' and`config.yaml` should be present in the current working directory, `~/.syftr/config.yaml`,`/etc/syftr/config.yaml` or be specified in `SYFTR_CONFIG_FILE` environmental variable.
 * When the configuration is correct, you should be able to run [`examples/1-welcome.ipynb`](examples/1-welcome.ipynb) without any problems.
 
 ## Quickstart
+
 First run `make check` to validate your credentials and configuration.
 Next, try the example Jupyter notebooks located in the [`examples`](/examples) directory.
 Or directly run a __syftr__ study with user API:
