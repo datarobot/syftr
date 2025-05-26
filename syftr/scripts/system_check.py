@@ -334,7 +334,9 @@ def _check_single_embedding_worker(model_name: str, results_queue: queue.Queue):
     try:
         with suppress_logging():  # suppress INFO and DEBUG logs
             start_time = time.time()
-            model, is_onnx = get_embedding_model(model_name)
+            model, is_onnx = get_embedding_model(
+                model_name, use_hf_endpoint_models=False
+            )
             assert model, f"Failed to get model '{model_name}'"
             assert is_onnx in [True, False], f"Unexpected is_onnx return: {is_onnx}"
 
@@ -504,6 +506,9 @@ You can run this script again to check your progress after addressing the issues
         _, paths = build_example_config(llms, embedding_models)
         console.print(
             "We generated an example configuration based on the available models."
+        )
+        console.print(
+            "By default, the example is running 10 random and 10 optimization trials."
         )
         console.print("You can edit it and then run it from your project root with:")
         console.print()
