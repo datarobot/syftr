@@ -9,6 +9,8 @@ import shutil
 import tomllib
 from typing import Any, Dict, List
 
+import yaml
+
 from syftr.configuration import cfg
 from syftr.huggingface_helper import get_hf_token
 
@@ -45,22 +47,18 @@ def _build_excludes() -> List[str]:
 def _prepare_working_dir() -> str:
     root = cfg.paths.root_dir
     dest = root / "ray_working_dir"
-    secrets_dir = cfg.model_config["secrets_dir"]
 
     if dest.exists():
         shutil.rmtree(dest)
     dest.mkdir(parents=True, exist_ok=False)
 
-    shutil.copytree(root / secrets_dir, dest / secrets_dir)  # type: ignore
+    cfg_data = cfg.model_dump()
+    with open(dest / "config.yaml", "w") as cfg_file:
+        yaml.dump(cfg_data, cfg_file)
+
+    # TODO: load current study data and dump to a yaml instead
+    # of requiring studies directory
     shutil.copytree(root / "studies", dest / "studies")
-    try:
-        shutil.copyfile(root / ".env", dest / ".env")
-    except FileNotFoundError:
-        pass
-    try:
-        shutil.copyfile(root / "config.yaml", dest / "config.yaml")
-    except FileNotFoundError:
-        pass
 
     return dest.as_posix()
 
