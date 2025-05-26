@@ -169,7 +169,11 @@ class Splitter(BaseModel, SearchSpaceMixin):
         return method_card * chunk_exp_card * overlap_card
 
 
-LOCAL_EMBEDDING_MODELS = [model.model_name for model in cfg.local_models.embedding]
+LOCAL_EMBEDDING_MODELS = (
+    [model.model_name for model in cfg.local_models.embedding]
+    if cfg.local_models.embedding
+    else []
+)
 
 DEFAULT_EMBEDDING_MODELS: T.List[str] = list(
     set(
@@ -202,7 +206,11 @@ DEFAULT_EMBEDDING_MODELS: T.List[str] = list(
 
 ALL_LLMS = list(LLMs.keys())
 
-LOCAL_LLMS = [model.model_name for model in cfg.local_models.generative]
+LOCAL_LLMS = (
+    [model.model_name for model in cfg.local_models.generative]
+    if cfg.local_models.generative
+    else []
+)
 
 DEFAULT_LLMS: T.List[str] = list(
     set(
@@ -1310,7 +1318,7 @@ class OptimizationConfig(BaseModel):
         default=0.0, description="Number of GPUs allocated per trial."
     )
     embedding_device: EmbeddingDeviceType = Field(
-        default="onnx-cpu",
+        default=None,
         description="Device to use for embeddings (e.g., 'cpu', 'cuda', 'onnx-cpu'). Use `None` to auto-detect.",
     )
     use_hf_embedding_models: bool = Field(

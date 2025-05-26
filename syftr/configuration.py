@@ -96,6 +96,7 @@ S3_TIMEOUT = 3600
 NON_OPENAI_CONTEXT_WINDOW_FACTOR = 0.85
 NDIGITS = 4
 UNSUPPORTED_PARAMS = ["splitter_chunk_size"]
+SYFTR_CONFIG_FILE_ENV_NAME = "SYFTR_CONFIG_FILE"
 
 
 class APIKeySerializationMixin:
@@ -411,8 +412,8 @@ class LocalOpenAILikeEmbeddingModel(BaseModel, APIKeySerializationMixin):
 
 
 class LocalOpenAILikeModels(BaseModel, APIKeySerializationMixin):
-    generative: T.List[LocalOpenAILikeModel] = Field(default_factory=list)
-    embedding: T.List[LocalOpenAILikeEmbeddingModel] = Field(default_factory=list)
+    generative: T.Optional[T.List[LocalOpenAILikeModel]] = Field(default=None)
+    embedding: T.Optional[T.List[LocalOpenAILikeEmbeddingModel]] = Field(default=None)
     default_api_key: SecretStr = SecretStr("NOT SET")
 
 
@@ -527,7 +528,7 @@ class Settings(BaseSettings):
             Path.home() / ".syftr/config.yaml",
             REPO_ROOT / "config.yaml",
             "config.yaml",
-            Path(os.environ.get("SYFTR_CONFIG_FILE", "")),
+            Path(os.environ.get(SYFTR_CONFIG_FILE_ENV_NAME, "")),
         ],
         secrets_dir="runtime-secrets",
         env_file=".env",

@@ -152,6 +152,10 @@ class Study:
     def knee_point(self) -> T.Dict[str, T.Any]:
         """Return the knee point of the Pareto front of a completed study."""
         df_pareto = self.pareto_df
+        if len(df_pareto) < 3:
+            raise SyftrUserAPIError(
+                "Not enough points in the Pareto front to find a knee point."
+            )
         knee = KneeLocator(
             df_pareto["values_1"],
             df_pareto["values_0"],
@@ -159,6 +163,8 @@ class Study:
             direction="increasing",
         )
         knee_point = knee.knee
+        if knee_point is None:
+            raise SyftrUserAPIError("Unable to find knee point in the Pareto front.")
         df_knee = df_pareto[df_pareto["values_1"] == knee_point]
         flow_params = json.loads(df_knee["user_attrs_flow"].values[0])
         obj1_name = self.study_config.optimization.objective_1_name
