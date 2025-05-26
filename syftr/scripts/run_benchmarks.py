@@ -51,7 +51,7 @@ from syftr.studyconfig_helper import build_configs
 
 PREFIX = "rank"
 BENCH_NUM = 3
-NUM_TRIALS = 160
+NUM_TRIALS = 150
 USE_PARETO_BASELINES = False
 RUN_NAME = "rag-and-agents"
 REUSE_STUDY = True
@@ -147,10 +147,10 @@ optimization_config = OptimizationConfig(
     baselines=baselines,
     baselines_cycle_llms=False,
     shuffle_baselines=True,
-    max_concurrent_trials=20,
+    max_concurrent_trials=150,
     num_eval_samples=50,
     num_eval_batch=5,
-    rate_limiter_max_coros=30,
+    rate_limiter_max_coros=40,
     rate_limiter_period=60,
     max_trial_cost=40.0,
     cpus_per_trial=1,
@@ -293,9 +293,9 @@ datasets = [
     # BrightHF(subset="economics"),
     # BrightHF(subset="psychology"),
     # BrightHF(subset="robotics"),
-    # BrightHF(subset="stackoverflow"),
+    BrightHF(subset="stackoverflow"),
     # BrightHF(subset="sustainable_living"),
-    BrightHF(subset="pony"),
+    # BrightHF(subset="pony"),
     # -----------------------------------------------
     # SyntheticHotPotQAHF(subset="train_hard"),
     # SyntheticFinanceBenchHF(),
