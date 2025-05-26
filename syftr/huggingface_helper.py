@@ -18,11 +18,17 @@ from syftr.studies import EmbeddingDeviceType, TimeoutConfig
 
 
 def get_hf_token():
-    return {"HF_TOKEN": str(cfg.hf_embeddings.api_key.get_secret_value())}
+    hf_token = str(cfg.hf_embeddings.api_key.get_secret_value())
+    if not hf_token or hf_token == "NOT SET":
+        return {}
+    return {"HF_TOKEN": hf_token}
 
 
 def load_hf_token_into_env():
-    os.environ.update(get_hf_token())
+    hf_token = get_hf_token()
+    # only update the environment if set
+    if hf_token:
+        os.environ.update(hf_token)
 
 
 class HuggingFaceEmbeddingWithTimeout(EmbeddingTimeoutMixin, HuggingFaceEmbedding):
@@ -35,19 +41,23 @@ class OpenAILikeEmbeddingWithTimeout(EmbeddingTimeoutMixin, OpenAILikeEmbedding)
         super().__init__(*args, **kwargs)
 
 
-LOCAL_EMBEDDING_MODELS = {
-    model.model_name: OpenAILikeEmbeddingWithTimeout(
-        model_name=model.model_name,
-        api_base=str(model.api_base),
-        api_key=model.api_key.get_secret_value()
-        if model.api_key is not None
-        else cfg.local_models.default_api_key.get_secret_value(),
-        timeout=model.timeout,
-        dimensions=model.dimensions,
-        additional_kwargs=model.additional_kwargs,
-    )
-    for model in cfg.local_models.embedding
-}
+LOCAL_EMBEDDING_MODELS = (
+    {
+        model.model_name: OpenAILikeEmbeddingWithTimeout(
+            model_name=model.model_name,
+            api_base=str(model.api_base),
+            api_key=model.api_key.get_secret_value()
+            if model.api_key is not None
+            else cfg.local_models.default_api_key.get_secret_value(),
+            timeout=model.timeout,
+            dimensions=model.dimensions,
+            additional_kwargs=model.additional_kwargs,
+        )
+        for model in cfg.local_models.embedding
+    }
+    if cfg.local_models.embedding
+    else {}
+)
 
 
 class OptimumEmbeddingWithTimeout(EmbeddingTimeoutMixin, OptimumEmbedding):
@@ -124,8 +134,8 @@ def get_embedding_model(
     name: str,
     timeout_config: TimeoutConfig = TimeoutConfig(),
     total_chunks: int = 0,
-    device: EmbeddingDeviceType = "onnx-cpu",
-    use_hf_endpoint_models: bool = True,
+    device: EmbeddingDeviceType = "cpu",
+    use_hf_endpoint_models: bool = False,
 ) -> T.Tuple[BaseEmbedding | None, bool | None]:
     """
     Returns an embedding model based on the name and device type.
