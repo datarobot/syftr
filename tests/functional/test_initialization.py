@@ -1,5 +1,6 @@
-import pytest
 from pathlib import Path
+
+import pytest
 
 from syftr.configuration import cfg
 from syftr.optimization import initialize_from_study
