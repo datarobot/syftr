@@ -41,7 +41,7 @@ evaluation:
   mode: random
   raise_on_exception: false
   use_tracing_metrics: false
-name: rank0--rag-and-agents--financebench_hf
+name: bench14--small-models--drdocs
 optimization:
   baselines: []
   cpus_per_trial: 5
