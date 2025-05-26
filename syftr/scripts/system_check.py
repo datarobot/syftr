@@ -92,6 +92,7 @@ def check_database():
             console.print(
                 "Found default configuration of SQLite. SQLite cannot be used in non-local mode. Set ray.local = True."
             )
+            return False
         console.print("Found default configuration of SQLite. Should work locally...")
         return True
     if (
