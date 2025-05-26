@@ -58,7 +58,6 @@ How to override default configuration values (in resolution priority order):
           name: mylogs
 """
 
-import json
 import logging
 import os
 import socket
