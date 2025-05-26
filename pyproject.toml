@@ -93,8 +93,8 @@ dependencies = [
     "types-tabulate",
     "vertexai==1.68.0",
 ]
+
 [tool.hatch.version]
-source = "code"
 path = "syftr/__init__.py"
 requires-python = ">=3.12.3,<3.13"
 source = "uv-dynamic-versioning"
@@ -174,7 +174,6 @@ name = "datarobot-python-dev"
 url = "https://artifactory.devinfra.drdev.io/artifactory/api/pypi/python-1711"
 publish-url = "https://artifactory.devinfra.drdev.io/artifactory/api/pypi/python-1711"
 explicit = true
-
 
 [tool.uv-dynamic-versioning]
 fallback-version = "0.0.0"
