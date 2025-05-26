@@ -153,8 +153,9 @@ from syftr.storage import PartitionMap, FinanceBenchHF
 dataset = FinanceBenchHF(partition_map=PartitionMap(
     test="sample"
 ))
-will map the test partition to the sample partition. This means that when we call `iter_examples(partition="test")`, it will actually iterate over the `sample` partition of the dataset.
+```
 
+will map the test partition to the sample partition. This means that when we call `iter_examples(partition="test")`, it will actually iterate over the `sample` partition of the dataset.
 
 ## Prepared datasets
 
@@ -179,7 +180,7 @@ datasets according to the five question topics - finance, movies, music, sports,
 partitioned each dataset into sample, train, test, and holdout partitions containing 5%, 42.5%, 42.5%, and
 10% of the QA pairs, respectively.
 The web page results for the QA pairs in each dataset and partition were used as the grounding data for RAG.
-Text from the provided HTML files was converted to Markdown format using the [“html2text”](https://github.com/aaronsw/html2text) library.
+Text from the provided HTML files was converted to Markdown format using the [html2text](https://github.com/aaronsw/html2text) library.
 The questions in CRAG typically contain challenging trivia about specific celebrities, events, or media, often
 requiring multi-hop lookup and linguistic or numerical reasoning.
 Note that our task setting differs significantly from that of the official CRAG Task 3 benchmark. We don’t
@@ -212,12 +213,12 @@ and holdout partitions of 10, 80, and 10 questions each.
 
 ### Step 1: Upload dataset to HuggingFace
 
-To add a new dataset to Syftr, we recommend uploading it to Hugging Face in the format used by Syftr. This allows for easy integration and usage with the existing Syftr infrastructure. The dataset should be structured as described above, with `groundingdata` and `qapairs` subsets, and the `qapairs` subset should be further divided into `train`, `test`, `sample`, and `holdout` partitions.
+To add a new dataset to Syftr, we recommend uploading it to Hugging Face in the format used by syftr. This allows for easy integration and usage with the existing Syftr infrastructure. The dataset should be structured as described above, with `groundingdata` and `qapairs` subsets, and the `qapairs` subset should be further divided into `train`, `test`, `sample`, and `holdout` partitions.
 
 This is not strictly necessary, however. Syftr can work with any dataset format as long as the `SyftrQADataset` class is implemented correctly to load the data.
 
 ### Step 2: Write syftr dataloader
 
-Adding a dataset is as simple as sub-classing the `SyftrQADataset` class and implementing the required methods. While we recommend uploading your processed dataset to Hugging Face using the convention adopted by the Syftr team, that is not necessary. See the [`InfiniteBench` class](../../syftr/storage.py) for using a Hugging Face dataset which uses another schema for the data or the `SyftrQADataset` class itself for using LlamaIndex's `SimpleDirectoryReader` for loading data from a local directory.
+Adding a dataset is as simple as sub-classing the `SyftrQADataset` class and implementing the required methods. While we recommend uploading your processed dataset to Hugging Face using the convention adopted by the syftr team, that is not necessary. See the [`InfiniteBench` class](../syftr/storage.py) for using a Hugging Face dataset which uses another schema for the data or the `SyftrQADataset` class itself for using LlamaIndex's `SimpleDirectoryReader` for loading data from a local directory.
 
 Please create a new issue on Github if you would like to contribute a new dataset to the syftr project or for assistance wrapping your dataset in a `SyftrQADataset` class. We will be happy to assist you in getting your dataset ready for use with syftr.
