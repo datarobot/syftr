@@ -83,7 +83,7 @@ def build_configs(
 def build_example_config(
     llms: T.List[str],
     embedding_models: T.List[str],
-    num_trials: int | None = 50,
+    num_trials: int | None = 10,
     embedding_max_time: int | None = 3600 * 8,
     datasets: T.List[SyftrQADataset] | None = None,
     optimization_config: OptimizationConfig | None = None,
@@ -108,9 +108,9 @@ def build_example_config(
         cpus_per_trial=1,
         seeder_timeout=3600 * 1,  # None: wait until finished, 0: don't wait
         num_random_trials=10,
-        use_individual_baselines=True,
-        use_agent_baselines=True,
-        use_variations_of_baselines=True,
+        use_individual_baselines=False,
+        use_agent_baselines=False,
+        use_variations_of_baselines=False,
         use_pareto_baselines=False,
         use_pareto_pruner=True,
         use_cost_pruner=True,

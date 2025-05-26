@@ -396,8 +396,8 @@ class LocalOpenAILikeEmbeddingModel(BaseModel):
 
 
 class LocalOpenAILikeModels(BaseModel):
-    generative: T.List[LocalOpenAILikeModel] = Field(default_factory=list)
-    embedding: T.List[LocalOpenAILikeEmbeddingModel] = Field(default_factory=list)
+    generative: T.Optional[T.List[LocalOpenAILikeModel]] = Field(default=None)
+    embedding: T.Optional[T.List[LocalOpenAILikeEmbeddingModel]] = Field(default=None)
     default_api_key: SecretStr = SecretStr("NOT SET")
 
 

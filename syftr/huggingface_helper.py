@@ -41,19 +41,23 @@ class OpenAILikeEmbeddingWithTimeout(EmbeddingTimeoutMixin, OpenAILikeEmbedding)
         super().__init__(*args, **kwargs)
 
 
-LOCAL_EMBEDDING_MODELS = {
-    model.model_name: OpenAILikeEmbeddingWithTimeout(
-        model_name=model.model_name,
-        api_base=str(model.api_base),
-        api_key=model.api_key.get_secret_value()
-        if model.api_key is not None
-        else cfg.local_models.default_api_key.get_secret_value(),
-        timeout=model.timeout,
-        dimensions=model.dimensions,
-        additional_kwargs=model.additional_kwargs,
-    )
-    for model in cfg.local_models.embedding
-}
+LOCAL_EMBEDDING_MODELS = (
+    {
+        model.model_name: OpenAILikeEmbeddingWithTimeout(
+            model_name=model.model_name,
+            api_base=str(model.api_base),
+            api_key=model.api_key.get_secret_value()
+            if model.api_key is not None
+            else cfg.local_models.default_api_key.get_secret_value(),
+            timeout=model.timeout,
+            dimensions=model.dimensions,
+            additional_kwargs=model.additional_kwargs,
+        )
+        for model in cfg.local_models.embedding
+    }
+    if cfg.local_models.embedding
+    else {}
+)
 
 
 class OptimumEmbeddingWithTimeout(EmbeddingTimeoutMixin, OptimumEmbedding):
@@ -130,8 +134,8 @@ def get_embedding_model(
     name: str,
     timeout_config: TimeoutConfig = TimeoutConfig(),
     total_chunks: int = 0,
-    device: EmbeddingDeviceType = "onnx-cpu",
-    use_hf_endpoint_models: bool = True,
+    device: EmbeddingDeviceType = "cpu",
+    use_hf_endpoint_models: bool = False,
 ) -> T.Tuple[BaseEmbedding | None, bool | None]:
     """
     Returns an embedding model based on the name and device type.
