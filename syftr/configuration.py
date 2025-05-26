@@ -404,7 +404,7 @@ class Optuna(BaseModel):
 
 
 class Database(BaseModel):
-    dsn: str = "sqlite:////{cfg.tmp_dir}/syftr.db"
+    dsn: str = "sqlite:////{cfg.tmp_dir}/syftr.db"  # Provide default SQLite path when not specified.
     engine_kwargs: T.Dict[str, T.Any] = {
         # https://docs.sqlalchemy.org/en/20/core/pooling.html#setting-pool-recycle
         "pool_recycle": 300,
