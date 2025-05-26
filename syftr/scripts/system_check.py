@@ -528,7 +528,9 @@ You can run this script again to check your progress after addressing the issues
         console.print(
             "By default, the example is running 10 random and 10 optimization trials."
         )
-        console.print("You can edit it and then run it from your project root with:")
+        console.print(
+            "You can edit it and then run it locally from your project root with:"
+        )
         console.print()
         console.print(
             f"[yellow]python -m syftr.ray.submit --study-config {paths[0]}[/yellow]"
