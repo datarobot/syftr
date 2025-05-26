@@ -66,7 +66,7 @@ import typing as T
 from pathlib import Path
 
 from optuna.storages import RDBStorage
-from pydantic import BaseModel, Field, HttpUrl, PostgresDsn, SecretStr, field_validator
+from pydantic import BaseModel, Field, HttpUrl, SecretStr, field_validator
 from pydantic_file_secrets import FileSecretsSettingsSource
 from pydantic_settings import (
     BaseSettings,
@@ -114,6 +114,7 @@ class Paths(BaseModel):
     sota_dir: Annotated[Path, Field(validate_default=True)] = data_dir / "sota"
     lock_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "syftr-locks"
     nltk_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "nltk-data"
+    sqlite_dir: Annotated[Path, Field(validate_default=True)] = REPO_ROOT
 
     @property
     def templates_without_context(self) -> Path:
@@ -136,6 +137,7 @@ class Paths(BaseModel):
         "index_cache",
         "lock_dir",
         "nltk_dir",
+        "sqlite_dir",
         mode="after",
     )
     @classmethod
@@ -408,11 +410,11 @@ class Optuna(BaseModel):
     show_progress: bool = True
 
 
-class Postgres(BaseModel):
-    dsn: PostgresDsn = PostgresDsn(
-        "postgresql://user:pass@localhost:5432/syftr?connect_timeout=60"
-    )
-    engine_kwargs: T.Dict[str, T.Any] = {
+class Database(BaseModel):
+    dsn: str = "sqlite:////{}/syftr.db".format(
+        Paths().sqlite_dir
+    )  # Provide default SQLite path when not specified.
+    postgres_engine_kwargs: T.Dict[str, T.Any] = {
         # https://docs.sqlalchemy.org/en/20/core/pooling.html#setting-pool-recycle
         "pool_recycle": 300,
         "pool_pre_ping": True,  # Important for PostgreSQL
@@ -430,10 +432,12 @@ class Postgres(BaseModel):
     }
 
     def get_engine(self) -> Engine:
-        return create_engine(self.dsn.unicode_string(), **self.engine_kwargs)
+        kwargs = {} if "sqlite" in self.dsn else self.postgres_engine_kwargs
+        return create_engine(self.dsn, **kwargs)
 
     def get_optuna_storage(self) -> RDBStorage:
-        return RDBStorage(self.dsn.unicode_string(), engine_kwargs=self.engine_kwargs)
+        kwargs = {} if "sqlite" in self.dsn else self.postgres_engine_kwargs
+        return RDBStorage(self.dsn, engine_kwargs=kwargs)
 
 
 class Ray(BaseModel):
@@ -494,7 +498,7 @@ class Settings(BaseSettings):
     paths: Paths = Paths()
     plotting: Plotting = Plotting()
     instrumentation: Instrumentation = Instrumentation()
-    postgres: Postgres = Postgres()
+    database: Database = Database()
     storage: Storage = Storage()
     ray: Ray = Ray()
     study_config_file: T.Optional[Path] = None

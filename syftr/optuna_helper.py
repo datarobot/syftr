@@ -28,7 +28,7 @@ def get_study_names(
     include_regex = [include_regex] if isinstance(include_regex, str) else include_regex
     exclude_regex = [exclude_regex] if isinstance(exclude_regex, str) else exclude_regex
     all_study_names = optuna.get_all_study_names(
-        storage=cfg.postgres.get_optuna_storage()
+        storage=cfg.database.get_optuna_storage()
     )
     assert all_study_names, "No studies found"
     return sorted(
@@ -56,7 +56,7 @@ def trial_exists(
     params: T.Dict[str, T.Any],
     storage: str | BaseStorage | None = None,
 ):
-    storage = storage or cfg.postgres.get_optuna_storage()
+    storage = storage or cfg.database.get_optuna_storage()
     logger.debug("Loading '%s' from storage: %s", study_name, storage)
     study = optuna.load_study(study_name=study_name, storage=storage)
     for trial in study.get_trials():
@@ -70,7 +70,7 @@ def recreate_with_completed_trials(
     storage: str | BaseStorage | None = None,
 ):
     study_name = study_config.name
-    storage = storage or cfg.postgres.get_optuna_storage()
+    storage = storage or cfg.database.get_optuna_storage()
     try:
         study: optuna.Study = optuna.load_study(study_name=study_name, storage=storage)
     except KeyError:
@@ -141,7 +141,7 @@ def get_completed_trials(
     drop_inf_latency: bool | None = True,
 ) -> pd.DataFrame:
     study_list = study if isinstance(study, list) else [study]
-    storage = storage or cfg.postgres.get_optuna_storage()
+    storage = storage or cfg.database.get_optuna_storage()
     tmp: T.List[optuna.Study] = []
     for s in study_list:
         if isinstance(s, str):
@@ -206,7 +206,7 @@ def get_pareto_df(
         study_config.name if isinstance(study_config, StudyConfig) else study_config
     )
     study: optuna.Study = optuna.load_study(
-        study_name=study_name, storage=cfg.postgres.get_optuna_storage()
+        study_name=study_name, storage=cfg.database.get_optuna_storage()
     )
     df_trials: pd.DataFrame = get_completed_trials(study, success_rate=success_rate)
     pareto_mask = get_pareto_mask(df_trials)
@@ -250,7 +250,7 @@ def get_knee_flow(
 
 def get_failed_trials(study_names: str | T.List[str]) -> pd.DataFrame:
     study_names = study_names if isinstance(study_names, list) else [study_names]
-    storage = cfg.postgres.get_optuna_storage()
+    storage = cfg.database.get_optuna_storage()
     dfs: T.List[pd.DataFrame] = []
     for study_name in study_names:
         study: optuna.Study = optuna.load_study(study_name=study_name, storage=storage)

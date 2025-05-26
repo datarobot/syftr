@@ -87,15 +87,23 @@ The README.md file contains an example config.yaml file.
 def check_database():
     db_connections = []
     # Ensure dsn is not None and has hosts method
+    if cfg.database and "sqlite" in cfg.database.dsn:
+        if not cfg.ray.local:
+            console.print(
+                "Found default configuration of SQLite. SQLite cannot be used in non-local mode. Set ray.local = True."
+            )
+            return False
+        console.print("Found default configuration of SQLite. Should work locally...")
+        return True
     if (
-        cfg.postgres
-        and cfg.postgres.dsn
-        and hasattr(cfg.postgres.dsn, "hosts")
-        and callable(cfg.postgres.dsn.hosts)
+        cfg.database
+        and cfg.database.dsn
+        and hasattr(cfg.database.dsn, "hosts")
+        and callable(cfg.database.dsn.hosts)
     ):
         try:
             # hosts() might return a list of dicts or a list of pydantic models
-            parsed_hosts = cfg.postgres.dsn.hosts()
+            parsed_hosts = cfg.database.dsn.hosts()
             if parsed_hosts:
                 for host_info in parsed_hosts:
                     if isinstance(host_info, dict):
@@ -117,14 +125,14 @@ def check_database():
                     else:
                         db_connections.append("Invalid host entry")
             else:  # If hosts() returns empty or None
-                db_connections.append(f"No host information in DSN: {cfg.postgres.dsn}")
+                db_connections.append(f"No host information in DSN: {cfg.database.dsn}")
 
         except Exception as e:
             db_connections.append(
-                f"Could not parse DSN: {cfg.postgres.dsn}. Error: {e}"
+                f"Could not parse DSN: {cfg.database.dsn}. Error: {e}"
             )
-    elif cfg.postgres and cfg.postgres.dsn:
-        db_connections.append(f"Attempting direct DSN: {cfg.postgres.dsn}")
+    elif cfg.database and cfg.database.dsn:
+        db_connections.append(f"Attempting direct DSN: {cfg.database.dsn}")
     else:
         db_connections.append("Postgres DSN not configured.")
 

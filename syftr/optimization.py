@@ -33,7 +33,7 @@ def tune_objective(
 ) -> T.Dict[str, float] | None:
     study = optuna.load_study(
         study_name=study_config.name,
-        storage=cfg.postgres.get_optuna_storage(),
+        storage=cfg.database.get_optuna_storage(),
     )
     trial = study.ask()
     if block_name:
@@ -74,7 +74,7 @@ def save_study_config_to_db(study: optuna.Study, study_config: StudyConfig):
 
 def get_study(study_config: StudyConfig) -> optuna.Study:
     study_name = study_config.name
-    storage = cfg.postgres.get_optuna_storage()
+    storage = cfg.database.get_optuna_storage()
     if study_config.reuse_study:
         logger.info(
             "We are going to reuse study '%s' if it exists or create a new one otherwise",
@@ -135,7 +135,7 @@ def initialize_from_study(
         "Cannot use both success_rate and src_df"
     )
 
-    storage = storage or cfg.postgres.get_optuna_storage()
+    storage = storage or cfg.database.get_optuna_storage()
 
     src_name = src_config.name
     dst_name = dst_config.name

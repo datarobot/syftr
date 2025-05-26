@@ -18,7 +18,7 @@ pre-commit install
 __syftr__'s examples require the following credentials:
 * Azure OpenAI API key
 * Azure OpenAI endpoint URL (`api_url`)
-* PostgreSQL server dsn
+* PostgreSQL server dsn (if no dsn is provided, will use local SQLite)
 * Huggingface API key
 
 To enter these credentials, copy [config.yaml.sample](config.yaml.sample) to `config.yaml` and edit the required portions.
@@ -38,6 +38,7 @@ You can rename this file to `config.yaml` and fill in all necessary details acco
   Make sure you copy them from `config.yaml` before running any studies.
 * Currently there are two main ways to run syftr: by cloning the repo or by installing it as a Python package. When it is cloned as a repo, all config files are already in-place, you just need to rename / fill them in. When it is run as a library, directory `runtime_secrets' and `config.yaml` should be present in the current working directory, `~/.syftr/config.yaml`,  `/etc/syftr/config.yaml` or be specified in `SYFTR_CONFIG_FILE` environmental variable.
 * When the configuration is correct, you should be able to run [`examples/1-welcome.ipynb`](examples/1-welcome.ipynb) without any problems.
+* syftr allows using SQLite for running examples locally. If no PostgreSQL address is provided, local SQLite database will be used. Make sure you run it in local mode with a single Ray worker only to avoid any issues.
 
 ### Quickstart
 First run `make check` to validate your credentials and configuration.
