@@ -91,8 +91,13 @@ def build_example_config(
     datasets: T.List[SyftrQADataset] | None = None,
     optimization_config: OptimizationConfig | None = None,
 ):
-    assert isinstance(embedding_max_time, int), "embedding_max_time must be an int"
     assert isinstance(num_trials, int), "num_trials must be an int"
+    assert isinstance(max_concurrent_trials, int), (
+        "max_concurrent_trials must be an int"
+    )
+    assert isinstance(num_eval_samples, int), "num_eval_samples must be an int"
+    assert isinstance(num_random_trials, int), "num_random_trials must be an int"
+    assert isinstance(embedding_max_time, int), "embedding_max_time must be an int"
 
     datasets = datasets or [DRDocsHF()]
 
