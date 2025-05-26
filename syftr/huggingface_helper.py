@@ -131,7 +131,7 @@ def get_embedding_model(
     timeout_config: TimeoutConfig = TimeoutConfig(),
     total_chunks: int = 0,
     device: EmbeddingDeviceType = "onnx-cpu",
-    use_hf_endpoint_models: bool = True,
+    use_hf_endpoint_models: bool = False,
 ) -> T.Tuple[BaseEmbedding | None, bool | None]:
     """
     Returns an embedding model based on the name and device type.
