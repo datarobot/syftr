@@ -97,6 +97,7 @@ dependencies = [
 source = "code"
 path = "syftr/__init__.py"
 requires-python = ">=3.12.3,<3.13"
+source = "uv-dynamic-versioning"
 
 [project.optional-dependencies]
 dev = [
@@ -174,8 +175,6 @@ url = "https://artifactory.devinfra.drdev.io/artifactory/api/pypi/python-1711"
 publish-url = "https://artifactory.devinfra.drdev.io/artifactory/api/pypi/python-1711"
 explicit = true
 
-[tool.hatch.version]
-source = "uv-dynamic-versioning"
 
 [tool.uv-dynamic-versioning]
 fallback-version = "0.0.0"
