@@ -4,7 +4,6 @@ __syftr__ is an agent optimizer that helps you find the best agentic workflows f
 [Paper](https://arxiv.org) | [Blogpost](https://www.datarobot.com)
 
 ### Installation
-=======
 Please clone the __syftr__ repo and run:
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
