@@ -321,7 +321,4 @@ if __name__ == "__main__":
 
     study = Study.from_file(study_config_file)
     study.run()
-    logger.info(
-        "Started study `%s` with job_id `%s`", study.study_config.name, study.job_id
-    )
-    submit.tail(study.client, study.job_id)
+    study.wait_for_completion(stream_logs=True)
