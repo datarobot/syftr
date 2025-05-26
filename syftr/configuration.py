@@ -114,6 +114,7 @@ class Paths(BaseModel):
     sota_dir: Annotated[Path, Field(validate_default=True)] = data_dir / "sota"
     lock_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "syftr-locks"
     nltk_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "nltk-data"
+    sqlite_dir: Annotated[Path, Field(validate_default=True)] = data_dir / "sqlite"
 
     @property
     def templates_without_context(self) -> Path:
@@ -136,6 +137,7 @@ class Paths(BaseModel):
         "index_cache",
         "lock_dir",
         "nltk_dir",
+        "sqlite_dir",
         mode="after",
     )
     @classmethod
@@ -409,9 +411,8 @@ class Optuna(BaseModel):
 
 
 class Database(BaseModel):
-    # TODO: Try to respect used-configured tmp_dir here.
     dsn: str = "sqlite:////{}/syftr.db".format(
-        Path(os.getcwd()).absolute()
+        Paths().sqlite_dir
     )  # Provide default SQLite path when not specified.
     postgres_engine_kwargs: T.Dict[str, T.Any] = {
         # https://docs.sqlalchemy.org/en/20/core/pooling.html#setting-pool-recycle
