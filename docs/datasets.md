@@ -144,7 +144,9 @@ Similarly `iter_examples()` loads the question answer pairs using `_load_qa_data
 
 ### Using partition maps
 
-It is also possible to use a partition map to map the partition names to different names. This can be useful if a dataset has different partition names than the convention used by `SyftrQADataset` or if we want to use a different partitioning scheme. For example:
+The dataset partitions `test` and `train` have specific meanings within `syftr` - `train` can be used during the build phase, such as for building few-shot example indices, while `test` must be used during evaluation.
+
+`PartitionMap` allows us to change which actual partition is used when `syftr` requests to iterate over the `train` or `test` partition. For example, setting `PartitionMap(test="sample")` will ensure that the `sample` set of QA pairs and grounding data is used at evaluation time:
 
 ```python
 
@@ -153,9 +155,6 @@ from syftr.storage import PartitionMap, FinanceBenchHF
 dataset = FinanceBenchHF(partition_map=PartitionMap(
     test="sample"
 ))
-```
-
-will map the test partition to the sample partition. This means that when we call `iter_examples(partition="test")`, it will actually iterate over the `sample` partition of the dataset.
 
 ## Prepared datasets
 
