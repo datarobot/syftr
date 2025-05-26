@@ -50,8 +50,8 @@ from syftr.studies import (  # noqa
 from syftr.studyconfig_helper import build_configs
 
 PREFIX = "rank"
-BENCH_NUM = 0
-NUM_TRIALS = 60
+BENCH_NUM = 3
+NUM_TRIALS = 160
 USE_PARETO_BASELINES = False
 RUN_NAME = "rag-and-agents"
 REUSE_STUDY = True
@@ -156,7 +156,7 @@ optimization_config = OptimizationConfig(
     cpus_per_trial=1,
     seeder_timeout=3600 * 10,  # None: wait until finished, 0: don't wait
     # -----------------------------------------------
-    num_random_trials=50,
+    num_random_trials=0,
     # -----------------------------------------------
     use_individual_baselines=True,
     use_agent_baselines=True,
@@ -278,7 +278,7 @@ evaluation = Evaluation(
 )
 
 datasets = [
-    FinanceBenchHF(),
+    # FinanceBenchHF(),
     # -----------------------------------------------
     # BrightHF(subset="biology"),
     # CragTask3HF(subset="music"),
@@ -295,7 +295,7 @@ datasets = [
     # BrightHF(subset="robotics"),
     # BrightHF(subset="stackoverflow"),
     # BrightHF(subset="sustainable_living"),
-    # BrightHF(subset="pony"),
+    BrightHF(subset="pony"),
     # -----------------------------------------------
     # SyntheticHotPotQAHF(subset="train_hard"),
     # SyntheticFinanceBenchHF(),
