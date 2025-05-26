@@ -30,7 +30,7 @@ hf_embeddings:
 
 # Use any relational DB provider supported by Optuna storage (required).
 # If no dsn is provided, will use SQLite by default which allows running smaller
-# studies locally
+# examples locally.
 database:
   dsn: "postgresql://user:pass@postgresserver:5432/syftr"
   # Optionally tune conection args.

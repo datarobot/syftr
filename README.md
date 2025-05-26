@@ -25,7 +25,7 @@ To enter these credentials, copy [config.yaml.sample](config.yaml.sample) to `co
 
 
 ### Additional Configuration Options
-__syftr__ uses many components including Ray for job scheduling and PostgreSQL / SQLite for storing results. In this section we describe how to configure them to run __syftr__ successfully.
+__syftr__ uses many components including Ray for job scheduling and PostgreSQL for storing results. In this section we describe how to configure them to run __syftr__ successfully.
 * The main config file of syftr is `config.yaml`. You can specify paths, logging, database and Ray parameters and many others. For detailed instructions and examples, please refer to [config.yaml.sample](config.yaml.sample).
 You can rename this file to `config.yaml` and fill in all necessary details according to your infrastructure.
 * You can also configure syftr with environment variables: `export SYFTR_PATHS__ROOT_DIR=/foo/bar`
@@ -38,7 +38,7 @@ You can rename this file to `config.yaml` and fill in all necessary details acco
   Make sure you copy them from `config.yaml` before running any studies.
 * Currently there are two main ways to run syftr: by cloning the repo or by installing it as a Python package. When it is cloned as a repo, all config files are already in-place, you just need to rename / fill them in. When it is run as a library, directory `runtime_secrets' and `config.yaml` should be present in the current working directory, `~/.syftr/config.yaml`,  `/etc/syftr/config.yaml` or be specified in `SYFTR_CONFIG_FILE` environmental variable.
 * When the configuration is correct, you should be able to run [`examples/1-welcome.ipynb`](examples/1-welcome.ipynb) without any problems.
-* syftr allows using SQLite for running smaller studies locally. If no PostgreSQL address is provided, local SQLite database will be used. Make sure you run it in local mode only to avoid any issues.
+* syftr allows using SQLite for running examples locally. If no PostgreSQL address is provided, local SQLite database will be used. Make sure you run it in local mode with a single Ray worker only to avoid any issues.
 
 ### Quickstart
 First run `make check` to validate your credentials and configuration.
