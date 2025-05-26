@@ -4,6 +4,7 @@ import threading
 from contextlib import contextmanager
 from pathlib import Path
 
+import ray
 from rich.console import Console
 from rich.text import Text
 from sqlalchemy.exc import OperationalError
@@ -468,12 +469,29 @@ def check_embedding_models():
     return True
 
 
+def check_ray():
+    if not ray.is_initialized():
+        console.print("[bold red]Ray is not initialized.[/bold red]")
+        console.print("If you want to use a local ray instance, you can run:")
+        console.print()
+        console.print(
+            "[yellow]ray start --head --port=6379 --dashboard-port=8265 --include-dashboard=True[/yellow]"
+        )
+        console.print()
+        return False
+    else:
+        console.print("Ray is already initialized.")
+        console.print(ray.status())
+        return True
+
+
 CHECKS = [
     print_into,
     check_config,
     check_database,
     check_llms,
     check_embedding_models,
+    check_ray,
 ]
 
 
