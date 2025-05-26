@@ -409,8 +409,8 @@ class Optuna(BaseModel):
 
 
 class Database(BaseModel):
-    dsn: str = "sqlite:////{cfg.tmp_dir}/syftr.db"  # Provide default SQLite path when not specified.
-    engine_kwargs: T.Dict[str, T.Any] = {
+    dsn: str = "sqlite:////{cfg.paths.tmp_dir}/syftr.db"  # Provide default SQLite path when not specified.
+    postgres_engine_kwargs: T.Dict[str, T.Any] = {
         # https://docs.sqlalchemy.org/en/20/core/pooling.html#setting-pool-recycle
         "pool_recycle": 300,
         "pool_pre_ping": True,  # Important for PostgreSQL
@@ -428,11 +428,11 @@ class Database(BaseModel):
     }
 
     def get_engine(self) -> Engine:
-        kwargs = {} if "sqlite" in self.dsn else self.engine_kwargs
+        kwargs = {} if "sqlite" in self.dsn else self.postgres_engine_kwargs
         return create_engine(self.dsn, **kwargs)
 
     def get_optuna_storage(self) -> RDBStorage:
-        kwargs = {} if "sqlite" in self.dsn else self.engine_kwargs
+        kwargs = {} if "sqlite" in self.dsn else self.postgres_engine_kwargs
         return RDBStorage(self.dsn, engine_kwargs=kwargs)
 
 
