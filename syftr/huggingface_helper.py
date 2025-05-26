@@ -18,11 +18,17 @@ from syftr.studies import EmbeddingDeviceType, TimeoutConfig
 
 
 def get_hf_token():
-    return {"HF_TOKEN": str(cfg.hf_embeddings.api_key.get_secret_value())}
+    hf_token = str(cfg.hf_embeddings.api_key.get_secret_value())
+    if not hf_token or hf_token == "NOT SET":
+        return {}
+    return {"HF_TOKEN": hf_token}
 
 
 def load_hf_token_into_env():
-    os.environ.update(get_hf_token())
+    hf_token = get_hf_token()
+    # only update the environment if set
+    if hf_token:
+        os.environ.update(hf_token)
 
 
 class HuggingFaceEmbeddingWithTimeout(EmbeddingTimeoutMixin, HuggingFaceEmbedding):

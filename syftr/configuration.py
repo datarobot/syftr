@@ -58,7 +58,6 @@ How to override default configuration values (in resolution priority order):
           name: mylogs
 """
 
-import getpass
 import logging
 import os
 import socket
@@ -88,6 +87,7 @@ S3_TIMEOUT = 3600
 NON_OPENAI_CONTEXT_WINDOW_FACTOR = 0.85
 NDIGITS = 4
 UNSUPPORTED_PARAMS = ["splitter_chunk_size"]
+SYFTR_CONFIG_FILE_ENV_NAME = "SYFTR_CONFIG_FILE"
 
 """
 Namespaced configuration classes.
@@ -105,7 +105,7 @@ class Paths(BaseModel):
     results_dir: Annotated[Path, Field(validate_default=True)] = REPO_ROOT / "results"
     studies_dir: Annotated[Path, Field(validate_default=True)] = REPO_ROOT / "studies"
     test_studies_dir: Path = REPO_ROOT / "tests/studies"
-    tmp_dir: Path = Path(tempfile.gettempdir()) / getpass.getuser()
+    tmp_dir: Path = Path(tempfile.gettempdir()) / "syftr"
     huggingface_cache: Annotated[Path, Field(validate_default=True)] = (
         tmp_dir / "huggingface"
     )
@@ -135,11 +135,16 @@ class Paths(BaseModel):
         "onnx_dir",
         "index_cache",
         "lock_dir",
+        "nltk_dir",
         mode="after",
     )
     @classmethod
     def path_exists(cls, path: Path) -> Path:
         path.mkdir(parents=True, exist_ok=True)
+        try:
+            path.chmod(0o775)
+        except PermissionError:
+            logging.debug(f"PermissionError: Unable to change permissions for {path}.")
         return path
 
 
@@ -503,7 +508,7 @@ class Settings(BaseSettings):
             Path.home() / ".syftr/config.yaml",
             REPO_ROOT / "config.yaml",
             "config.yaml",
-            Path(os.environ.get("SYFTR_CONFIG_FILE", "")),
+            Path(os.environ.get(SYFTR_CONFIG_FILE_ENV_NAME, "")),
         ],
         secrets_dir="runtime-secrets",
         env_file=".env",

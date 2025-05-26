@@ -1,12 +1,8 @@
 import argparse
 import asyncio
-import json  # noqa
 import time
-from copy import deepcopy
-from pathlib import Path
-from typing import AsyncIterable, List, Literal, Tuple
+import typing as T
 
-import yaml
 from ray.job_submission import JobStatus
 
 from syftr.configuration import cfg
@@ -51,15 +47,16 @@ from syftr.studies import (  # noqa
     TopK,
     TransferLearningConfig,
 )
+from syftr.studyconfig_helper import build_configs
 
 PREFIX = "rank"
-BENCH_NUM = 2
-NUM_TRIALS = 0
+BENCH_NUM = 0
+NUM_TRIALS = 60
 USE_PARETO_BASELINES = False
 RUN_NAME = "rag-and-agents"
 REUSE_STUDY = True
 RECREATE_STUDY = True
-EVAL_MODE: Literal["single", "random", "consensus"] = "random"
+EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 
@@ -157,9 +154,9 @@ optimization_config = OptimizationConfig(
     rate_limiter_period=60,
     max_trial_cost=40.0,
     cpus_per_trial=1,
-    seeder_timeout=3600 * 2,  # None: wait until finished, 0: don't wait
+    seeder_timeout=3600 * 10,  # None: wait until finished, 0: don't wait
     # -----------------------------------------------
-    num_random_trials=0,
+    num_random_trials=50,
     # -----------------------------------------------
     use_individual_baselines=True,
     use_agent_baselines=True,
@@ -188,7 +185,7 @@ optimization_config = OptimizationConfig(
 #     embedding_model="BAAI/bge-large-en-v1.5",
 # )
 
-llms: List[str] = LOCAL_LLMS
+llms: T.List[str] = LOCAL_LLMS
 
 embedding_models = [
     "BAAI/bge-small-en-v1.5",
@@ -283,14 +280,14 @@ evaluation = Evaluation(
 datasets = [
     FinanceBenchHF(),
     # -----------------------------------------------
-    BrightHF(subset="biology"),
-    CragTask3HF(subset="music"),
-    CragTask3HF(subset="sports"),
-    DRDocsHF(),
-    HotPotQAHF(subset="train_hard"),
-    InfiniteBenchHF(),
-    MultiHopRAGHF(),
-    PhantomWikiv050(),
+    # BrightHF(subset="biology"),
+    # CragTask3HF(subset="music"),
+    # CragTask3HF(subset="sports"),
+    # DRDocsHF(),
+    # HotPotQAHF(subset="train_hard"),
+    # InfiniteBenchHF(),
+    # MultiHopRAGHF(),
+    # PhantomWikiv050(),
     # -----------------------------------------------
     # BrightHF(subset="earth_science"),
     # BrightHF(subset="economics"),
@@ -329,52 +326,16 @@ datasets = [
 assert datasets, "No datasets found. Please check the dataset list."
 
 
-def _build_study_name(dataset: SyftrQADataset, bench_num: int) -> str:
-    dataset_name = dataset.name.replace("/", "-")
-    return f"{PREFIX}{bench_num}--{RUN_NAME}--{dataset_name}"
-
-
 def derived_representer(dumper, data):
     return dumper.represent_dict({"description": data.description})
 
 
-def _build_configs(bench_num: int) -> Tuple[List[StudyConfig], List[Path]]:
-    configs = []
-    for dataset in datasets:
-        _search_space = deepcopy(search_space)
-        configs.append(
-            StudyConfig(
-                name=_build_study_name(dataset, bench_num),
-                dataset=dataset,
-                search_space=_search_space,
-                optimization=optimization_config,
-                # transfer_learning=transfer_learning,
-                toy_mode=False,
-                reuse_study=REUSE_STUDY,
-                recreate_study=RECREATE_STUDY,
-                evaluation=evaluation,
-                timeouts=TimeoutConfig(
-                    embedding_timeout_active=True, embedding_max_time=EMBEDDING_MAX_TIME
-                ),
-            )
-        )
-
-    paths = [cfg.paths.studies_dir / f"{config.name}.yaml" for config in configs]
-    for config, path in zip(configs, paths):
-        with open(path, "w") as handle:
-            yaml.dump(config.dict(), handle)
-
-    paths = [path.relative_to(cfg.paths.root_dir) for path in paths]
-
-    return configs, paths
-
-
-async def iter_job_logs(job_logs: AsyncIterable):
+async def iter_job_logs(job_logs: T.AsyncIterable):
     async for lines in job_logs:
         print(lines, end="")
 
 
-async def iter_all_job_logs(tailers: List[AsyncIterable]):
+async def iter_all_job_logs(tailers: T.List[T.AsyncIterable]):
     log_iters = [iter_job_logs(tailer) for tailer in tailers]
     await asyncio.gather(*log_iters)
 
@@ -396,7 +357,19 @@ def main():
     args = parser.parse_args()
     cfg.ray.local = False if args.remote else cfg.ray.local
 
-    configs, paths = _build_configs(bench_num=args.number)
+    configs, paths = build_configs(
+        datasets=datasets,
+        search_space=search_space,
+        optimization_config=optimization_config,
+        evaluation=evaluation,
+        bench_num=args.number,
+        reuse_study=REUSE_STUDY,
+        recreate_study=RECREATE_STUDY,
+        prefix=PREFIX,
+        run_name=RUN_NAME,
+        embedding_max_time=EMBEDDING_MAX_TIME,
+        transfer_learning=None,
+    )
 
     if DRY_RUN:
         print("Not submitting jobs because DRY_RUN is set to True")
