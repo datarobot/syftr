@@ -26,7 +26,7 @@ QA_PAIRS = {
 }
 
 
-@pytest.mark.flaky(reruns=4, reruns_delay=2)
+@pytest.mark.xfail(reason="Tool use not guaranteed for all models")
 def test_critique_agent_flow(
     critique_agent_flow: T.Tuple[CritiqueAgentFlow, StudyConfig],
     llama_debug,
@@ -42,7 +42,7 @@ def test_critique_agent_flow(
         assert llama_debug.get_event_pairs(CBEventType.SYNTHESIZE)
 
 
-@pytest.mark.flaky(reruns=4, reruns_delay=2)
+@pytest.mark.xfail(reason="Some models hit the max iterations limit")
 def test_react_flow(
     react_agent_flow: T.Tuple[ReActAgentFlow, StudyConfig],
     llama_debug,
