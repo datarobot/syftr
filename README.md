@@ -1,5 +1,5 @@
 <div style="text-align: center;">
-  <img src="syftr-logo.jpeg" alt="syftr Logo" width="300" style="border-radius: 8px;" />
+  <img src="docs/syftr-logo.jpeg" alt="syftr Logo" width="300" style="border-radius: 8px;" />
 </div>
 
 # syftr - Efficient Search for Pareto-optimal Flows
