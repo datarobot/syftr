@@ -410,7 +410,9 @@ class Optuna(BaseModel):
 
 class Database(BaseModel):
     # TODO: Try to respect used-configured tmp_dir here.
-    dsn: str = "sqlite:////{}/syftr.db".format(Path(tempfile.gettempdir()) / "syftr")  # Provide default SQLite path when not specified.
+    dsn: str = "sqlite:////{}/syftr.db".format(
+        Path(tempfile.gettempdir()) / "syftr"
+    )  # Provide default SQLite path when not specified.
     postgres_engine_kwargs: T.Dict[str, T.Any] = {
         # https://docs.sqlalchemy.org/en/20/core/pooling.html#setting-pool-recycle
         "pool_recycle": 300,
