@@ -111,12 +111,6 @@ local_models:
 
 Models added in the ``config.yaml`` will be automatically added to the default search space, or you can enable them manually for specific flow components.
 
-
-<<<<<<< HEAD
-
-
-=======
->>>>>>> main
 ### Citation
 If you use this code in your research please cite the following [publicaton](https://arxiv.org).
 
