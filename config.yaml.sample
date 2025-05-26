@@ -28,8 +28,10 @@ gcp_vertex:
 hf_embeddings:
   api_key: "asdf1234"
 
-# Use any relational DB provider supported by Optuna storage (required)
-postgres:
+# Use any relational DB provider supported by Optuna storage (required).
+# If no dsn is provided, will use SQLite by default which allows running smaller
+# studies locally
+database:
   dsn: "postgresql://user:pass@postgresserver:5432/syftr"
   # Optionally tune conection args.
   # Sessions must last a long time, so should be resilient to transient network interruptions
