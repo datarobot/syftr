@@ -1,13 +1,13 @@
-# Syftr Datasets
+# syftr Datasets
 
 ## Dataset Structure and Format
 
-Syftr datasets have two main subsets:
+syftr datasets have two main subsets:
 
 1. `groundingdata`: Contains the grounding data used in RAG scenarios.
 2. `qapairs`: question-answer pairs.
 
-Syftr uses Hugging Face [datasets](https://huggingface.co/docs/datasets/en/index) format for data loading and processing. See [DataRobot-Research](https://huggingface.co/DataRobot-Research) organization for examples of already prepared datasets used in Syftr.
+syftr uses Hugging Face [datasets](https://huggingface.co/docs/datasets/en/index) format for data loading and processing. See [DataRobot-Research](https://huggingface.co/DataRobot-Research) organization for examples of already prepared datasets used in syftr.
 
 The `qapairs` are further divided into the following splits:
 
@@ -27,11 +27,11 @@ Let us begin by examining the [HotPotQA](https://huggingface.co/datasets/DataRob
 * `groundingdata_dev`: grounding data created by concatenating the `context` field of all the question answer pairs in the `dev` set 
 * `groundingdata_train_hard`: grounding data created by concatenating the `context` field of all the question answer pairs in the `train_hard` set
 
-The `groundingdata_*` subsets contain the grounding data to be used for RAG workflows while the `qapairs_*` subsets contain the question answer pairs to be used for training and evaluation of the models. This is a convention we follow for all the datasets we create for Syftr. This convention is not necessary though and any convention can be used as we will shortly see below. (See the [`InfiniteBench` class](../syftr/storage.py)) It is not even necessary to use Hugging Face dataset formats. Syftr can work with data from any source.
+The `groundingdata_*` subsets contain the grounding data to be used for RAG workflows while the `qapairs_*` subsets contain the question answer pairs to be used for training and evaluation of the models. This is a convention we follow for all the datasets we create for syftr. This convention is not necessary though and any convention can be used as we will shortly see below. (See the [`InfiniteBench` class](../syftr/storage.py)) It is not even necessary to use Hugging Face dataset formats. syftr can work with data from any source.
 
-## Loading data into Syftr
+## Loading data into syftr
 
-The [`SyftrQADataset`](../syftr/storage.py) class is the interface class for any dataset to be used with Syftr. It is a [Pydantic](https://docs.pydantic.dev/latest/) model which defines the structure of the dataset and provides methods to load and access the data. The two most important methods in this class are `def iter_examples(self, partition="test", use_ray=False) -> T.Iterator[QAPair]` and `def iter_grounding_data(self, **load_kwargs) -> T.Iterator[Document]`. The former iterates over the question answer pairs in the specified partition (e.g. `train`, `test`, etc.) while the latter iterates over the grounding data. The `SyftrQADataset` class provides default implementations assuming data in a certain format but this can be easily overridden by creating a custom dataset class which inherits from `SyftrQADataset` and implements the required methods.
+The [`SyftrQADataset`](../syftr/storage.py) class is the interface class for any dataset to be used with syftr. It is a [Pydantic](https://docs.pydantic.dev/latest/) model which defines the structure of the dataset and provides methods to load and access the data. The two most important methods in this class are `def iter_examples(self, partition="test", use_ray=False) -> T.Iterator[QAPair]` and `def iter_grounding_data(self, **load_kwargs) -> T.Iterator[Document]`. The former iterates over the question answer pairs in the specified partition (e.g. `train`, `test`, etc.) while the latter iterates over the grounding data. The `SyftrQADataset` class provides default implementations assuming data in a certain format but this can be easily overridden by creating a custom dataset class which inherits from `SyftrQADataset` and implements the required methods.
 We encourage the reader to inspect this class and then the `HotPotQAHF` class which inherits from it and implements the methods for the [HotPotQA](https://huggingface.co/datasets/DataRobot-Research/hotpotqa) dataset:
 
 ```python
@@ -159,7 +159,7 @@ will map the test partition to the sample partition. This means that when we cal
 
 ## Prepared datasets
 
-At the time of writing we have the following pre-processed datasets available in the [DataRobot-Research](https://huggingface.co/DataRobot-Research) organization for ready usage with Syftr. We will continue to add more datasets and also dataloaders from different sources as we use Syftr on more use-cases:
+At the time of writing we have the following pre-processed datasets available in the [DataRobot-Research](https://huggingface.co/DataRobot-Research) organization for ready usage with syftr. We will continue to add more datasets and also dataloaders from different sources as we use syftr on more use-cases:
 
 * [DataRobot-Research/hotpotqa](https://huggingface.co/datasets/DataRobot-Research/hotpotqa): [HotpotQA](https://hotpotqa.github.io/) is a large-scale question-answering dataset designed to promote
 research in multi-hop reasoning. It contains approximately 113, 000 QA pairs, where answering each question
@@ -172,7 +172,7 @@ separate sample, train, test, and holdout partitions with 20, 7305, 500, and 783
 * [DataRobot-Research/crag](https://huggingface.co/datasets/DataRobot-Research/crag): The [CRAG (Comprehensive RAG)](https://github.com/facebookresearch/CRAG) benchmark dataset from Meta was introduced for
 KDD Cup 2024. The [AIcrowd 2024](https://www.aicrowd.com/challenges/meta-comprehensive-rag-benchmark-kdd-cup-2024) challenge contains three tasks - Task 1: retrieval summarization,
 Task 2: knowledge graph and web retrieval, and Task 3: end-to-end RAG. We use the Task 3 dataset only, as this
-is the closest task to the RAG task Syftr is built to optimize. CRAG Task 3 contains 4, 400 QA pairs on a
+is the closest task to the RAG task syftr is built to optimize. CRAG Task 3 contains 4, 400 QA pairs on a
 variety of topics. The official Task 3 is to perform RAG over 50 web pages fetched from an Internet search engine
 for each question. We attempted a different task, which is to perform RAG over all of the web pages included in
 the dataset. To reduce the size of the data required for embedding and evaluation, we split the dataset into five
@@ -213,9 +213,9 @@ and holdout partitions of 10, 80, and 10 questions each.
 
 ### Step 1: Upload dataset to HuggingFace
 
-To add a new dataset to Syftr, we recommend uploading it to Hugging Face in the format used by syftr. This allows for easy integration and usage with the existing Syftr infrastructure. The dataset should be structured as described above, with `groundingdata` and `qapairs` subsets, and the `qapairs` subset should be further divided into `train`, `test`, `sample`, and `holdout` partitions.
+To add a new dataset to Syftr, we recommend uploading it to Hugging Face in the format used by syftr. This allows for easy integration and usage with the existing syftr infrastructure. The dataset should be structured as described above, with `groundingdata` and `qapairs` subsets, and the `qapairs` subset should be further divided into `train`, `test`, `sample`, and `holdout` partitions.
 
-This is not strictly necessary, however. Syftr can work with any dataset format as long as the `SyftrQADataset` class is implemented correctly to load the data.
+This is not strictly necessary, however. syftr can work with any dataset format as long as the `SyftrQADataset` class is implemented correctly to load the data.
 
 ### Step 2: Write syftr dataloader
 
