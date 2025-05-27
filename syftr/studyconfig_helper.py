@@ -83,13 +83,21 @@ def build_configs(
 def build_example_config(
     llms: T.List[str],
     embedding_models: T.List[str],
-    num_trials: int | None = 50,
+    num_trials: int | None = 10,
+    max_concurrent_trials: int | None = 1,
+    num_eval_samples: int | None = 50,
+    num_random_trials: int | None = 10,
     embedding_max_time: int | None = 3600 * 8,
     datasets: T.List[SyftrQADataset] | None = None,
     optimization_config: OptimizationConfig | None = None,
 ):
-    assert isinstance(embedding_max_time, int), "embedding_max_time must be an int"
     assert isinstance(num_trials, int), "num_trials must be an int"
+    assert isinstance(max_concurrent_trials, int), (
+        "max_concurrent_trials must be an int"
+    )
+    assert isinstance(num_eval_samples, int), "num_eval_samples must be an int"
+    assert isinstance(num_random_trials, int), "num_random_trials must be an int"
+    assert isinstance(embedding_max_time, int), "embedding_max_time must be an int"
 
     datasets = datasets or [DRDocsHF()]
 
@@ -99,18 +107,18 @@ def build_example_config(
         num_trials=num_trials,
         baselines_cycle_llms=False,
         shuffle_baselines=True,
-        max_concurrent_trials=5,
-        num_eval_samples=50,
+        max_concurrent_trials=max_concurrent_trials,
+        num_eval_samples=num_eval_samples,
         num_eval_batch=5,
         rate_limiter_max_coros=10,
         rate_limiter_period=60,
         max_trial_cost=40.0,
         cpus_per_trial=1,
         seeder_timeout=3600 * 1,  # None: wait until finished, 0: don't wait
-        num_random_trials=10,
-        use_individual_baselines=True,
-        use_agent_baselines=True,
-        use_variations_of_baselines=True,
+        num_random_trials=num_random_trials,
+        use_individual_baselines=False,
+        use_agent_baselines=False,
+        use_variations_of_baselines=False,
         use_pareto_baselines=False,
         use_pareto_pruner=True,
         use_cost_pruner=True,

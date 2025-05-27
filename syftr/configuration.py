@@ -66,7 +66,15 @@ import typing as T
 from pathlib import Path
 
 from optuna.storages import RDBStorage
-from pydantic import BaseModel, Field, HttpUrl, PostgresDsn, SecretStr, field_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    HttpUrl,
+    PostgresDsn,
+    SecretStr,
+    field_serializer,
+    field_validator,
+)
 from pydantic_file_secrets import FileSecretsSettingsSource
 from pydantic_settings import (
     BaseSettings,
@@ -88,6 +96,15 @@ NON_OPENAI_CONTEXT_WINDOW_FACTOR = 0.85
 NDIGITS = 4
 UNSUPPORTED_PARAMS = ["splitter_chunk_size"]
 SYFTR_CONFIG_FILE_ENV_NAME = "SYFTR_CONFIG_FILE"
+
+
+class APIKeySerializationMixin:
+    @field_serializer("api_key", "credentials", "default_api_key", check_fields=False)
+    def serialize_api_key(self, api_key: SecretStr, _info) -> str:
+        if api_key is None:
+            return "NOT SET"
+        return api_key.get_secret_value()
+
 
 """
 Namespaced configuration classes.
@@ -205,7 +222,7 @@ class HFEmbedding(BaseModel):
     api_url: HttpUrl
 
 
-class HFEmbeddings(BaseModel):
+class HFEmbeddings(BaseModel, APIKeySerializationMixin):
     api_key: SecretStr = SecretStr("NOT SET")
     models_config_map: T.Dict[str, HFEmbedding] = {
         "BAAI/bge-small-en-v1.5": HFEmbedding(
@@ -307,7 +324,7 @@ class HFEmbeddings(BaseModel):
     }
 
 
-class AzureInferenceLlama33(BaseModel):
+class AzureInferenceLlama33(BaseModel, APIKeySerializationMixin):
     # Use cfg.azure_inference_llama.api_key.get_secret_value() to get value
     api_key: SecretStr = SecretStr("NOT SET")
     region_name: str = "NOT SET"
@@ -315,7 +332,7 @@ class AzureInferenceLlama33(BaseModel):
     model_name: str = "NOT SET"
 
 
-class AzureInferenceMistral(BaseModel):
+class AzureInferenceMistral(BaseModel, APIKeySerializationMixin):
     # Use cfg.azure_inference_mistral.api_key.get_secret_value() to get value
     api_key: SecretStr = SecretStr("NOT SET")
     region_name: str = "NOT SET"
@@ -323,7 +340,7 @@ class AzureInferenceMistral(BaseModel):
     model_name: str = "NOT SET"
 
 
-class AzureInferencePhi4(BaseModel):
+class AzureInferencePhi4(BaseModel, APIKeySerializationMixin):
     # Use cfg.azure_inference_phi4.api_key.get_secret_value() to get value
     api_key: SecretStr = SecretStr("NOT SET")
     region_name: str = "NOT SET"
@@ -331,7 +348,7 @@ class AzureInferencePhi4(BaseModel):
     model_name: str = "NOT SET"
 
 
-class AzureInferenceR1(BaseModel):
+class AzureInferenceR1(BaseModel, APIKeySerializationMixin):
     # Use cfg.azure_inference_phi4.api_key.get_secret_value() to get value
     api_key: SecretStr = SecretStr("NOT SET")
     region_name: str = "NOT SET"
@@ -339,23 +356,23 @@ class AzureInferenceR1(BaseModel):
     model_name: str = "NOT SET"
 
 
-class Cerebras(BaseModel):
+class Cerebras(BaseModel, APIKeySerializationMixin):
     # Use cfg.azure_oai.api_key.get_secret_value() to get value
     api_key: SecretStr = SecretStr("NOT SET")
     api_url: HttpUrl = HttpUrl("https://api.cerebras.ai/v1")
 
 
-class TogetherAI(BaseModel):
+class TogetherAI(BaseModel, APIKeySerializationMixin):
     # Use cfg.azure_oai.api_key.get_secret_value() to get value
     api_key: SecretStr = SecretStr("NOT SET")
 
 
-class DataRobot(BaseModel):
+class DataRobot(BaseModel, APIKeySerializationMixin):
     api_key: SecretStr = SecretStr("NOT SET")
     endpoint: HttpUrl = HttpUrl("http://NOT.SET")
 
 
-class AzureOAI(BaseModel):
+class AzureOAI(BaseModel, APIKeySerializationMixin):
     # Use cfg.azure_oai.api_key.get_secret_value() to get value
     api_key: SecretStr = SecretStr("NOT SET")
     default_deployment: str = "gpt-4o-mini"
@@ -365,7 +382,7 @@ class AzureOAI(BaseModel):
     api_type: str = "azure"
 
 
-class GCPVertex(BaseModel):
+class GCPVertex(BaseModel, APIKeySerializationMixin):
     # Use cfg.gcp_vertex.credentials.get_secret_value() to get value
     # Note credentials are a string, typically will need to do a json.loads
     project_id: str = "NOT SET"
@@ -373,7 +390,7 @@ class GCPVertex(BaseModel):
     credentials: SecretStr = SecretStr("NOT SET")
 
 
-class LocalOpenAILikeModel(BaseModel):
+class LocalOpenAILikeModel(BaseModel, APIKeySerializationMixin):
     model_name: str
     api_base: str
     api_key: SecretStr | None = None
@@ -386,7 +403,7 @@ class LocalOpenAILikeModel(BaseModel):
     additional_kwargs: dict[str, T.Any] = Field(default_factory=dict)
 
 
-class LocalOpenAILikeEmbeddingModel(BaseModel):
+class LocalOpenAILikeEmbeddingModel(BaseModel, APIKeySerializationMixin):
     model_name: str
     api_base: str
     api_key: SecretStr | None = None
@@ -395,9 +412,9 @@ class LocalOpenAILikeEmbeddingModel(BaseModel):
     additional_kwargs: dict[str, T.Any] | None = None
 
 
-class LocalOpenAILikeModels(BaseModel):
-    generative: T.List[LocalOpenAILikeModel] = Field(default_factory=list)
-    embedding: T.List[LocalOpenAILikeEmbeddingModel] = Field(default_factory=list)
+class LocalOpenAILikeModels(BaseModel, APIKeySerializationMixin):
+    generative: T.Optional[T.List[LocalOpenAILikeModel]] = Field(default=None)
+    embedding: T.Optional[T.List[LocalOpenAILikeEmbeddingModel]] = Field(default=None)
     default_api_key: SecretStr = SecretStr("NOT SET")
 
 
@@ -434,6 +451,10 @@ class Postgres(BaseModel):
 
     def get_optuna_storage(self) -> RDBStorage:
         return RDBStorage(self.dsn.unicode_string(), engine_kwargs=self.engine_kwargs)
+
+    @field_serializer("dsn")
+    def serialize_dsn(self, dsn: PostgresDsn):
+        return dsn.unicode_string()
 
 
 class Ray(BaseModel):

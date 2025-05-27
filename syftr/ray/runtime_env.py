@@ -52,6 +52,7 @@ def _prepare_working_dir() -> str:
     dest.mkdir(parents=True, exist_ok=False)
 
     shutil.copytree(root / secrets_dir, dest / secrets_dir)  # type: ignore
+
     shutil.copytree(root / "studies", dest / "studies")
     try:
         shutil.copyfile(root / ".env", dest / ".env")

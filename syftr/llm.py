@@ -34,26 +34,31 @@ def _scale(
     return int(context_window_length * factor)
 
 
-os.environ["HF_TOKEN"] = cfg.hf_embeddings.api_key.get_secret_value()
+if (hf_token := cfg.hf_embeddings.api_key.get_secret_value()) != "NOT SET":
+    os.environ["HF_TOKEN"] = hf_token
 
 
-LOCAL_MODELS = {
-    model.model_name: OpenAILike(  # type: ignore
-        api_base=str(model.api_base),
-        api_key=model.api_key.get_secret_value()
-        if model.api_key is not None
-        else cfg.local_models.default_api_key.get_secret_value(),
-        model=model.model_name,
-        max_tokens=model.max_tokens,
-        context_window=_scale(model.context_window),
-        is_chat_model=model.is_chat_model,
-        is_function_calling_model=model.is_function_calling_model,
-        timeout=model.timeout,
-        max_retries=model.max_retries,
-        additional_kwargs=model.additional_kwargs,
-    )
-    for model in cfg.local_models.generative
-}
+LOCAL_MODELS = (
+    {
+        model.model_name: OpenAILike(  # type: ignore
+            api_base=str(model.api_base),
+            api_key=model.api_key.get_secret_value()
+            if model.api_key is not None
+            else cfg.local_models.default_api_key.get_secret_value(),
+            model=model.model_name,
+            max_tokens=model.max_tokens,
+            context_window=_scale(model.context_window),
+            is_chat_model=model.is_chat_model,
+            is_function_calling_model=model.is_function_calling_model,
+            timeout=model.timeout,
+            max_retries=model.max_retries,
+            additional_kwargs=model.additional_kwargs,
+        )
+        for model in cfg.local_models.generative
+    }
+    if cfg.local_models.generative
+    else {}
+)
 
 AZURE_GPT35_TURBO = AzureOpenAI(
     model="gpt-3.5-turbo",
