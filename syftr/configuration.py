@@ -131,7 +131,8 @@ class Paths(BaseModel):
     sota_dir: Annotated[Path, Field(validate_default=True)] = data_dir / "sota"
     lock_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "syftr-locks"
     nltk_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "nltk-data"
-    sqlite_dir: Annotated[Path, Field(validate_default=True)] = REPO_ROOT
+    # sqlite_dir: Annotated[Path, Field(validate_default=True)] = REPO_ROOT
+    sqlite_dir: Annotated[Path, Field(validate_default=True)] = Path.home() / ".syftr"
 
     @property
     def templates_without_context(self) -> Path:
