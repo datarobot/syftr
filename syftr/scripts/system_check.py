@@ -87,7 +87,7 @@ The README.md file contains an example config.yaml file.
 def check_database():
     db_connections = []
     # Ensure dsn is not None and has hosts method
-    if cfg.database and "sqlite" in cfg.database.dsn:
+    if cfg.database and "sqlite" in cfg.database.dsn.unicode_string():
         if not cfg.ray.local:
             console.print(
                 "Found default configuration of SQLite. SQLite cannot be used in non-local mode."
