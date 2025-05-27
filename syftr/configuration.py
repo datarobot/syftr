@@ -101,7 +101,9 @@ SYFTR_CONFIG_FILE_ENV_NAME = "SYFTR_CONFIG_FILE"
 
 class APIKeySerializationMixin:
     @field_serializer("api_key", "credentials", "default_api_key", check_fields=False)
-    def serialize_api_key(self, api_key: SecretStr, _info):
+    def serialize_api_key(self, api_key: SecretStr, _info) -> str:
+        if api_key is None:
+            return "NOT SET"
         return api_key.get_secret_value()
 
 
