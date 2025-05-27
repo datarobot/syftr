@@ -9,7 +9,7 @@ dependencies = [
     "botocore",
     "cloudpickle",
     "colorlog",
-    "datasets",
+    "datasets>=3.3.2",
     "diskcache",
     "faiss-cpu",
     "filelock",

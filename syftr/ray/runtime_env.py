@@ -51,7 +51,10 @@ def _prepare_working_dir() -> str:
         shutil.rmtree(dest)
     dest.mkdir(parents=True, exist_ok=False)
 
-    shutil.copytree(root / secrets_dir, dest / secrets_dir)  # type: ignore
+    try:
+        shutil.copytree(root / secrets_dir, dest / secrets_dir)  # type: ignore
+    except FileNotFoundError:
+        pass
 
     shutil.copytree(root / "studies", dest / "studies")
     try:
