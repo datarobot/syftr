@@ -7,6 +7,7 @@ for detailed documentation of this file's parameters.
 
 import shutil
 import tomllib
+from pathlib import Path
 from typing import Any, Dict, List
 
 import yaml
@@ -44,7 +45,7 @@ def _build_excludes() -> List[str]:
     return sorted(list(excludes))
 
 
-def _prepare_working_dir() -> str:
+def _prepare_working_dir(study_config_path: Path) -> str:
     root = cfg.paths.root_dir
     dest = root / "ray_working_dir"
 
@@ -56,9 +57,7 @@ def _prepare_working_dir() -> str:
     with open(dest / "config.yaml", "w") as cfg_file:
         yaml.dump(cfg_data, cfg_file)
 
-    # TODO: load current study data and dump to a yaml instead
-    # of requiring studies directory
-    shutil.copytree(root / "studies", dest / "studies")
+    shutil.copy(study_config_path, dest)
 
     return dest.as_posix()
 
@@ -69,11 +68,11 @@ def _prepare_modules():
     return [syftr]
 
 
-def get_runtime_env(delete_confirmed: bool = False) -> Dict[str, Any]:
+def get_runtime_env(study_config_path: Path, delete_confirmed: bool = False) -> Dict[str, Any]:
     return {
         "env_vars": _build_env(delete_confirmed),
         "pip": _build_pip(),
         "py_modules": _prepare_modules(),
-        "working_dir": _prepare_working_dir(),
+        "working_dir": _prepare_working_dir(study_config_path),
         "excludes": _build_excludes(),
     }
