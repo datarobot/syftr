@@ -7,7 +7,10 @@ for detailed documentation of this file's parameters.
 
 import shutil
 import tomllib
+from pathlib import Path
 from typing import Any, Dict, List
+
+import yaml
 
 from syftr.configuration import cfg
 from syftr.huggingface_helper import get_hf_token
@@ -42,26 +45,19 @@ def _build_excludes() -> List[str]:
     return sorted(list(excludes))
 
 
-def _prepare_working_dir() -> str:
+def _prepare_working_dir(study_config_path: Path) -> str:
     root = cfg.paths.root_dir
     dest = root / "ray_working_dir"
-    secrets_dir = cfg.model_config["secrets_dir"]
 
     if dest.exists():
         shutil.rmtree(dest)
     dest.mkdir(parents=True, exist_ok=False)
 
-    shutil.copytree(root / secrets_dir, dest / secrets_dir)  # type: ignore
+    cfg_data = cfg.model_dump()
+    with open(dest / "config.yaml", "w") as cfg_file:
+        yaml.dump(cfg_data, cfg_file)
 
-    shutil.copytree(root / "studies", dest / "studies")
-    try:
-        shutil.copyfile(root / ".env", dest / ".env")
-    except FileNotFoundError:
-        pass
-    try:
-        shutil.copyfile(root / "config.yaml", dest / "config.yaml")
-    except FileNotFoundError:
-        pass
+    shutil.copy(study_config_path, dest)
 
     return dest.as_posix()
 
@@ -72,11 +68,13 @@ def _prepare_modules():
     return [syftr]
 
 
-def get_runtime_env(delete_confirmed: bool = False) -> Dict[str, Any]:
+def get_runtime_env(
+    study_config_path: Path, delete_confirmed: bool = False
+) -> Dict[str, Any]:
     return {
         "env_vars": _build_env(delete_confirmed),
         "pip": _build_pip(),
         "py_modules": _prepare_modules(),
-        "working_dir": _prepare_working_dir(),
+        "working_dir": _prepare_working_dir(study_config_path),
         "excludes": _build_excludes(),
     }

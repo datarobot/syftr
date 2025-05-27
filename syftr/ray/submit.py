@@ -61,9 +61,9 @@ def start_study(
     runtime_env = get_runtime_env(delete_confirmed)
 
     if not agentic:
-        entrypoint = f"python -m syftr.tuner.qa_tuner --study-config {study_config_file.as_posix()}"
+        entrypoint = f"python -m syftr.tuner.qa_tuner --study-config {study_config_file.name}"
     else:
-        entrypoint = f"python -m syftr.tuner.agent_tuner --study-config {study_config_file.as_posix()}"
+        entrypoint = f"python -m syftr.tuner.agent_tuner --study-config {study_config_file.name}"
 
     if not cfg.ray.local:
         logger.info(
