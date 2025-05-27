@@ -8,7 +8,8 @@ __syftr__ is an agent optimizer that helps you find the best agentic workflows f
 
 ![syftr](docs/flowgen_headliner.png)
 
-Please read more details in our [blogpost](https://datarobot.com) and full [technical paper](https://arxiv.org/abs/2505.20266).
+Please read more details in our <a href="https://www.datarobot.com/blog/pareto-optimized-ai-workflows-syftr" target="_blank">blogpost</a>
+ and full <a href="https://arxiv.org/abs/2505.20266" target="_blank">technical paper</a>.
 
 We are excited for what you will discover using __syftr__!
 
@@ -150,7 +151,7 @@ See detailed instructions [here](docs/datasets.md).
 
 ## Citation
 
-If you use this code in your research please cite the following [publicaton](https://arxiv.org/abs/2505.20266).
+If you use this code in your research please cite the following <a href="https://arxiv.org/abs/2505.20266" target="_blank">publication</a>.
 
 ```bibtex
 @article{syftr2025,
