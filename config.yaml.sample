@@ -34,7 +34,7 @@ gcp_vertex:
 azure_inference_mistral:
   api_key: "<your-api-key>"
   region_name: "northcentralus"
-  default_deployment: "Mistral-large-2411-drocto"
+  default_deployment: "<your-Mistral-large-deployment>"
   model_name: "MistralLarge2411"
 
 # Required for llama-33-70B LLM
