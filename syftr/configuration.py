@@ -460,7 +460,7 @@ class Database(BaseModel):
         return RDBStorage(self.dsn.unicode_string(), engine_kwargs=kwargs)
 
     @field_serializer("dsn")
-    def serialize_dsn(self, dsn: PostgresDsn | AnyUrl):
+    def serialize_dsn(self, dsn: AnyUrl):
         return dsn.unicode_string()
 
 
