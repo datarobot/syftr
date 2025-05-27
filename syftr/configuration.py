@@ -67,9 +67,9 @@ from pathlib import Path
 
 from optuna.storages import RDBStorage
 from pydantic import (
+    AnyUrl,
     BaseModel,
     Field,
-    AnyUrl,
     HttpUrl,
     SecretStr,
     field_serializer,
