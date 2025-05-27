@@ -69,6 +69,7 @@ from optuna.storages import RDBStorage
 from pydantic import (
     BaseModel,
     Field,
+    AnyUrl,
     HttpUrl,
     PostgresDsn,
     SecretStr,
@@ -426,8 +427,8 @@ class Optuna(BaseModel):
 
 
 class Database(BaseModel):
-    dsn: str = "sqlite:////{}/syftr.db".format(
-        Paths().sqlite_dir
+    dsn: AnyUrl = AnyUrl(
+        "sqlite:////{}/syftr.db".format(Paths().sqlite_dir)
     )  # Provide default SQLite path when not specified.
     postgres_engine_kwargs: T.Dict[str, T.Any] = {
         # https://docs.sqlalchemy.org/en/20/core/pooling.html#setting-pool-recycle
@@ -447,15 +448,19 @@ class Database(BaseModel):
     }
 
     def get_engine(self) -> Engine:
-        kwargs = {} if "sqlite" in self.dsn else self.postgres_engine_kwargs
-        return create_engine(self.dsn, **kwargs)
+        kwargs = (
+            {} if "sqlite" in self.dsn.unicode_string() else self.postgres_engine_kwargs
+        )
+        return create_engine(self.dsn.unicode_string(), **kwargs)
 
     def get_optuna_storage(self) -> RDBStorage:
-        kwargs = {} if "sqlite" in self.dsn else self.postgres_engine_kwargs
-        return RDBStorage(self.dsn, engine_kwargs=kwargs)
+        kwargs = (
+            {} if "sqlite" in self.dsn.unicode_string() else self.postgres_engine_kwargs
+        )
+        return RDBStorage(self.dsn.unicode_string(), engine_kwargs=kwargs)
 
     @field_serializer("dsn")
-    def serialize_dsn(self, dsn: PostgresDsn):
+    def serialize_dsn(self, dsn: PostgresDsn | AnyUrl):
         return dsn.unicode_string()
 
 
