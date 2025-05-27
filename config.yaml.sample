@@ -48,7 +48,7 @@ azure_inference_llama33:
 azure_inference_phi4:
   api_key: "<your-api-key>"
   region_name: "northcentralus"
-  default_deployment: "Phi-4-drocto"
+  default_deployment: "<your-Phi-4-deployment>"
   model_name: "AzurePhi-4"
 
 # Required for cerebras-llama-31-8B and cerebras-llama-33-70B LLMs
