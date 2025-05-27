@@ -23,7 +23,6 @@ __syftr__'s examples require the following credentials:
 * Azure OpenAI API key
 * Azure OpenAI endpoint URL (`api_url`)
 * PostgreSQL server dsn
-* Huggingface API key
 
 To enter these credentials, copy [config.yaml.sample](config.yaml.sample) to `config.yaml` and edit the required portions.
 
