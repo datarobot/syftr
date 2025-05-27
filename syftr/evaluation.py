@@ -182,7 +182,7 @@ async def exception_catcher(
         if isinstance(results, tuple):
             return *results, None
         return results, None
-    except tuple(RETRIABLE_EXCEPTIONS):
+    except RETRIABLE_EXCEPTIONS:
         raise
     except Exception as ex:
         if raise_on_exception:
