@@ -34,8 +34,8 @@ def _get_metadata(study_config: StudyConfig) -> Dict[str, Any]:
         "git_sha": sha,
         "git_short_sha": short_sha,
         "submitted_by": getpass.getuser(),
-        "study_config": study_config.json(),
-        "config": cfg.json(),
+        "study_config": study_config.model_dump_json(),
+        "config": cfg.model_dump_json(),
     }
 
 
