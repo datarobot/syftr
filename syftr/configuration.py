@@ -71,7 +71,6 @@ from pydantic import (
     Field,
     AnyUrl,
     HttpUrl,
-    PostgresDsn,
     SecretStr,
     field_serializer,
     field_validator,
