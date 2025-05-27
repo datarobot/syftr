@@ -51,7 +51,7 @@ from syftr.studyconfig_helper import build_configs
 
 PREFIX = "rank"
 BENCH_NUM = 3
-NUM_TRIALS = 150
+NUM_TRIALS = 0
 USE_PARETO_BASELINES = False
 RUN_NAME = "rag-and-agents"
 REUSE_STUDY = True
@@ -135,9 +135,9 @@ if USE_PARETO_BASELINES:
                 baselines.append(flow)
     print(f"We have {len(baselines)} Pareto-baselines for seeding")
 
-# baselines = json.load(
-#     open(cfg.paths.results_dir / "silver-bullet-like-flows.json", "r")
-# )
+# import json
+
+# baselines = json.load(open(cfg.paths.results_dir / "silver-bullets.json", "r"))
 
 optimization_config = OptimizationConfig(
     method="expanding",
@@ -147,10 +147,10 @@ optimization_config = OptimizationConfig(
     baselines=baselines,
     baselines_cycle_llms=False,
     shuffle_baselines=True,
-    max_concurrent_trials=50,
+    max_concurrent_trials=20,
     num_eval_samples=50,
     num_eval_batch=5,
-    rate_limiter_max_coros=40,
+    rate_limiter_max_coros=30,
     rate_limiter_period=60,
     max_trial_cost=40.0,
     cpus_per_trial=1,
@@ -158,9 +158,9 @@ optimization_config = OptimizationConfig(
     # -----------------------------------------------
     num_random_trials=0,
     # -----------------------------------------------
-    use_individual_baselines=True,
-    use_agent_baselines=True,
-    use_variations_of_baselines=True,
+    use_individual_baselines=False,
+    use_agent_baselines=False,
+    use_variations_of_baselines=False,
     # -----------------------------------------------
     use_pareto_baselines=False,  # required for transfer learning
     # -----------------------------------------------
@@ -289,13 +289,13 @@ datasets = [
     # MultiHopRAGHF(),
     # PhantomWikiv050(),
     # -----------------------------------------------
-    # BrightHF(subset="earth_science"),
-    # BrightHF(subset="economics"),
-    # BrightHF(subset="psychology"),
-    # BrightHF(subset="robotics"),
+    BrightHF(subset="earth_science"),
+    BrightHF(subset="economics"),
+    BrightHF(subset="psychology"),
+    BrightHF(subset="robotics"),
     BrightHF(subset="stackoverflow"),
-    # BrightHF(subset="sustainable_living"),
-    # BrightHF(subset="pony"),
+    BrightHF(subset="sustainable_living"),
+    BrightHF(subset="pony"),
     # -----------------------------------------------
     # SyntheticHotPotQAHF(subset="train_hard"),
     # SyntheticFinanceBenchHF(),
