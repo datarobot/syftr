@@ -34,7 +34,8 @@ def _scale(
     return int(context_window_length * factor)
 
 
-os.environ["HF_TOKEN"] = cfg.hf_embeddings.api_key.get_secret_value()
+if hf_token := cfg.hf_embeddings.api_key.get_secret_value() != "NOT SET":
+    os.environ["HF_TOKEN"] = hf_token
 
 
 LOCAL_MODELS = (
