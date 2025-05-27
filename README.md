@@ -36,18 +36,39 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv venv --python 3.12.7
 source .venv/bin/activate
 uv sync --extra dev
-# Install pre-commit linter and formatter [optional, recommended]
-pre-commit install
 ```
+
+## Configuration
+
+The main configuration file for __syftr__ is the `config.yaml` file, which can be located at `~/.syftr/config.yaml` or the repository root directory.
+
+__syftr__ can also optionally be configured through environment variables, a `.env` file in the repository root directory, and credentials can be securely stored in a `runtime-secrets` directory in the repository root.
+For simplicity, we recommend just using `config.yaml` when you are starting out.
+
+### LLM Configuration
+
+To use __syftr__, you will need to configure credentials for at least one supported LLM provider, and have at least one compatible LLM deployment there.
+
+Supported providers include:
+
+* Any OpenAI API-compatible endpoint
+* [Azure OpenAI](docs/llm-configuration.md#Configuring-Azure-OpenAI)
+* Azure AI
+* Google Cloud Platform Vertex AI
+* Together AI
+* DataRobot
+* Cerebras
+
+Please file a feature request if you'd like additional models or providers supported, or a bug if you have any trouble configuring a supported provider.
+
 
 ### Required Credentials
 
 __syftr__'s examples require the following credentials:
 
-* Azure OpenAI API key
+* Azure OpenAI API key  # MENTION YOU NEED SOME MODELS DEPLOYED HERE...
 * Azure OpenAI endpoint URL (`api_url`)
 * PostgreSQL server dsn (if no dsn is provided, will use local SQLite)
-* Huggingface API key
 
 To enter these credentials, copy [config.yaml.sample](config.yaml.sample) to `config.yaml` and edit the required portions.
 
@@ -58,7 +79,7 @@ __syftr__ uses many components including Ray for job scheduling and PostgreSQL f
 * The main config file of __syftr__ is `config.yaml`. You can specify paths, logging, database and Ray parameters and many others. For detailed instructions and examples, please refer to [config.yaml.sample](config.yaml.sample).
 You can rename this file to `config.yaml` and fill in all necessary details according to your infrastructure.
 * You can also configure __syftr__ with environment variables: `export SYFTR_PATHS__ROOT_DIR=/foo/bar`
-* In order to function properly, Ray requires credentials to be stored in the `runtime-secrets/` directory.
+* In order to function properly, Ray requires credentials to be stored in the `runtime-secrets/` directory.  # THIS SOUNDS LIKE A BUG
   For example:
 
   ```bash
@@ -68,12 +89,12 @@ You can rename this file to `config.yaml` and fill in all necessary details acco
 
   Make sure you copy them from `config.yaml` before running any studies.
 * Currently there are two main ways to run __syftr__: by cloning the repo or by installing it as a Python package. When it is cloned as a repo, all config files are already in-place, you just need to rename / fill them in. When it is run as a library, directory `runtime_secrets` and `config.yaml` should be present in the current working directory, `~/.syftr/config.yaml`, `/etc/syftr/config.yaml` or be specified in `SYFTR_CONFIG_FILE` environmental variable.
-* When the configuration is correct, you should be able to run [`examples/1-welcome.ipynb`](examples/1-welcome.ipynb) without any problems.
-* syftr allows using SQLite for running examples locally. If no PostgreSQL address is provided, local SQLite database will be used. Make sure you run it in local mode with a single Ray worker only to avoid any issues.
+* When the configuration is correct, you should be able to run [`examples/1-welcome.ipynb`](examples/1-welcome.ipynb) without any problems.  (DUPLICATED BELOW?)
+* syftr allows using SQLite for running examples locally. If no PostgreSQL address is provided, local SQLite database will be used. Make sure you run it in local mode with a single Ray worker only to avoid any issues. (*WHAT DOES THIS MEAAAN)
 
 ## Quickstart
 
-First run `make check` to validate your credentials and configuration.
+First run `make check` to validate your credentials and configuration. (WELL MOST OF THE LLMs FAIL BECAUSE I WAS TOLD TO PUT IN AZURE CREDS AND ENDPOINT AND THAT'S ALL)
 Next, try the example Jupyter notebooks located in the [`examples`](/examples) directory.
 Or directly run a __syftr__ study with user API:
 
@@ -81,10 +102,11 @@ Or directly run a __syftr__ study with user API:
 from syftr import api
 
 s = api.Study.from_file("studies/example-dr-docs.yaml")
-s.run()
+s.run()  # RAY CLIENT CONNECTION TIMEOUT - RAN 'ray start --head' ELSEWHERE
+# I SET LOCAL TO TRUE
 ```
 
-Obtaining the results after the study is complete:
+Obtaining the results after the study is complete:  # HOW LONG THIS GONNA TAKE?
 
 ```python
 s.wait_for_completion()
