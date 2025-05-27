@@ -41,7 +41,7 @@ azure_inference_mistral:
 azure_inference_llama33:
   api_key: "<your-api-key>"
   region_name: "northcentralus"
-  default_deployment: "Llama-3-3-70B-Instruct-drocto"
+  default_deployment: "<your-Llama-3-3-70B-Instruct-deployment>"
   model_name: "AzureLlama3370B"
 
 # Required for phi-4 LLM
