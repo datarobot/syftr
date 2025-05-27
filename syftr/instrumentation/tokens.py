@@ -4,6 +4,7 @@ import time
 from typing import Any, Dict, Optional, Type, Union
 
 import google
+from azure.ai.inference.models._models import ChatCompletionsToolCall
 from llama_index.core.base.llms.types import ChatResponse, CompletionResponse
 from llama_index.core.evaluation import CorrectnessEvaluator
 from llama_index.core.instrumentation.events import BaseEvent
@@ -143,6 +144,8 @@ class CircularReferenceEncoder(json.JSONEncoder):
         self.seen.add(id(obj))
         if isinstance(obj, google.cloud.aiplatform_v1beta1.types.tool.FunctionCall):
             return obj.to_dict()
+        if isinstance(obj, ChatCompletionsToolCall):
+            return obj.as_dict()
         return super().default(obj)
 
 
