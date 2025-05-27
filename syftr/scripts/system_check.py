@@ -90,10 +90,14 @@ def check_database():
     if cfg.database and "sqlite" in cfg.database.dsn:
         if not cfg.ray.local:
             console.print(
-                "Found default configuration of SQLite. SQLite cannot be used in non-local mode. Set ray.local = True."
+                "Found default configuration of SQLite. SQLite cannot be used in non-local mode."
+            )
+            console.print(
+                "Set ray.local = True or configure PostgreSQL for advanced usage."
             )
             return False
         console.print("Found default configuration of SQLite. Should work locally...")
+        console.print("For advanced usage, consider configuring PostgreSQL.")
         return True
     if (
         cfg.database
