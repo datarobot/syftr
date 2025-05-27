@@ -312,7 +312,10 @@ class Study:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="This is the syftr API CLI for running syftr studies.",
+        epilog="Verify the study config file before running. Significant costs may occur.",
+    )
 
     parser.add_argument("--study-config", help="Path to study config yaml")
     args = parser.parse_args()
