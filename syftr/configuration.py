@@ -100,10 +100,16 @@ SYFTR_CONFIG_FILE_ENV_NAME = "SYFTR_CONFIG_FILE"
 
 class APIKeySerializationMixin:
     @field_serializer("api_key", "credentials", "default_api_key", check_fields=False)
-    def serialize_api_key(self, api_key: SecretStr, _info) -> str:
+    def serialize_api_key(self, api_key: SecretStr | None, _info) -> str:
         if api_key is None:
             return "NOT SET"
         return api_key.get_secret_value()
+
+    @field_serializer("endpoint", "api_url", check_fields=False)
+    def serialize_http_url(self, url: HttpUrl | None, _info) -> str:
+        if url is None:
+            return "NOT SET"
+        return url.unicode_string()
 
 
 """
@@ -215,7 +221,7 @@ class Storage(BaseModel):
     local_cache_max_size_gb: int | float = 10
 
 
-class HFEmbedding(BaseModel):
+class HFEmbedding(BaseModel, APIKeySerializationMixin):
     embedding_model_name: str
     max_length: int = 512
     hf_embedding_batch_size: int = 32
