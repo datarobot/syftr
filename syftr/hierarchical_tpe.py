@@ -667,14 +667,14 @@ class HierarchicalTPESampler(TPESampler):
                 hierarchy,
                 groups,
                 trials,
-                mask,
+                mask,  # type: ignore
                 samples,
                 delta_ll,
                 parent_group_index=i,
             )
 
             assert all(mask[param_name].all() for param_name in groups[i])
-        return mask, samples, delta_ll
+        return mask, samples, delta_ll  # type: ignore
 
     def _get_hierarchical_child_samples(
         self,
