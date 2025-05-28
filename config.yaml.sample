@@ -59,9 +59,10 @@ cerebras:
 togetherai:
   api_key: "<your-api-key>"
 
-# HuggingFace Embeddings (optional)
-hf_embeddings:
-  api_key: "<your-api-key>"
+# HuggingFace Embeddings (optional - required to use embedding models 
+# which require a signed agreement, or HuggingFace inference endpoints)
+# hf_embeddings:
+#   api_key: "<your-api-key>"
 
 # Use any relational DB provider supported by Optuna storage (recommended).
 # If no dsn is provided, will use SQLite by default which allows running smaller
