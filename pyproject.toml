@@ -88,7 +88,7 @@ dependencies = [
     "transformers==4.48.3",
     "tree-sitter-languages",
     "tree-sitter",
-    "tree_sitter_language_pack",
+    "tree_sitter_language_pack>=0.7.3",
     "types-protobuf",
     "types-pytz",
     "types-tabulate",
