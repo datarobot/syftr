@@ -19,7 +19,7 @@ __syftr__ builds on a number of powerful open source projects:
 
 * [LlamaIndex](https://www.llamaindex.ai/) for building sophisticated agentic and non-agentic RAG workflows
 
-* [HuggingFace](https://huggingface.co/docs/datasets/en/index) Datasets for fast, collaborative, and uniform dataset interface
+* [HuggingFace Datasets](https://huggingface.co/docs/datasets/en/index) for fast, collaborative, and uniform dataset interface
 
 * [Trace](https://github.com/microsoft/Trace) for optimizing textual components within workflows, such as prompts
 
