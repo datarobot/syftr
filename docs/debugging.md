@@ -18,6 +18,6 @@ Finally, in a different terminal, we'll now run `build_flow.py` as follows:
 python syftr/scripts/build_flow.py --study-config-path studies/example-dr-docs.yaml --interactive --instrumentation --flow-json '{"few_shot_enabled": false, "rag_mode": "no_rag", "template_name": "concise", "response_synthesizer_llm": "gpt-4o-std"}'
 ```
 
-This will instantiate a the flow described in the json and evaluate it against the dataset used in the study-config, in this case `drdocs`. The `--interactive` flag will set a breakpoint at each question and response, and the `--instrumentation` flag will send traces to Phoenix.
+This will instantiate the flow described in the json and evaluate it against the dataset used in the study-config, in this case `drdocs`. The `--interactive` flag will set a breakpoint at each question and response, and the `--instrumentation` flag will send traces to Phoenix.
 
 Refreshing the Phoenix webpage should now show traces for each QA Pair, response, and any additional internal flow information that is logged.
