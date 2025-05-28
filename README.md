@@ -43,7 +43,6 @@ __syftr__'s examples require the following credentials:
 * Azure OpenAI API key
 * Azure OpenAI endpoint URL (`api_url`)
 * PostgreSQL server dsn (if no dsn is provided, will use local SQLite)
-* HuggingFace API key (optional, needed only for using HuggingFace inference endpoints for computing embeddings)
 
 To enter these credentials, copy [config.yaml.sample](config.yaml.sample) to `config.yaml` and edit the required portions.
 
