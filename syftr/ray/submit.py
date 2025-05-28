@@ -58,7 +58,7 @@ def start_study(
 ) -> str:
     metadata = _get_metadata(study_config)
     submission_id = _get_submission_id(metadata)
-    runtime_env = get_runtime_env(delete_confirmed)
+    runtime_env = get_runtime_env(study_config_file, delete_confirmed)
 
     if not agentic:
         entrypoint = f"python -m syftr.tuner.qa_tuner --study-config {study_config_file.name}"
