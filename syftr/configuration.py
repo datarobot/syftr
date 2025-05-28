@@ -105,12 +105,6 @@ class APIKeySerializationMixin:
             return "NOT SET"
         return api_key.get_secret_value()
 
-    @field_serializer("endpoint", "api_url", check_fields=False)
-    def serialize_http_url(self, url: HttpUrl | None, _info) -> str:
-        if url is None:
-            return "NOT SET"
-        return url.unicode_string()
-
 
 """
 Namespaced configuration classes.
@@ -221,7 +215,7 @@ class Storage(BaseModel):
     local_cache_max_size_gb: int | float = 10
 
 
-class HFEmbedding(BaseModel, APIKeySerializationMixin):
+class HFEmbedding(BaseModel):
     embedding_model_name: str
     max_length: int = 512
     hf_embedding_batch_size: int = 32

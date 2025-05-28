@@ -5,6 +5,7 @@ https://docs.ray.io/en/latest/ray-core/handling-dependencies.html#api-reference
 for detailed documentation of this file's parameters.
 """
 
+import json
 import shutil
 import tomllib
 from pathlib import Path
@@ -53,9 +54,9 @@ def _prepare_working_dir(study_config_path: Path) -> str:
         shutil.rmtree(dest)
     dest.mkdir(parents=True, exist_ok=False)
 
-    cfg_data = cfg.model_dump()
+    cfg_data = json.loads(cfg.model_dump_json())
     with open(dest / "config.yaml", "w") as cfg_file:
-        yaml.dump(cfg_data, cfg_file)
+        yaml.safe_dump(cfg_data, cfg_file)
 
     shutil.copy(study_config_path, dest)
 
