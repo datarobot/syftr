@@ -10,7 +10,6 @@ from llama_index.core.schema import TransformComponent
 from llama_index.core.storage.docstore.types import BaseDocumentStore
 from llama_index.core.storage.storage_context import StorageContext
 from llama_index.retrievers.bm25 import BM25Retriever
-
 from syftr.hf_endpoint_embeddings import HFEndpointEmbeddings
 from syftr.huggingface_helper import get_embedding_model
 from syftr.llm import get_llm
@@ -133,7 +132,7 @@ def build_rag_retriever(
     logger.info("Loading grounding data documents")
     documents = list(study_config.dataset.iter_grounding_data())
     splitter = build_splitter(study_config, params)
-    transforms = [splitter]
+    transforms: T.List[TransformComponent] = [splitter]
 
     # Build indexes
     sparse_retriever = sparse_docstore = None
