@@ -303,9 +303,9 @@ def _seed_baselines(
     study_name = study_config.name
     search_space = study_config.search_space
     study = optuna.load_study(
-        study_name=study_name, storage=cfg.postgres.get_optuna_storage()
+        study_name=study_name, storage=cfg.database.get_optuna_storage()
     )
-    if trial_exists(study_name, baseline, cfg.postgres.get_optuna_storage()):
+    if trial_exists(study_name, baseline, cfg.database.get_optuna_storage()):
         logger.warning(
             "Skipping evaluation of baseline which already exists in study '%s': %s",
             study_name,

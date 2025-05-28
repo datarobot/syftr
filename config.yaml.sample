@@ -2,35 +2,73 @@
 # See `syftr/configuration.py::Settings for the full configuration object
 # and instructions on how to configure Syftr
 
-# Azure OpenAI API (required when using Azure OAI models)
+# Azure OpenAI API (required when using Azure OAI LLMs)
 azure_oai:
   # Sensitive strings can also be placed in the appropriate file in runtime-secrets/
   # For example, put this key in a file named runtime-secrets/azure_oai__api_key
-  api_key: "asdf1234"
+  api_key: "<your-api-key>"
   api_url: "https://my-azure-endpoint.openai.azure.com/"
 
-# Google Cloud Platform VertexAI (required when using VertexAI)
+# Google Cloud Platform VertexAI (required when using VertexAI LLMs)
 gcp_vertex:
-  project_id: "myproject-12345"
+  project_id: "<your-project-id>"
   region: "europe-west1"
   # Put your GCP credentials file in runtime-secrets/gcp_vertex__credentials
-  # Or place it here:
-  credentials: >
-    {
-      "type": "service_account",
-      "project_id": "myproject-1324",
-      "private_key_id": "",
-      "private_key": "-----BEGIN PRIVATE KEY-----...
-      ...
-    }
+  # Or uncomment the following:
+  # credentials: >
+  #   {
+  #     "type": "service_account",
+  #     "project_id": "<your-project-id>",
+  #     "private_key_id": "<your-private-key-id>",
+  #     "private_key": "<your-private-key>",
+  #     "client_email": "<your-client-email>",
+  #     "client_id": "<your-client-id>",
+  #     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  #     "token_uri": "https://oauth2.googleapis.com/token",
+  #     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  #     "client_x509_cert_url": "<your-cert-url>",
+  #     "universe_domain": "googleapis.com"
+  #   }
 
-# HuggingFace Embeddings (required for most experiments)
-hf_embeddings:
-  api_key: "asdf1234"
+# Required for mistral-large LLM
+azure_inference_mistral:
+  api_key: "<your-api-key>"
+  region_name: "northcentralus"
+  default_deployment: "<your-Mistral-large-deployment>"
+  model_name: "MistralLarge2411"
 
-# Use any relational DB provider supported by Optuna storage (required)
-postgres:
-  dsn: "postgresql://user:pass@postgresserver:5432/syftr"
+# Required for llama-33-70B LLM
+azure_inference_llama33:
+  api_key: "<your-api-key>"
+  region_name: "northcentralus"
+  default_deployment: "<your-Llama-3-3-70B-Instruct-deployment>"
+  model_name: "AzureLlama3370B"
+
+# Required for phi-4 LLM
+azure_inference_phi4:
+  api_key: "<your-api-key>"
+  region_name: "northcentralus"
+  default_deployment: "<your-Phi-4-deployment>"
+  model_name: "AzurePhi-4"
+
+# Required for cerebras-llama-31-8B and cerebras-llama-33-70B LLMs
+cerebras:
+  api_key: "<your-api-key>"
+
+# Required for TogetherDeepseekR1 and TogetherDeepseekV3 LLMs
+togetherai:
+  api_key: "<your-api-key>"
+
+# HuggingFace Embeddings (optional - required to use embedding models 
+# which require a signed agreement, or HuggingFace inference endpoints)
+# hf_embeddings:
+#   api_key: "<your-api-key>"
+
+# Use any relational DB provider supported by Optuna storage (recommended).
+# If no dsn is provided, will use SQLite by default which allows running smaller
+# examples locally.
+# database:
+#   dsn: "postgresql://user:pass@postgresserver:5432/syftr"
   # Optionally tune conection args.
   # Sessions must last a long time, so should be resilient to transient network interruptions
   #

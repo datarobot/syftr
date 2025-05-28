@@ -133,7 +133,7 @@ def build_rag_retriever(
     logger.info("Loading grounding data documents")
     documents = list(study_config.dataset.iter_grounding_data())
     splitter = build_splitter(study_config, params)
-    transforms = [splitter]
+    transforms: T.List[TransformComponent] = [splitter]
 
     # Build indexes
     sparse_retriever = sparse_docstore = None

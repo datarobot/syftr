@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import json
 import logging
@@ -92,7 +93,7 @@ class Study:
         """
         try:
             study = optuna.load_study(
-                study_name=study_name, storage=cfg.postgres.get_optuna_storage()
+                study_name=study_name, storage=cfg.database.get_optuna_storage()
             )
         except KeyError:
             raise SyftrUserAPIError(f"Cannot find study {study_name} in the database.")
@@ -119,7 +120,7 @@ class Study:
         try:
             _ = optuna.load_study(
                 study_name=self.study_config.name,
-                storage=cfg.postgres.get_optuna_storage(),
+                storage=cfg.database.get_optuna_storage(),
             )
         except KeyError:
             pass
@@ -298,7 +299,7 @@ class Study:
         try:
             optuna.delete_study(
                 study_name=self.study_config.name,
-                storage=cfg.postgres.get_optuna_storage(),
+                storage=cfg.database.get_optuna_storage(),
             )
             logger.info(f"Study {self.study_config.name} deleted from the database.")
         except KeyError:
@@ -308,3 +309,19 @@ class Study:
 
     def __repr__(self):
         return f"Study(name={self.study_config.name}, remote={self.remote})"
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="This is the syftr API CLI, the main entry point for running syftr in the shell.",
+        epilog="Please, verify study configs before submission as it may incur significant costs.",
+    )
+
+    parser.add_argument("--study-config", help="Path to study config yaml")
+    args = parser.parse_args()
+
+    study_config_file = Path(args.study_config)
+
+    study = Study.from_file(study_config_file)
+    study.run()
+    study.wait_for_completion(stream_logs=True)

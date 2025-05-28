@@ -7,10 +7,10 @@ from pathlib import Path
 from rich.console import Console
 from rich.text import Text
 from sqlalchemy.exc import OperationalError
+from transformers import AutoConfig
 
 from syftr import __version__ as version
 from syftr.configuration import SYFTR_CONFIG_FILE_ENV_NAME, cfg
-from syftr.huggingface_helper import get_embedding_model
 from syftr.llm import get_llm
 from syftr.optuna_helper import get_study_names
 from syftr.studies import ALL_LLMS, DEFAULT_EMBEDDING_MODELS
@@ -87,15 +87,27 @@ The README.md file contains an example config.yaml file.
 def check_database():
     db_connections = []
     # Ensure dsn is not None and has hosts method
+    if cfg.database and "sqlite" in cfg.database.dsn.unicode_string():
+        if not cfg.ray.local:
+            console.print(
+                "Found default configuration of SQLite. SQLite cannot be used in non-local mode."
+            )
+            console.print(
+                "Set ray.local = True or configure PostgreSQL for advanced usage."
+            )
+            return False
+        console.print("Found default configuration of SQLite. Should work locally...")
+        console.print("For advanced usage, consider configuring PostgreSQL.")
+        return True
     if (
-        cfg.postgres
-        and cfg.postgres.dsn
-        and hasattr(cfg.postgres.dsn, "hosts")
-        and callable(cfg.postgres.dsn.hosts)
+        cfg.database
+        and cfg.database.dsn
+        and hasattr(cfg.database.dsn, "hosts")
+        and callable(cfg.database.dsn.hosts)
     ):
         try:
             # hosts() might return a list of dicts or a list of pydantic models
-            parsed_hosts = cfg.postgres.dsn.hosts()
+            parsed_hosts = cfg.database.dsn.hosts()
             if parsed_hosts:
                 for host_info in parsed_hosts:
                     if isinstance(host_info, dict):
@@ -117,14 +129,14 @@ def check_database():
                     else:
                         db_connections.append("Invalid host entry")
             else:  # If hosts() returns empty or None
-                db_connections.append(f"No host information in DSN: {cfg.postgres.dsn}")
+                db_connections.append(f"No host information in DSN: {cfg.database.dsn}")
 
         except Exception as e:
             db_connections.append(
-                f"Could not parse DSN: {cfg.postgres.dsn}. Error: {e}"
+                f"Could not parse DSN: {cfg.database.dsn}. Error: {e}"
             )
-    elif cfg.postgres and cfg.postgres.dsn:
-        db_connections.append(f"Attempting direct DSN: {cfg.postgres.dsn}")
+    elif cfg.database and cfg.database.dsn:
+        db_connections.append(f"Attempting direct DSN: {cfg.database.dsn}")
     else:
         db_connections.append("Postgres DSN not configured.")
 
@@ -327,44 +339,18 @@ def _check_single_embedding_worker(model_name: str, results_queue: queue.Queue):
     """
     Worker function for a thread to check a single embedding model instance.
     Puts a tuple (model_name, status, detail_string) into the results_queue.
-    status can be "accessible", "inaccessible", "warning".
+    status can be "accessible" or "inaccessible".
     """
-    import time
-
     try:
         with suppress_logging():  # suppress INFO and DEBUG logs
-            start_time = time.time()
-            model, is_onnx = get_embedding_model(
-                model_name, use_hf_endpoint_models=False
+            AutoConfig.from_pretrained(model_name)
+        results_queue.put(
+            (
+                model_name,
+                "accessible",
+                "available on HuggingFace.",
             )
-            assert model, f"Failed to get model '{model_name}'"
-            assert is_onnx in [True, False], f"Unexpected is_onnx return: {is_onnx}"
-
-            embedding = model.get_query_embedding("Test embedding string")
-            elapsed = time.time() - start_time
-
-        if (
-            embedding
-            and isinstance(embedding, list)
-            and all(isinstance(x, float) for x in embedding)
-        ):
-            dim = len(embedding)
-            suffix = "ONNX" if is_onnx else "Transformers"
-            results_queue.put(
-                (
-                    model_name,
-                    "accessible",
-                    f"{suffix} model returned {dim}D vector in {elapsed:.2f}s.",
-                )
-            )
-        else:
-            results_queue.put(
-                (
-                    model_name,
-                    "warning",
-                    "Connected but returned invalid or empty embedding.",
-                )
-            )
+        )
     except Exception as e:
         error_type = type(e).__name__
         error_message = str(e).replace("\n", " ")
@@ -512,9 +498,7 @@ You can run this script again to check your progress after addressing the issues
         )
         console.print("You can edit it and then run it from your project root with:")
         console.print()
-        console.print(
-            f"[yellow]python -m syftr.ray.submit --study-config {paths[0]}[/yellow]"
-        )
+        console.print(f"[yellow]python -m syftr.api --study-config {paths[0]}[/yellow]")
         console.print()
     return True
 

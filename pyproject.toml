@@ -1,6 +1,6 @@
 [project]
 name = "syftr"
-dynamic = ["version"]
+version = "0.0.2"
 requires-python = ">=3.12.3,<3.13"
 dependencies = [
     "aiolimiter",
@@ -9,7 +9,7 @@ dependencies = [
     "botocore",
     "cloudpickle",
     "colorlog",
-    "datasets",
+    "datasets>=3.3",
     "diskcache",
     "faiss-cpu",
     "filelock",
@@ -77,16 +77,18 @@ dependencies = [
     "python-slugify",
     "rapidfuzz",
     "ray[client,data,default,serve,tune]",
+    "rich",
     "rouge_score",
     "s3fs",
     "scikit-learn",
     "sentencepiece",
+    "sqlalchemy",
     "tabulate",
     "trace-opt",
     "transformers==4.48.3",
     "tree-sitter-languages",
     "tree-sitter",
-    "tree_sitter_language_pack",
+    "tree_sitter_language_pack>=0.7.3",
     "types-protobuf",
     "types-pytz",
     "types-tabulate",

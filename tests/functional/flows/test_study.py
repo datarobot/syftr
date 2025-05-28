@@ -8,7 +8,7 @@ from syftr.studies import StudyConfig
 
 
 def test_flow_exists():
-    study_config_file_name = "test-greedy-src.yaml"
+    study_config_file_name = "test-study-src.yaml"
     study_config_file = Path(cfg.paths.test_studies_dir / study_config_file_name)
     study_config = StudyConfig.from_file(study_config_file)
     study = optuna.load_study(

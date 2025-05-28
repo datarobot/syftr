@@ -394,11 +394,11 @@ def _run_flow(flow: T.Dict[str, T.Any], study_config: StudyConfig) -> None:
 
     logger.info("Loading study: %s", study_name)
     study = optuna.load_study(
-        study_name=study_name, storage=cfg.postgres.get_optuna_storage()
+        study_name=study_name, storage=cfg.database.get_optuna_storage()
     )
 
     if study_config.optimization.skip_existing and trial_exists(
-        study_name, params, cfg.postgres.get_optuna_storage()
+        study_name, params, cfg.database.get_optuna_storage()
     ):
         logger.warning(
             "Flow already exists in study '%s': %s",
