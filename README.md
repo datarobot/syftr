@@ -56,7 +56,8 @@ You can rename this file to `config.yaml` and fill in all necessary details acco
 
 ## Quickstart
 
-First run `make check` to validate your credentials and configuration.
+First, run `make check` to validate your credentials and configuration.
+Note that most LLM connections are likely to fail if you have not provided configuration for them.
 Next, try the example Jupyter notebooks located in the [`examples`](/examples) directory.
 Or directly run a __syftr__ study with user API:
 
