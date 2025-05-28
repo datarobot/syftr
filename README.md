@@ -130,7 +130,7 @@ local_models:
 
 Models added in the ``config.yaml`` will be automatically added to the default search space, or you can enable them manually for specific flow components.
 
-## Custom Datsets
+## Custom Datasets
 
 See detailed instructions [here](docs/datasets.md).
 
