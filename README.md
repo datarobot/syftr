@@ -19,7 +19,7 @@ __syftr__ builds on a number of powerful open source projects:
 
 * [LlamaIndex](https://www.llamaindex.ai/) for building sophisticated agentic and non-agentic RAG workflows
 
-* [HuggingFace](https://huggingface.co/docs/datasets/en/index) Datasets for fast, collaborative, and uniform dataset interface
+* [HuggingFace Datasets](https://huggingface.co/docs/datasets/en/index) for fast, collaborative, and uniform dataset interface
 
 * [Trace](https://github.com/microsoft/Trace) for optimizing textual components within workflows, such as prompts
 
@@ -32,8 +32,6 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv venv --python 3.12.7
 source .venv/bin/activate
 uv sync --extra dev
-# Install pre-commit linter and formatter [optional, recommended]
-pre-commit install
 ```
 
 ### Required Credentials
@@ -43,7 +41,6 @@ __syftr__'s examples require the following credentials:
 * Azure OpenAI API key
 * Azure OpenAI endpoint URL (`api_url`)
 * PostgreSQL server dsn (if no dsn is provided, will use local SQLite)
-* Huggingface API key
 
 To enter these credentials, copy [config.yaml.sample](config.yaml.sample) to `config.yaml` and edit the required portions.
 
@@ -54,22 +51,13 @@ __syftr__ uses many components including Ray for job scheduling and PostgreSQL f
 * The main config file of __syftr__ is `config.yaml`. You can specify paths, logging, database and Ray parameters and many others. For detailed instructions and examples, please refer to [config.yaml.sample](config.yaml.sample).
 You can rename this file to `config.yaml` and fill in all necessary details according to your infrastructure.
 * You can also configure __syftr__ with environment variables: `export SYFTR_PATHS__ROOT_DIR=/foo/bar`
-* In order to function properly, Ray requires credentials to be stored in the `runtime-secrets/` directory.
-  For example:
-
-  ```bash
-  $ cat runtime-secrets/azure_oai__api_key
-  asdfasdfasdf12341234
-  ```
-
-  Make sure you copy them from `config.yaml` before running any studies.
-* Currently there are two main ways to run __syftr__: by cloning the repo or by installing it as a Python package. When it is cloned as a repo, all config files are already in-place, you just need to rename / fill them in. When it is run as a library, directory `runtime_secrets` and `config.yaml` should be present in the current working directory, `~/.syftr/config.yaml`, `/etc/syftr/config.yaml` or be specified in `SYFTR_CONFIG_FILE` environmental variable.
 * When the configuration is correct, you should be able to run [`examples/1-welcome.ipynb`](examples/1-welcome.ipynb) without any problems.
-* syftr allows using SQLite for running examples locally. If no PostgreSQL address is provided, local SQLite database will be used. Make sure you run it in local mode with a single Ray worker only to avoid any issues.
+* __syftr__ uses SQLite by default for Optuna storage. The `database.dsn` configuration field can be used to configure any Optuna-supported relational database storage. We recommend Postgres for distributed workloads.
 
 ## Quickstart
 
-First run `make check` to validate your credentials and configuration.
+First, run `make check` to validate your credentials and configuration.
+Note that most LLM connections are likely to fail if you have not provided configuration for them.
 Next, try the example Jupyter notebooks located in the [`examples`](/examples) directory.
 Or directly run a __syftr__ study with user API:
 
@@ -142,7 +130,7 @@ local_models:
 
 Models added in the ``config.yaml`` will be automatically added to the default search space, or you can enable them manually for specific flow components.
 
-## Custom Datsets
+## Custom Datasets
 
 See detailed instructions [here](docs/datasets.md).
 
