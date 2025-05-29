@@ -205,6 +205,7 @@ ignore.*
 studies/bench*
 studies/rank*
 studies/greedy*
+studies/box*
 studies/example1--small-study--drdocs_hf.yaml
 
 notebooks/.nfs*
