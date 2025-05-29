@@ -64,7 +64,7 @@ def test_pareto_df_study_does_not_exist():
     study = api.Study.from_file(NON_EXISTANT_STUDY_CONFIG_PATH)
     with pytest.raises(api.SyftrUserAPIError) as exc:
         study.pareto_df
-    assert exc.value.args[0] == "Cannot find this study in the database."
+    assert exc.value.args[0].startswith("Cannot find this study in the database:")
 
 
 def test_pareto_flows():
@@ -80,7 +80,7 @@ def test_pareto_flows_study_does_not_exist():
     study = api.Study.from_file(NON_EXISTANT_STUDY_CONFIG_PATH)
     with pytest.raises(api.SyftrUserAPIError) as exc:
         study.pareto_flows
-    assert exc.value.args[0] == "Cannot find this study in the database."
+    assert exc.value.args[0].startswith("Cannot find this study in the database")
 
 
 def test_knee_point():
@@ -98,7 +98,7 @@ def test_knee_point_study_does_not_exist():
     study = api.Study.from_file(NON_EXISTANT_STUDY_CONFIG_PATH)
     with pytest.raises(api.SyftrUserAPIError) as exc:
         study.knee_point
-    assert exc.value.args[0] == "Cannot find this study in the database."
+    assert exc.value.args[0].startswith("Cannot find this study in the database")
 
 
 def test_status_completed():

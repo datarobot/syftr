@@ -148,7 +148,9 @@ class Study:
                 study=self.study_config.name, storage=cfg.database.get_optuna_storage()
             )
         except KeyError:
-            raise SyftrUserAPIError("Cannot find this study in the database.")
+            raise SyftrUserAPIError(
+                f"Cannot find this study in the database: `{self.study_config.name}`"
+            )
         return df_flows
 
     @property
@@ -157,7 +159,9 @@ class Study:
         try:
             df_pareto = get_pareto_df(self.study_config)
         except KeyError:
-            raise SyftrUserAPIError("Cannot find this study in the database.")
+            raise SyftrUserAPIError(
+                f"Cannot find this study in the database: `{self.study_config.name}`"
+            )
         return df_pareto
 
     @property
