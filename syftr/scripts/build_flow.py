@@ -20,10 +20,14 @@ from syftr.tuner.qa_tuner import build_flow
     "-s",
     "--study-config-path",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to the study config yaml file",
 )
 @click.option("-i", "--interactive", is_flag=True)
 @click.option("-o", "--instrumentation", is_flag=True)
-@click.option("-f", "--flow-json", type=str)
+@click.option(
+    "-f", "--flow-json", type=str, required=True, help="JSON string of flow parameters"
+)
 def main(
     study_config_path: Path, flow_json: str, instrumentation: bool, interactive: bool
 ):
