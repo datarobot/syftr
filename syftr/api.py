@@ -15,7 +15,7 @@ from kneed import KneeLocator
 
 from syftr.configuration import cfg
 from syftr.logger import logger
-from syftr.optuna_helper import get_pareto_df
+from syftr.optuna_helper import get_completed_trials, get_pareto_df
 from syftr.ray import submit
 from syftr.studies import StudyConfig
 
@@ -141,12 +141,27 @@ class Study:
         }
 
     @property
+    def flows_df(self) -> pd.DataFrame:
+        """Returns a Pandas dataframe containing all completed flows in the study."""
+        try:
+            df_flows = get_completed_trials(
+                study=self.study_config.name, storage=cfg.database.get_optuna_storage()
+            )
+        except KeyError:
+            raise SyftrUserAPIError(
+                f"Cannot find this study in the database: `{self.study_config.name}`"
+            )
+        return df_flows
+
+    @property
     def pareto_df(self) -> pd.DataFrame:
         """Return the Pareto front of a completed study as a Pandas dataframe."""
         try:
             df_pareto = get_pareto_df(self.study_config)
         except KeyError:
-            raise SyftrUserAPIError("Cannot find this study in the database.")
+            raise SyftrUserAPIError(
+                f"Cannot find this study in the database: `{self.study_config.name}`"
+            )
         return df_pareto
 
     @property
@@ -176,11 +191,10 @@ class Study:
         }
         return {"metrics": flow_metrics, "params": flow_params}
 
-    @property
-    def pareto_flows(self) -> T.List[T.Dict[str, T.Any]]:
-        """Return the Pareto front of a completed study."""
+    def _extract_flows(self, df: pd.DataFrame) -> T.List[T.Dict[str, T.Any]]:
+        """Helper method to extract flow dicts from a dataframe."""
         output = []
-        for _, row in self.pareto_df.iterrows():
+        for _, row in df.iterrows():
             flow_params = json.loads(row["user_attrs_flow"])
             obj1_name = self.study_config.optimization.objective_1_name
             obj2_name = self.study_config.optimization.objective_2_name
@@ -190,6 +204,16 @@ class Study:
             }
             output.append({"metrics": flow_metrics, "params": flow_params})
         return output
+
+    @property
+    def flows(self) -> T.List[T.Dict[str, T.Any]]:
+        """Return all completed flows in the study."""
+        return self._extract_flows(self.flows_df)
+
+    @property
+    def pareto_flows(self) -> T.List[T.Dict[str, T.Any]]:
+        """Return the Pareto front of a completed study."""
+        return self._extract_flows(self.pareto_df)
 
     @cached_property
     def client(self):
