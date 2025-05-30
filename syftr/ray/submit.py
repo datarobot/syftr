@@ -34,8 +34,8 @@ def _get_metadata(study_config: StudyConfig) -> Dict[str, Any]:
         "git_sha": sha,
         "git_short_sha": short_sha,
         "submitted_by": getpass.getuser(),
-        "study_config": study_config.json(),
-        "config": cfg.json(),
+        "study_config": study_config.model_dump_json(),
+        "config": cfg.model_dump_json(),
     }
 
 
@@ -58,12 +58,16 @@ def start_study(
 ) -> str:
     metadata = _get_metadata(study_config)
     submission_id = _get_submission_id(metadata)
-    runtime_env = get_runtime_env(delete_confirmed)
+    runtime_env = get_runtime_env(study_config_file, delete_confirmed)
 
     if not agentic:
-        entrypoint = f"python -m syftr.tuner.qa_tuner --study-config {study_config_file.as_posix()}"
+        entrypoint = (
+            f"python -m syftr.tuner.qa_tuner --study-config {study_config_file.name}"
+        )
     else:
-        entrypoint = f"python -m syftr.tuner.agent_tuner --study-config {study_config_file.as_posix()}"
+        entrypoint = (
+            f"python -m syftr.tuner.agent_tuner --study-config {study_config_file.name}"
+        )
 
     if not cfg.ray.local:
         logger.info(

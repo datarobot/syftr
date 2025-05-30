@@ -12,7 +12,7 @@ from syftr.ray.utils import ray_init
 from syftr.studies import StudyConfig
 from syftr.tuner.qa_tuner import objective, run_flow
 
-STORAGE = cfg.postgres.get_optuna_storage()
+STORAGE = cfg.database.get_optuna_storage()
 
 
 def main():

@@ -255,7 +255,7 @@ def download_study(study_name: str) -> pd.DataFrame:
         return CACHE[cache_key]
 
     study = optuna.load_study(
-        study_name=study_name, storage=cfg.postgres.get_optuna_storage()
+        study_name=study_name, storage=cfg.database.get_optuna_storage()
     )
     df: pd.DataFrame = study.trials_dataframe()
     if len(df) == 0:
@@ -459,7 +459,7 @@ def load_studies(study_names=None, only_successful_trials=True):
     # load all studies by default
     if study_names is None:
         study_names = optuna.get_all_study_names(
-            storage=cfg.postgres.get_optuna_storage()
+            storage=cfg.database.get_optuna_storage()
         )
     elif isinstance(study_names, str):
         study_names = [study_names]

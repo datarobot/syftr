@@ -51,7 +51,7 @@ from syftr.studyconfig_helper import build_configs
 
 PREFIX = "rank"
 BENCH_NUM = 0
-NUM_TRIALS = 60
+NUM_TRIALS = 10
 USE_PARETO_BASELINES = False
 RUN_NAME = "rag-and-agents"
 REUSE_STUDY = True
@@ -147,7 +147,7 @@ optimization_config = OptimizationConfig(
     baselines=baselines,
     baselines_cycle_llms=False,
     shuffle_baselines=True,
-    max_concurrent_trials=20,
+    max_concurrent_trials=10,
     num_eval_samples=50,
     num_eval_batch=5,
     rate_limiter_max_coros=30,
@@ -156,11 +156,11 @@ optimization_config = OptimizationConfig(
     cpus_per_trial=1,
     seeder_timeout=3600 * 10,  # None: wait until finished, 0: don't wait
     # -----------------------------------------------
-    num_random_trials=50,
+    num_random_trials=0,
     # -----------------------------------------------
-    use_individual_baselines=True,
-    use_agent_baselines=True,
-    use_variations_of_baselines=True,
+    use_individual_baselines=False,
+    use_agent_baselines=False,
+    use_variations_of_baselines=False,
     # -----------------------------------------------
     use_pareto_baselines=False,  # required for transfer learning
     # -----------------------------------------------

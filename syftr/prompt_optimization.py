@@ -240,7 +240,7 @@ def run_pareto_flows_prompt_optimization(study_path: str, remote: bool = False):
     logger.info("Loading study config from file %s", study_path)
     study_config = StudyConfig.from_file(study_path)
     logger.info("Loading pareto flows for study %s", study_config.name)
-    storage = cfg.postgres.get_optuna_storage()
+    storage = cfg.database.get_optuna_storage()
     study = optuna.load_study(
         study_name=study_config.name,
         storage=storage,
