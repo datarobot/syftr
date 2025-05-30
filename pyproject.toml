@@ -149,6 +149,7 @@ target-version = "py312"
 exclude = ["notebooks", "plotting.py", "examples"]
 line-length = 88
 indent-width = 4
+lint.select = [
     "E4",   # Enable pycodestyle import checks
     "E7",   # Enable pycodestyle 
     "E9",   # Enable pycodestyle errors checks
