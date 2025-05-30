@@ -37,7 +37,7 @@ functional-tests:
 e2e-tests:
 	@uv run pytest -svv tests/e2e/
 
-tests: unit-tests functional-tests
+tests: unit-tests functional-tests e2e-tests
 
 remote-pyenv:
 	@ansible-playbook -u datarobot -i inventory.ini playbooks/remote-pyenv.yml
