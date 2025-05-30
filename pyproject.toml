@@ -173,11 +173,5 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 addopts = "--ignore=scratch"
 
-[[tool.uv.index]]
-name = "datarobot-python-dev"
-url = "https://artifactory.devinfra.drdev.io/artifactory/api/pypi/python-1711"
-publish-url = "https://artifactory.devinfra.drdev.io/artifactory/api/pypi/python-1711"
-explicit = true
-
 [tool.uv-dynamic-versioning]
 fallback-version = "0.0.0"
