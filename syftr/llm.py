@@ -19,11 +19,19 @@ from llama_index.llms.openai_like import OpenAILike
 from llama_index.llms.vertex import Vertex
 from mypy_extensions import DefaultNamedArg
 
-from syftr.configuration import NON_OPENAI_CONTEXT_WINDOW_FACTOR, cfg
-from syftr.logger import logger
-from syftr.patches import (
-    _get_all_kwargs,
+from syftr.configuration import (
+    NON_OPENAI_CONTEXT_WINDOW_FACTOR,
+    AnthropicVertexLLM,
+    AzureAICompletionsLLM,
+    AzureOpenAILLM,
+    CerebrasLLM,
+    OpenAILikeLLM,
+    Settings,
+    VertexAILLM,
+    cfg,
 )
+from syftr.logger import logger
+from syftr.patches import _get_all_kwargs
 
 Anthropic._get_all_kwargs = _get_all_kwargs  # type: ignore
 
@@ -533,16 +541,6 @@ CEREBRAS_LLAMA_33_70B = Cerebras(
 )
 
 
-from syftr.configuration import (
-    AzureOpenAILLM,
-    VertexAILLM,
-    AnthropicVertexLLM,
-    AzureAICompletionsLLM,
-    CerebrasLLM,
-    OpenAILikeLLM,
-)
-
-
 def _construct_azure_openai_llm(name: str, llm_config: AzureOpenAILLM) -> AzureOpenAI:
     return AzureOpenAI(
         model=llm_config.metadata.model_name,
@@ -556,8 +554,13 @@ def _construct_azure_openai_llm(name: str, llm_config: AzureOpenAILLM) -> AzureO
         additional_kwargs=llm_config.additional_kwargs or {},
     )
 
+
 def _construct_vertex_ai_llm(name: str, llm_config: VertexAILLM) -> Vertex:
-    credentials = service_account.Credentials.from_service_account_info(GCP_CREDS) if GCP_CREDS else {}
+    credentials = (
+        service_account.Credentials.from_service_account_info(GCP_CREDS)
+        if GCP_CREDS
+        else {}
+    )
     return Vertex(
         model=llm_config.model or llm_config.metadata.model_name,
         project=cfg.gcp_vertex.project_id,
@@ -571,7 +574,10 @@ def _construct_vertex_ai_llm(name: str, llm_config: VertexAILLM) -> Vertex:
         location=cfg.gcp_vertex.region,
     )
 
-def _construct_anthropic_vertex_llm(name: str, llm_config: AnthropicVertexLLM) -> Anthropic:
+
+def _construct_anthropic_vertex_llm(
+    name: str, llm_config: AnthropicVertexLLM
+) -> Anthropic:
     anthropic_llm = Anthropic(
         model=llm_config.model,
         project_id=llm_config.project_id or cfg.gcp_vertex.project_id,
@@ -583,7 +589,10 @@ def _construct_anthropic_vertex_llm(name: str, llm_config: AnthropicVertexLLM) -
     )
     return add_scoped_credentials_anthropic(anthropic_llm)
 
-def _construct_azure_ai_completions_llm(name: str, llm_config: AzureAICompletionsLLM) -> AzureAICompletionsModel:
+
+def _construct_azure_ai_completions_llm(
+    name: str, llm_config: AzureAICompletionsLLM
+) -> AzureAICompletionsModel:
     return AzureAICompletionsModel(
         credential=llm_config.api_key.get_secret_value(),
         endpoint=llm_config.endpoint,
@@ -600,11 +609,12 @@ def _construct_cerebras_llm(name: str, llm_config: CerebrasLLM) -> Cerebras:
         api_base=str(cfg.cerebras.api_url),
         temperature=llm_config.temperature,
         max_tokens=llm_config.metadata.num_output,
-        context_window=llm_config.metadata.context_window, # Use raw value as per existing Cerebras configs
+        context_window=llm_config.metadata.context_window,  # Use raw value as per existing Cerebras configs
         is_function_calling_model=llm_config.metadata.is_function_calling_model,
         max_retries=llm_config.max_retries,
         additional_kwargs=llm_config.additional_kwargs or {},
     )
+
 
 def _construct_openai_like_llm(name: str, llm_config: OpenAILikeLLM) -> OpenAILike:
     return OpenAILike(
@@ -620,30 +630,51 @@ def _construct_openai_like_llm(name: str, llm_config: OpenAILikeLLM) -> OpenAILi
         additional_kwargs=llm_config.additional_kwargs or {},
     )
 
-_dynamically_loaded_llms: T.Dict[str, LLM] = {}
-if cfg.generative_models:
-    logger.debug(f"Loading LLMs from 'generative_models' configuration: {list(cfg.generative_models.keys())}")
-    for name, llm_config_instance in cfg.generative_models.items():
+
+def load_configured_llms(config: Settings) -> T.Dict[str, LLM]:
+    _dynamically_loaded_llms: T.Dict[str, LLM] = {}
+    if not config.generative_models:
+        return {}
+    logger.debug(
+        f"Loading LLMs from 'generative_models' configuration: {list(config.generative_models.keys())}"
+    )
+    for name, llm_config_instance in config.generative_models.items():
         llm_instance: T.Optional[LLM] = None
         try:
             provider = getattr(llm_config_instance, "provider", None)
 
-            if provider == "azure_openai" and isinstance(llm_config_instance, AzureOpenAILLM):
+            if provider == "azure_openai" and isinstance(
+                llm_config_instance, AzureOpenAILLM
+            ):
                 llm_instance = _construct_azure_openai_llm(name, llm_config_instance)
-            elif provider == "vertex_ai" and isinstance(llm_config_instance, VertexAILLM):
+            elif provider == "vertex_ai" and isinstance(
+                llm_config_instance, VertexAILLM
+            ):
                 llm_instance = _construct_vertex_ai_llm(name, llm_config_instance)
-            elif provider == "anthropic_vertex" and isinstance(llm_config_instance, AnthropicVertexLLM):
-                llm_instance = _construct_anthropic_vertex_llm(name, llm_config_instance)
-            elif provider == "azure_ai" and isinstance(llm_config_instance, AzureAICompletionsLLM):
-                llm_instance = _construct_azure_ai_completions_llm(name, llm_config_instance)
-            elif provider == "cerebras" and isinstance(llm_config_instance, CerebrasLLM):
+            elif provider == "anthropic_vertex" and isinstance(
+                llm_config_instance, AnthropicVertexLLM
+            ):
+                llm_instance = _construct_anthropic_vertex_llm(
+                    name, llm_config_instance
+                )
+            elif provider == "azure_ai" and isinstance(
+                llm_config_instance, AzureAICompletionsLLM
+            ):
+                llm_instance = _construct_azure_ai_completions_llm(
+                    name, llm_config_instance
+                )
+            elif provider == "cerebras" and isinstance(
+                llm_config_instance, CerebrasLLM
+            ):
                 llm_instance = _construct_cerebras_llm(name, llm_config_instance)
-            elif provider == "openai_like" and isinstance(llm_config_instance, OpenAILikeLLM):
+            elif provider == "openai_like" and isinstance(
+                llm_config_instance, OpenAILikeLLM
+            ):
                 llm_instance = _construct_openai_like_llm(name, llm_config_instance)
             else:
-                logger.warning(
+                raise ValueError(
                     f"Unsupported provider type '{provider}' or "
-                    f"mismatched Pydantic config model type for model '{name}'. Skipping."
+                    f"mismatched Pydantic config model type for model '{name}'."
                 )
                 continue
 
@@ -652,8 +683,11 @@ if cfg.generative_models:
                 logger.debug(f"Successfully loaded LLM '{name}' from configuration.")
         except Exception as e:
             # Log with traceback for easier debugging
-            logger.error(f"Failed to load configured LLM '{name}' due to: {e}", exc_info=True)
+            logger.error(
+                f"Failed to load configured LLM '{name}' due to: {e}", exc_info=True
+            )
             raise
+    return _dynamically_loaded_llms
 
 
 # When you add model, make sure all tests pass successfully
@@ -683,7 +717,7 @@ LLMs = {
     **LOCAL_MODELS,
 }
 
-LLMs.update(_dynamically_loaded_llms)
+LLMs.update(load_configured_llms(cfg))
 
 
 def get_llm(name: str | None = None):

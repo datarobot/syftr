@@ -10,15 +10,17 @@ from fsspec.implementations.local import LocalFileSystem
 from llama_index.core import Document, Settings, SimpleDirectoryReader
 from llama_index.core.callbacks import CallbackManager, LlamaDebugHandler
 from llama_index.core.evaluation import CorrectnessEvaluator
+from llama_index.core.llms.llm import LLM
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.retrievers import BaseRetriever
 from llama_index.core.storage.docstore.types import BaseDocumentStore
 from llama_index.llms.azure_openai import AzureOpenAI
 
-from syftr.configuration import cfg
+from syftr.configuration import AzureOpenAILLM, LLMCostTokens, LLMMetadata, cfg
+from syftr.configuration import Settings as CfgSettings
 from syftr.flows import Flow, RAGFlow, ReActAgentFlow
 from syftr.huggingface_helper import get_embedding_model
-from syftr.llm import get_llm
+from syftr.llm import get_llm, load_configured_llms
 from syftr.retrievers.build import _build_dense_index, build_rag_retriever
 from syftr.storage import HotPotQAHF, PartitionMap, QAPair, SyftrQADataset
 from syftr.studies import (
@@ -558,3 +560,48 @@ def react_agent_flow(
         ),
         hotpot_toy_study_config,
     )
+
+
+def config_with_models() -> Settings:
+    custom_config = CfgSettings(
+        generative_models={
+            "test_gpt_4o_mini": AzureOpenAILLM(
+                deployment_name="gpt-4o-mini",
+                api_version="2024-06-01",
+                additional_kwargs={"user": "syftr"},
+                cost=LLMCostTokens(input=0.15, output=0.60),
+                metadata=LLMMetadata(
+                    model_name="gpt-4o-mini",
+                    context_window=128000,
+                    is_function_calling_model=True,
+                ),
+            ),
+            "test_gpt_4o": AzureOpenAILLM(
+                deployment_name="gpt-4o",
+                api_version="2024-06-01",
+                additional_kwargs={"user": "syftr"},
+                cost=LLMCostTokens(input=2.5, output=10.00),
+                metadata=LLMMetadata(
+                    model_name="gpt-4o",
+                    context_window=128000,
+                    is_function_calling_model=True,
+                ),
+            ),
+        }
+    )
+    custom_config.generative_models = {
+        key: value
+        for key, value in custom_config.generative_models.items()
+        if "test_" in key
+    }
+    return custom_config
+
+
+@pytest.fixture(
+    params=[name for name in config_with_models().generative_models.keys()],
+    ids=[name for name in config_with_models().generative_models.keys()],
+)
+def configured_models(request) -> T.Tuple[str, LLM]:
+    name = request.param
+    llms = load_configured_llms(config_with_models())
+    return name, llms[name]

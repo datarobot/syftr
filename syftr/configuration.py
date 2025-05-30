@@ -472,9 +472,7 @@ class OpenAILikeLLM(LLMConfig):
     model: str = Field(
         description="Name of the OpenAI-like model (e.g., meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo)."
     )
-    api_base: HttpUrl = Field(
-        description="API base URL for the OpenAI-like model."
-    )
+    api_base: HttpUrl = Field(description="API base URL for the OpenAI-like model.")
     api_key: SecretStr = Field(description="API key for this endpoint")
     timeout: int = Field(
         default=120, description="Timeout in seconds for API requests."
