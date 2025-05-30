@@ -49,11 +49,11 @@ from syftr.studies import (  # noqa
 )
 from syftr.studyconfig_helper import build_configs
 
-PREFIX = "rank"
-BENCH_NUM = 0
-NUM_TRIALS = 10
+PREFIX = "box"
+BENCH_NUM = 1
+NUM_TRIALS = 1000
 USE_PARETO_BASELINES = False
-RUN_NAME = "rag-and-agents"
+RUN_NAME = "retriever"
 REUSE_STUDY = True
 RECREATE_STUDY = True
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
@@ -61,34 +61,11 @@ DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 
 blocks = [
-    Block(
-        name="global",
-        num_trials=NUM_TRIALS,
-        components=[
-            "rag_retriever",
-            "splitter",
-            "additional_context",
-            "few_shot_retriever",
-            "hyde",
-            "critique_rag_agent",
-            "lats_rag_agent",
-            "react_rag_agent",
-            "rag_mode",
-            "reranker",
-            "response_synthesizer_llm",
-            "sub_question_rag",
-            "template_name",
-        ],
-    ),
     # Block(
-    #     name="rag_retriever",
-    #     num_trials=100,
-    #     components=["rag_retriever"],
-    # ),
-    # Block(
-    #     name="main",
-    #     num_trials=900,
+    #     name="global",
+    #     num_trials=NUM_TRIALS,
     #     components=[
+    #         "rag_retriever",
     #         "splitter",
     #         "additional_context",
     #         "few_shot_retriever",
@@ -103,6 +80,29 @@ blocks = [
     #         "template_name",
     #     ],
     # ),
+    Block(
+        name="rag_retriever",
+        num_trials=200,
+        components=["rag_retriever"],
+    ),
+    Block(
+        name="main",
+        num_trials=NUM_TRIALS - 200,
+        components=[
+            "splitter",
+            "additional_context",
+            "few_shot_retriever",
+            "hyde",
+            "critique_rag_agent",
+            "lats_rag_agent",
+            "react_rag_agent",
+            "rag_mode",
+            "reranker",
+            "response_synthesizer_llm",
+            "sub_question_rag",
+            "template_name",
+        ],
+    ),
 ]
 
 
@@ -135,19 +135,19 @@ if USE_PARETO_BASELINES:
                 baselines.append(flow)
     print(f"We have {len(baselines)} Pareto-baselines for seeding")
 
-# baselines = json.load(
-#     open(cfg.paths.results_dir / "silver-bullet-like-flows.json", "r")
-# )
+# import json
+
+# baselines = json.load(open(cfg.paths.results_dir / "silver-bullets.json", "r"))
 
 optimization_config = OptimizationConfig(
     method="expanding",
-    # blocks=blocks,
+    blocks=blocks,
     shuffle_blocks=False,
     num_trials=NUM_TRIALS,
     baselines=baselines,
-    baselines_cycle_llms=False,
+    baselines_cycle_llms=True,
     shuffle_baselines=True,
-    max_concurrent_trials=10,
+    max_concurrent_trials=20,
     num_eval_samples=50,
     num_eval_batch=5,
     rate_limiter_max_coros=30,
@@ -156,11 +156,11 @@ optimization_config = OptimizationConfig(
     cpus_per_trial=1,
     seeder_timeout=3600 * 10,  # None: wait until finished, 0: don't wait
     # -----------------------------------------------
-    num_random_trials=0,
+    num_random_trials=100,
     # -----------------------------------------------
-    use_individual_baselines=False,
-    use_agent_baselines=False,
-    use_variations_of_baselines=False,
+    use_individual_baselines=True,
+    use_agent_baselines=True,
+    use_variations_of_baselines=True,
     # -----------------------------------------------
     use_pareto_baselines=False,  # required for transfer learning
     # -----------------------------------------------
@@ -278,16 +278,16 @@ evaluation = Evaluation(
 )
 
 datasets = [
-    FinanceBenchHF(),
     # -----------------------------------------------
     # BrightHF(subset="biology"),
     # CragTask3HF(subset="music"),
     # CragTask3HF(subset="sports"),
     # DRDocsHF(),
+    FinanceBenchHF(),
     # HotPotQAHF(subset="train_hard"),
-    # InfiniteBenchHF(),
+    InfiniteBenchHF(),
     # MultiHopRAGHF(),
-    # PhantomWikiv050(),
+    PhantomWikiv050(),
     # -----------------------------------------------
     # BrightHF(subset="earth_science"),
     # BrightHF(subset="economics"),
