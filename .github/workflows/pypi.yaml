@@ -19,6 +19,13 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: ">=0.4.24"
+          enable-cache: true
+          cache-local-path: /home/runner/work/_temp/setup-uv-cache
+
       - name: Build release distributions
         run: |
           uv build
