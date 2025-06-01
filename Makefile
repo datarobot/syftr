@@ -29,15 +29,15 @@ pre-commit-run:
 	@pre-commit run --all-files
 
 unit-tests:
-	@uv run pytest -svv tests/unit/*
+	@uv run pytest -svv tests/unit/
 
 functional-tests:
-	@uv run pytest -svv tests/functional/*
+	@uv run pytest -svv tests/functional/
 
 e2e-tests:
-	@uv run pytest -svv tests/e2e/*
+	@uv run pytest -svv tests/e2e/
 
-tests: unit-tests functional-tests
+tests: unit-tests functional-tests e2e-tests
 
 remote-pyenv:
 	@ansible-playbook -u datarobot -i inventory.ini playbooks/remote-pyenv.yml

@@ -1,6 +1,8 @@
 [project]
 name = "syftr"
-version = "0.0.2"
+description = "syftr is an agent optimizer that helps you find the best agentic workflows for your budget."
+readme = "README.md"
+dynamic = ["version"]
 requires-python = ">=3.12.3,<3.13"
 dependencies = [
     "aiolimiter",
@@ -95,10 +97,11 @@ dependencies = [
     "types-tabulate",
     "vertexai==1.68.0",
 ]
+
 [tool.hatch.version]
-source = "code"
 path = "syftr/__init__.py"
 requires-python = ">=3.12.3,<3.13"
+source = "uv-dynamic-versioning"
 
 [project.optional-dependencies]
 dev = [
@@ -143,7 +146,7 @@ syftr = "syftr"
 
 [tool.ruff]
 target-version = "py312"
-exclude = ["scratch", "notebooks", "plotting.py", "examples"]
+exclude = ["notebooks", "plotting.py", "examples"]
 line-length = 88
 indent-width = 4
 lint.select = [
@@ -165,9 +168,11 @@ ignore_missing_imports = true
 exclude = ['.venv', 'build', 'notebooks']
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "uv-dynamic-versioning"]
 build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 addopts = "--ignore=scratch"
 
+[tool.uv-dynamic-versioning]
+fallback-version = "0.0.0"
