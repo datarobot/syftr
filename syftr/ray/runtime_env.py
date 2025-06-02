@@ -26,6 +26,7 @@ def _build_pip() -> List[str]:
         # We are not in a git repo, syftr is used as a library.
         return ["syftr"]
 
+
 def _build_env(delete_confirmed: bool) -> Dict[str, str]:
     env = {"TOKENIZERS_PARALLELISM": "true", "NLTK_DATA": cfg.paths.nltk_dir.as_posix()}
     if delete_confirmed:
