@@ -37,7 +37,7 @@ from opentelemetry.trace import NoOpTracer
 from pydantic import BaseModel, PrivateAttr
 from vertexai.preview.tokenization import get_tokenizer_for_model
 
-from syftr.configuration import cfg
+from syftr.configuration import LLMCostCharacters, LLMCostHourly, LLMCostTokens, cfg
 from syftr.logger import logger
 
 # Unit: $ / token
@@ -121,6 +121,7 @@ if cfg.generative_models:
         cost_type = getattr(cost_config, "type", "unknown")
 
         if cost_type == "tokens":
+            assert isinstance(cost_config, LLMCostTokens), cost_config
             # Ensure the sub-dictionary for 'tokens' exists
             MODEL_PRICING_INFO["tokens"].setdefault(model_key, {})
             # cost_config.input/output are "Cost per million tokens"
@@ -135,6 +136,7 @@ if cfg.generative_models:
                 f"Updated token pricing for '{model_key}' from cfg ('{config_key}')."
             )
         elif cost_type == "characters":
+            assert isinstance(cost_config, LLMCostCharacters), cost_config
             MODEL_PRICING_INFO["characters"].setdefault(model_key, {})
             # cost_config.input/output are "Cost per million characters"
             # MODEL_PRICING_INFO stores "Cost per character"
@@ -148,6 +150,7 @@ if cfg.generative_models:
                 f"Updated character pricing for '{model_key}' from cfg ('{config_key}')."
             )
         elif cost_type == "hourly":
+            assert isinstance(cost_config, LLMCostHourly), cost_config
             MODEL_PRICING_INFO["seconds"].setdefault(model_key, {})
             # cost_config.rate is "Average inference cost per hour"
             # MODEL_PRICING_INFO stores "Cost per second"

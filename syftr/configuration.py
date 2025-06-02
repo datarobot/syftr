@@ -426,7 +426,7 @@ class AnthropicVertexLLM(LLMConfig):
     max_retries: int = Field(
         default=0, description="Maximum number of retries for API calls."
     )
-    additional_kwargs: Optional[Dict[str, Any]] = Field(
+    additional_kwargs: Dict[str, Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments for the Anthropic model.",
     )
@@ -444,7 +444,7 @@ class AzureAICompletionsLLM(LLMConfig):
     max_retries: int = Field(
         default=0, description="Maximum number of retries for API calls."
     )
-    additional_kwargs: Optional[Dict[str, Any]] = Field(
+    additional_kwargs: Dict[str, Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments for the Azure AI Completions model.",
     )
@@ -459,7 +459,7 @@ class CerebrasLLM(LLMConfig):
     max_retries: int = Field(
         default=0, description="Maximum number of retries for API calls."
     )
-    additional_kwargs: Optional[Dict[str, Any]] = Field(
+    additional_kwargs: Dict[str, Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments for the Cerebras model.",
     )
@@ -474,13 +474,16 @@ class OpenAILikeLLM(LLMConfig):
     )
     api_base: HttpUrl = Field(description="API base URL for the OpenAI-like model.")
     api_key: SecretStr = Field(description="API key for this endpoint")
+    api_version: Optional[str] = Field(
+        default=None, description="API version to use for this endpoint"
+    )
     timeout: int = Field(
         default=120, description="Timeout in seconds for API requests."
     )
     max_retries: int = Field(
         default=0, description="Maximum number of retries for API calls."
     )
-    additional_kwargs: Optional[Dict[str, Any]] = Field(
+    additional_kwargs: Dict[str, Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments for the OpenAI-like model.",
     )

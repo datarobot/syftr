@@ -546,7 +546,7 @@ def _construct_azure_openai_llm(name: str, llm_config: AzureOpenAILLM) -> AzureO
         model=llm_config.metadata.model_name,
         deployment_name=llm_config.deployment_name or llm_config.metadata.model_name,
         api_key=cfg.azure_oai.api_key.get_secret_value(),
-        azure_endpoint=str(cfg.azure_oai.api_url),
+        azure_endpoint=cfg.azure_oai.api_url.unicode_string(),
         api_version=llm_config.api_version or cfg.azure_oai.api_version,
         temperature=llm_config.temperature,
         max_tokens=llm_config.metadata.num_output,
@@ -595,10 +595,10 @@ def _construct_azure_ai_completions_llm(
 ) -> AzureAICompletionsModel:
     return AzureAICompletionsModel(
         credential=llm_config.api_key.get_secret_value(),
-        endpoint=llm_config.endpoint,
+        endpoint=llm_config.endpoint.unicode_string(),
         model_name=llm_config.model_name,
         temperature=llm_config.temperature,
-        metadata=llm_config.metadata,
+        metadata=llm_config.metadata.model_dump(),
     )
 
 
@@ -606,7 +606,7 @@ def _construct_cerebras_llm(name: str, llm_config: CerebrasLLM) -> Cerebras:
     return Cerebras(
         model=llm_config.model,
         api_key=cfg.cerebras.api_key.get_secret_value(),
-        api_base=str(cfg.cerebras.api_url),
+        api_base=cfg.cerebras.api_url.unicode_string(),
         temperature=llm_config.temperature,
         max_tokens=llm_config.metadata.num_output,
         context_window=llm_config.metadata.context_window,  # Use raw value as per existing Cerebras configs
@@ -621,6 +621,7 @@ def _construct_openai_like_llm(name: str, llm_config: OpenAILikeLLM) -> OpenAILi
         model=llm_config.model,
         api_base=str(llm_config.api_base),
         api_key=llm_config.api_key.get_secret_value(),
+        api_version=llm_config.api_version,  # type: ignore
         max_tokens=llm_config.metadata.num_output,
         context_window=_scale(llm_config.metadata.context_window),
         is_chat_model=llm_config.metadata.is_chat_model,
@@ -631,15 +632,15 @@ def _construct_openai_like_llm(name: str, llm_config: OpenAILikeLLM) -> OpenAILi
     )
 
 
-def load_configured_llms(config: Settings) -> T.Dict[str, LLM]:
-    _dynamically_loaded_llms: T.Dict[str, LLM] = {}
+def load_configured_llms(config: Settings) -> T.Dict[str, FunctionCallingLLM]:
+    _dynamically_loaded_llms: T.Dict[str, FunctionCallingLLM] = {}
     if not config.generative_models:
         return {}
     logger.debug(
         f"Loading LLMs from 'generative_models' configuration: {list(config.generative_models.keys())}"
     )
     for name, llm_config_instance in config.generative_models.items():
-        llm_instance: T.Optional[LLM] = None
+        llm_instance: T.Optional[FunctionCallingLLM] = None
         try:
             provider = getattr(llm_config_instance, "provider", None)
 

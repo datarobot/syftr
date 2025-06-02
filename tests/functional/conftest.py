@@ -562,7 +562,7 @@ def react_agent_flow(
     )
 
 
-def config_with_models() -> Settings:
+def config_with_models() -> CfgSettings:
     custom_config = CfgSettings(
         generative_models={
             "test_gpt_4o_mini": AzureOpenAILLM(
