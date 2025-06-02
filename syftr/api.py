@@ -1,4 +1,3 @@
-import argparse
 import asyncio
 import json
 import logging
@@ -308,11 +307,7 @@ class Study:
         """Stop running study."""
         if not hasattr(self, "job_id"):
             raise SyftrUserAPIError("This study is not running. Run it first.")
-        try:
-            self.client.stop_job(self.job_id)
-            logger.info(f"Job {self.job_id} stopped.")
-        except Exception as e:
-            raise SyftrUserAPIError(f"Failed to stop job {self.job_id}. Error: {e}")
+        stop_ray_job(self.job_id, self.client)
 
     def delete(self):
         """Remove study records and metadata from Optuna storage."""
@@ -335,17 +330,12 @@ class Study:
         return f"Study(name={self.study_config.name}, remote={self.remote})"
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="This is the syftr API CLI, the main entry point for running syftr in the shell.",
-        epilog="Please, verify study configs before submission as it may incur significant costs.",
-    )
-
-    parser.add_argument("--study-config", help="Path to study config yaml")
-    args = parser.parse_args()
-
-    study_config_file = Path(args.study_config)
-
-    study = Study.from_file(study_config_file)
-    study.run()
-    study.wait_for_completion(stream_logs=True)
+def stop_ray_job(job_id: int, client=None):
+    """Stop a Ray job by its ID."""
+    if client is None:
+        client = submit.get_client()
+    try:
+        client.stop_job(job_id)
+        logger.info(f"Job {job_id} stopped.")
+    except Exception as e:
+        raise SyftrUserAPIError(f"Failed to stop job {job_id}. Error: {e}")
