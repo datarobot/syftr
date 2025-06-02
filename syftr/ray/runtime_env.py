@@ -24,12 +24,7 @@ def _build_pip() -> List[str]:
         return pyproject_data["project"]["dependencies"]
     except FileNotFoundError:
         # We are not in a git repo, syftr is used as a library.
-        from pip._vendor import pkg_resources
-
-        _package_name = "syftr"
-        _package = pkg_resources.working_set.by_key[_package_name]
-        return [str(r) for r in _package.requires()]
-
+        return ["syftr"]
 
 def _build_env(delete_confirmed: bool) -> Dict[str, str]:
     env = {"TOKENIZERS_PARALLELISM": "true", "NLTK_DATA": cfg.paths.nltk_dir.as_posix()}
