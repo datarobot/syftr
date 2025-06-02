@@ -1,8 +1,4 @@
-# import pytest
-
 from syftr.flows import Flow
-
-# from syftr.llm import load_configured_llms
 
 
 def test_loaded_models(configured_models):
