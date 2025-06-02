@@ -34,7 +34,7 @@ def _get_metadata(study_config: StudyConfig) -> Dict[str, Any]:
     except git.exc.InvalidGitRepositoryError:
         # We are not in a git repo, syftr used as a library, so generating a random sha.
         short_sha = secrets.token_hex(nbytes=8)
-        sha = "library"
+        sha = "library_" + short_sha
     return {
         "study_name": study_config.name,
         "git_sha": sha,
