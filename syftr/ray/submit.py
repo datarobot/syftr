@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import getpass
+import secrets
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
@@ -26,9 +27,14 @@ def get_client() -> JobSubmissionClient:
 
 
 def _get_metadata(study_config: StudyConfig) -> Dict[str, Any]:
-    repo = git.Repo(cfg.paths.root_dir)
-    sha = repo.head.commit.hexsha
-    short_sha = repo.git.rev_parse(sha, short=True)
+    try:
+        repo = git.Repo(cfg.paths.root_dir)
+        sha = repo.head.commit.hexsha
+        short_sha = repo.git.rev_parse(sha, short=True)
+    except git.exc.InvalidGitRepositoryError:
+        # We are not in git repo, syftr used as a library, so generating a random sha.
+        short_sha = secrets.token_hex(nbytes=8)
+        sha = "library"
     return {
         "study_name": study_config.name,
         "git_sha": sha,
