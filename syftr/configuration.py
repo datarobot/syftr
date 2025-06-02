@@ -64,7 +64,6 @@ import socket
 import tempfile
 import typing as T
 from pathlib import Path
-from typing import Any, Dict, Literal, Optional, Union
 
 from google.cloud.aiplatform_v1beta1.types import content
 from llama_index.core.base.llms.types import LLMMetadata
@@ -349,19 +348,19 @@ class GCPVertex(BaseModel, APIKeySerializationMixin):
 
 
 class LLMCostTokens(BaseModel):
-    type: Literal["tokens"] = "tokens"
+    type: T.Literal["tokens"] = "tokens"
     input: float = Field(description="Cost per million input tokens")
     output: float = Field(description="Cost per million output tokens")
 
 
 class LLMCostCharacters(BaseModel):
-    type: Literal["characters"] = "characters"
+    type: T.Literal["characters"] = "characters"
     input: float = Field(description="Cost per million input characters")
     output: float = Field(description="Cost per million output characters")
 
 
 class LLMCostHourly(BaseModel):
-    type: Literal["hourly"] = "hourly"
+    type: T.Literal["hourly"] = "hourly"
     rate: float = Field(
         description="Average inference cost per hour "
         "(eg. machine hourly rate divided by average number of concurrent requests)"
@@ -370,7 +369,7 @@ class LLMCostHourly(BaseModel):
 
 class LLMConfig(BaseModel):
     cost: Annotated[
-        Union[LLMCostTokens, LLMCostCharacters, LLMCostHourly],
+        T.Union[LLMCostTokens, LLMCostCharacters, LLMCostHourly],
         Field(discriminator="type"),
     ] = Field(description="LLM inference costs by token, character, or hourly rate.")
 
@@ -385,11 +384,11 @@ class LLMConfig(BaseModel):
 
 # Specific LLM Instance Configurations
 class AzureOpenAILLM(LLMConfig):
-    provider: Literal["azure_openai"] = "azure_openai"
-    deployment_name: Optional[str] = None
-    api_version: Optional[str] = None
+    provider: T.Literal["azure_openai"] = "azure_openai"
+    deployment_name: T.Optional[str] = None
+    api_version: T.Optional[str] = None
     max_retries: int = 0
-    additional_kwargs: Optional[Dict[str, Any]] = None
+    additional_kwargs: T.Optional[T.Dict[str, T.Any]] = None
 
 
 GCP_SAFETY_SETTINGS = {
@@ -401,39 +400,39 @@ GCP_SAFETY_SETTINGS = {
 
 
 class VertexAILLM(LLMConfig):
-    provider: Literal["vertex_ai"] = "vertex_ai"
-    model: Optional[str] = None
+    provider: T.Literal["vertex_ai"] = "vertex_ai"
+    model: T.Optional[str] = None
     safety_settings: dict = GCP_SAFETY_SETTINGS
     max_retries: int = 0
-    additional_kwargs: Optional[Dict[str, Any]] = None
+    additional_kwargs: T.Optional[T.Dict[str, T.Any]] = None
 
 
 class AnthropicVertexLLM(LLMConfig):
-    provider: Literal["anthropic_vertex"] = Field(
+    provider: T.Literal["anthropic_vertex"] = Field(
         "anthropic_vertex", description="Provider identifier."
     )
     model: str = Field(
         description="Name of the Anthropic model on Vertex AI (e.g., claude-3-5-sonnet-v2@20241022)."
     )
-    project_id: Optional[str] = Field(
+    project_id: T.Optional[str] = Field(
         default=None,
         description="GCP Project ID. If None, uses global cfg.gcp_vertex.project_id.",
     )
-    region: Optional[str] = Field(
+    region: T.Optional[str] = Field(
         default=None,
         description="GCP Region. If None, uses global cfg.gcp_vertex.region.",
     )
     max_retries: int = Field(
         default=0, description="Maximum number of retries for API calls."
     )
-    additional_kwargs: Dict[str, Any] = Field(
+    additional_kwargs: T.Dict[str, T.Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments for the Anthropic model.",
     )
 
 
 class AzureAICompletionsLLM(LLMConfig):
-    provider: Literal["azure_ai"] = Field(
+    provider: T.Literal["azure_ai"] = Field(
         "azure_ai", description="Provider identifier."
     )
     model_name: str = Field(
@@ -444,14 +443,14 @@ class AzureAICompletionsLLM(LLMConfig):
     max_retries: int = Field(
         default=0, description="Maximum number of retries for API calls."
     )
-    additional_kwargs: Dict[str, Any] = Field(
+    additional_kwargs: T.Dict[str, T.Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments for the Azure AI Completions model.",
     )
 
 
 class CerebrasLLM(LLMConfig):
-    provider: Literal["cerebras"] = Field(
+    provider: T.Literal["cerebras"] = Field(
         "cerebras", description="Provider identifier."
     )
     model: str = Field(description="Name of the Cerebras model (e.g., llama3.1-8b).")
@@ -459,14 +458,14 @@ class CerebrasLLM(LLMConfig):
     max_retries: int = Field(
         default=0, description="Maximum number of retries for API calls."
     )
-    additional_kwargs: Dict[str, Any] = Field(
+    additional_kwargs: T.Dict[str, T.Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments for the Cerebras model.",
     )
 
 
 class OpenAILikeLLM(LLMConfig):
-    provider: Literal["openai_like"] = Field(
+    provider: T.Literal["openai_like"] = Field(
         "openai_like", description="Provider identifier for OpenAI-compatible APIs."
     )
     model: str = Field(
@@ -474,7 +473,7 @@ class OpenAILikeLLM(LLMConfig):
     )
     api_base: HttpUrl = Field(description="API base URL for the OpenAI-like model.")
     api_key: SecretStr = Field(description="API key for this endpoint")
-    api_version: Optional[str] = Field(
+    api_version: T.Optional[str] = Field(
         default=None, description="API version to use for this endpoint"
     )
     timeout: int = Field(
@@ -483,7 +482,7 @@ class OpenAILikeLLM(LLMConfig):
     max_retries: int = Field(
         default=0, description="Maximum number of retries for API calls."
     )
-    additional_kwargs: Dict[str, Any] = Field(
+    additional_kwargs: T.Dict[str, T.Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments for the OpenAI-like model.",
     )
@@ -491,7 +490,7 @@ class OpenAILikeLLM(LLMConfig):
 
 # Update LLMConfigUnion by adding the new classes
 LLMConfigUnion = Annotated[
-    Union[
+    T.Union[
         AzureOpenAILLM,
         VertexAILLM,
         AnthropicVertexLLM,
@@ -677,7 +676,7 @@ class Settings(BaseSettings):
     cerebras: Cerebras = Cerebras()
     togetherai: TogetherAI = TogetherAI()
     local_models: LocalOpenAILikeModels = LocalOpenAILikeModels()
-    generative_models: Dict[str, LLMConfigUnion] = Field(
+    generative_models: T.Dict[str, LLMConfigUnion] = Field(
         default_factory=dict, description="User-provided LLM definitions"
     )
     logging: Logging = Logging()
