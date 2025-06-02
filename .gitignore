@@ -208,6 +208,7 @@ studies/greedy*
 studies/box*
 studies/example1--small-study--drdocs_hf.yaml
 studies/test*
+studies/silver*
 
 notebooks/.nfs*
 

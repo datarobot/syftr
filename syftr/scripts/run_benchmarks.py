@@ -49,11 +49,11 @@ from syftr.studies import (  # noqa
 )
 from syftr.studyconfig_helper import build_configs
 
-PREFIX = "box"
+PREFIX = "silver"
 BENCH_NUM = 1
 NUM_TRIALS = 1000
 USE_PARETO_BASELINES = False
-RUN_NAME = "retriever"
+RUN_NAME = "in-sample"
 REUSE_STUDY = True
 RECREATE_STUDY = True
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
@@ -61,34 +61,11 @@ DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 
 blocks = [
-    # Block(
-    #     name="global",
-    #     num_trials=NUM_TRIALS,
-    #     components=[
-    #         "rag_retriever",
-    #         "splitter",
-    #         "additional_context",
-    #         "few_shot_retriever",
-    #         "hyde",
-    #         "critique_rag_agent",
-    #         "lats_rag_agent",
-    #         "react_rag_agent",
-    #         "rag_mode",
-    #         "reranker",
-    #         "response_synthesizer_llm",
-    #         "sub_question_rag",
-    #         "template_name",
-    #     ],
-    # ),
     Block(
-        name="rag_retriever",
-        num_trials=200,
-        components=["rag_retriever"],
-    ),
-    Block(
-        name="main",
-        num_trials=NUM_TRIALS - 200,
+        name="global",
+        num_trials=NUM_TRIALS,
         components=[
+            "rag_retriever",
             "splitter",
             "additional_context",
             "few_shot_retriever",
@@ -103,29 +80,34 @@ blocks = [
             "template_name",
         ],
     ),
+    # Block(
+    #     name="rag_retriever",
+    #     num_trials=200,
+    #     components=["rag_retriever"],
+    # ),
+    # Block(
+    #     name="main",
+    #     num_trials=NUM_TRIALS - 200,
+    #     components=[
+    #         "splitter",
+    #         "additional_context",
+    #         "few_shot_retriever",
+    #         "hyde",
+    #         "critique_rag_agent",
+    #         "lats_rag_agent",
+    #         "react_rag_agent",
+    #         "rag_mode",
+    #         "reranker",
+    #         "response_synthesizer_llm",
+    #         "sub_question_rag",
+    #         "template_name",
+    #     ],
+    # ),
 ]
 
 
-baseline_studies = [
-    "rank0--rag-and-agents--financebench_hf",
-    "rank1--rag-and-agents--bright_hf",
-    "rank1--rag-and-agents--crag_hf-music",
-    "rank1--rag-and-agents--crag_hf-sports",
-    "rank1--rag-and-agents--drdocs_hf",
-    "rank1--rag-and-agents--financebench_hf",
-    "rank1--rag-and-agents--hotpotqa_hf-train_hard",
-    "rank1--rag-and-agents--infinitebench_hf",
-    "rank1--rag-and-agents--multihoprag_hf",
-    "rank1--rag-and-agents--phantomwikiv050_hf",
-    "rank2--rag-and-agents--bright_hf",
-    "rank2--rag-and-agents--crag_hf-music",
-    "rank2--rag-and-agents--crag_hf-sports",
-    "rank2--rag-and-agents--drdocs_hf",
-    "rank2--rag-and-agents--financebench_hf",
-    "rank2--rag-and-agents--hotpotqa_hf-train_hard",
-    "rank2--rag-and-agents--infinitebench_hf",
-    "rank2--rag-and-agents--multihoprag_hf",
-    "rank2--rag-and-agents--phantomwikiv050_hf",
+baseline_studies: T.List[str] = [
+    # "silver1--in-sample--",
 ]
 baselines = []
 if USE_PARETO_BASELINES:
@@ -148,19 +130,19 @@ optimization_config = OptimizationConfig(
     baselines_cycle_llms=True,
     shuffle_baselines=True,
     max_concurrent_trials=20,
-    num_eval_samples=50,
+    num_eval_samples=100,
     num_eval_batch=5,
     rate_limiter_max_coros=30,
     rate_limiter_period=60,
     max_trial_cost=40.0,
     cpus_per_trial=1,
-    seeder_timeout=3600 * 10,  # None: wait until finished, 0: don't wait
+    seeder_timeout=3600 * 0,  # None: wait until finished, 0: don't wait
     # -----------------------------------------------
-    num_random_trials=100,
+    num_random_trials=10,
     # -----------------------------------------------
-    use_individual_baselines=True,
-    use_agent_baselines=True,
-    use_variations_of_baselines=True,
+    use_individual_baselines=False,
+    use_agent_baselines=False,
+    use_variations_of_baselines=False,
     # -----------------------------------------------
     use_pareto_baselines=False,  # required for transfer learning
     # -----------------------------------------------
@@ -283,19 +265,19 @@ datasets = [
     # CragTask3HF(subset="music"),
     # CragTask3HF(subset="sports"),
     # DRDocsHF(),
-    FinanceBenchHF(),
+    # FinanceBenchHF(),
     # HotPotQAHF(subset="train_hard"),
-    InfiniteBenchHF(),
+    # InfiniteBenchHF(),
     # MultiHopRAGHF(),
-    PhantomWikiv050(),
+    # PhantomWikiv050(),
     # -----------------------------------------------
-    # BrightHF(subset="earth_science"),
-    # BrightHF(subset="economics"),
-    # BrightHF(subset="psychology"),
-    # BrightHF(subset="robotics"),
+    BrightHF(subset="earth_science"),
+    BrightHF(subset="economics"),
+    BrightHF(subset="psychology"),
+    BrightHF(subset="robotics"),
     # BrightHF(subset="stackoverflow"),
-    # BrightHF(subset="sustainable_living"),
-    # BrightHF(subset="pony"),
+    BrightHF(subset="sustainable_living"),
+    BrightHF(subset="pony"),
     # -----------------------------------------------
     # SyntheticHotPotQAHF(subset="train_hard"),
     # SyntheticFinanceBenchHF(),
