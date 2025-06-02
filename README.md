@@ -82,34 +82,116 @@ print(s.pareto_flows)
 ]
 ```
 
-## Custom LLMs
+## LLM Configuration
 
-In addition to the built-in LLMs, you may enable additional OpenAI-API-compatible API endpoints in the ``config.yaml``.
+__syftr__ can be configured to use a wide variety of LLMs from a variety of LLM providers.
+These are configured using the ``generative_models`` section of ``config.yaml``.
 
-For example:
+Each LLM provider has some different configuration options as well as some common ones.
+Let's look at an example using ``gpt-4.5-preview`` hosted in Azure OpenAI:
 
 ```yaml
-local_models:
-  default_api_key: "YOUR_API_KEY_HERE"
-  generative:
-    - model_name: "microsoft/Phi-4-multimodal-instruct"
-      api_base: "http://phi-4-host.com/openai/v1"
-      max_tokens: 2000
-      context_window: 129072
+generative_models:
+  # azure_openai Provider Example
+  azure_gpt_45_preview:
+    provider: azure_openai
+
+    temperature: 0.0
+    max_retries: 0
+
+    # Provider-specific configurations
+    deployment_name: "gpt-4.5-preview"
+    api_version: "2024-12-01-preview"
+    additional_kwargs:
+      user: syftr
+
+    # Cost example - options are the same for all models (required)
+    cost:
+      type: tokens                      # tokens, characters, or hourly
+      input: 75
+      output: 150.00
+      # rate: 12.00
+
+    # LLamaIndex LLMetadata Example - keys and defaults are the same for all models
+    metadata:
+      model_name: gpt-4.5-preview
+      context_window: 100000
+      num_output: 2048
+      is_chat_model: true
       is_function_calling_model: true
-      additional_kwargs:
-        frequency_penalty: 1.0
-        temperature: 0.1
-    - model_name: "deepseek-ai/DeepSeek-R1-Distill-Llama-70B"
-      api_base: "http://big-vllm-host:8000/v1"
-      max_tokens: 2000
-      context_window: 129072
-      is_function_calling_model: true
-      additional_kwargs:
-        temperature: 0.6
+      system_role: SYSTEM
 ```
 
-And you may also enable additional embedding model endpoints:
+### Provider-specific options
+We will now cover the provider-specific options for the supported providers.
+
+All LLM configurations defined under `generative_models:` share a common set of options inherited from the base `LLMConfig`:
+
+* **`cost`**: (Object, Required) Defines the cost structure for the LLM.
+    * `type`: (String, Required) Type of cost calculation: `tokens`, `characters`, or `hourly`.
+    * `input`: (Float, Required) Cost for input (e.g., per million tokens/characters).
+    * `output`: (Float, Required if `type` is `tokens` or `characters`) Cost for output.
+    * `rate`: (Float, Required if `type` is `hourly`) Average cost per hour.
+* **`metadata`**: (Object, Required) Contains essential metadata about the LLM.
+    * `model_name`: (String, Required) The specific model identifier (e.g., "gpt-4o-mini", "gemini-1.5-pro-001").
+    * `context_window`: (Integer, Optional) The maximum context window size. Defaults to `3900`.
+    * `num_output`: (Integer, Optional) Default number of output tokens the model is expected to generate. Defaults to `256`.
+    * `is_chat_model`: (Boolean, Optional) Indicates if the model is a chat-based model. Defaults to `false`.
+    * `is_function_calling_model`: (Boolean, Optional) Indicates if the model supports function calling. Defaults to `false`.
+    * `system_role`: (String, Optional) The expected role name for system prompts (e.g., `SYSTEM`, `USER`). Defaults to `SYSTEM`.
+* **`temperature`**: (Float, Optional) The sampling temperature for generation. Defaults to `0.0`.
+
+Below are the configurations specific to each provider type:
+
+---
+### Provider: azure_openai
+* **`provider`**: (String, Literal) Must be `azure_openai`.
+* **`deployment_name`**: (String, Optional) The name of your deployment in Azure OpenAI. Will default to `metadata.model_name`.
+* **`api_version`**: (String, Optional) The Azure OpenAI API version to use (e.g., "2024-07-18"). If not provided, it may default to a global setting in `cfg.azure_oai.api_version` or a client default. Defaults to `None`.
+
+---
+### Provider: vertex_ai
+* **`provider`**: (String, Literal) Must be `vertex_ai`.
+* **`model`**: (String, Optional) The name of the model on Google Vertex AI (e.g., "gemini-1.5-pro-001", "text-bison@002"). Defaults to `metadata.model_name`.
+* **`project_id`**: (String, Optional) The GCP Project ID. If not provided (`None`), it will use the global `cfg.gcp_vertex.project_id`. Defaults to `None`.
+* **`region`**: (String, Optional) The GCP Region. If not provided (`None`), it will use the global `cfg.gcp_vertex.region`. Defaults to `None`.
+    * *Note*: `project_id` and `region` are typically sourced from the global `gcp_vertex` settings but can be specified in `additional_kwargs` if needed for a specific model client.*
+* **`safety_settings`**: (Object, Optional) A dictionary defining content safety settings. Defaults to predefined `GCP_SAFETY_SETTINGS` (maximally permissive - see `configuration.py`).
+
+---
+### Provider: anthropic_vertex
+* **`provider`**: (String, Literal) Must be `anthropic_vertex`.
+* **`model`**: (String, Required) The name of the Anthropic model available on Vertex AI (e.g., "claude-3-5-sonnet-v2@20241022").
+* **`project_id`**: (String, Optional) The GCP Project ID. If not provided (`None`), it will use the global `cfg.gcp_vertex.project_id`. Defaults to `None`.
+* **`region`**: (String, Optional) The GCP Region. If not provided (`None`), it will use the global `cfg.gcp_vertex.region`. Defaults to `None`.
+
+---
+### Provider: azure_ai
+* **`provider`**: (String, Literal) Must be `azure_ai` (for Azure AI Completions, e.g., catalog models).
+* **`model_name`**: (String, Required) The model name as recognized by Azure AI Completions (e.g., "Llama-3.3-70B-Instruct").
+* **`endpoint`**: (String, HttpUrl, Required) The API URL endpoint for this specific model deployment.
+* **`api_key`**: (String, SecretStr, Required) The API key for authenticating with the model's endpoint. Can be placed in a file in `runtime-secrets/generative_models__{your_model_key}__api_key`.
+
+---
+### Provider: cerebras
+* **`provider`**: (String, Literal) Must be `cerebras`.
+* **`model`**: (String, Required) The name of the Cerebras model (e.g., "llama3.1-8b").
+    * *Note: The API key and API URL are typically derived from the global `cfg.cerebras` settings.*
+* **`additional_kwargs`**: (Object, Optional) A dictionary of additional keyword arguments to pass to the Cerebras client. Defaults to an empty dictionary (`{}`).
+
+---
+### Provider: openai_like
+* **`provider`**: (String, Literal) Must be `openai_like` (for OpenAI-compatible APIs, including self-hosted models via vLLM, TGI, etc.).
+* **`model`**: (String, Required) The name of the model as expected by the OpenAI-compatible API (e.g., "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo", or a local model path if the server is configured that way).
+* **`api_base`**: (String, HttpUrl, Required) The base URL of the OpenAI-compatible API endpoint (e.g., "http://localhost:8000/v1").
+* **`api_key`**: (String, SecretStr, Required) The API key for the endpoint (can be a dummy value like "NA" if the server doesn't require one).
+* **`api_version`**: (String, Optional) The API version string, if required by the compatible API. Defaults to `None`.
+* **`timeout`**: (Integer, Optional) Timeout in seconds for API requests. Defaults to `120`.
+* **`additional_kwargs`**: (Object, Optional) A dictionary of additional keyword arguments to pass to the client. Defaults to an empty dictionary (`{}`).
+
+
+### Embedding models
+You may also enable additional embedding model endpoints:
 
 ```yaml
 local_models:
