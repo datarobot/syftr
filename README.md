@@ -1,8 +1,8 @@
-# <img src="docs/syftr-logo.jpeg" alt="syftr Logo" width="200"/> Efficient Search for Pareto-optimal Flows
+# <img src="https://raw.githubusercontent.com/datarobot/syftr/refs/heads/main/docs/syftr-logo.jpeg" alt="syftr Logo" width="200"/> Efficient Search for Pareto-optimal Flows
 
 __syftr__ is an agent optimizer that helps you find the best agentic workflows for a given budget. You bring your own dataset, compose the search space from models and components, and __syftr__ finds the best combination of parameters for your budget. It uses advances in multi-objective Bayesian Optimization and a novel domain-specific "Pareto Pruner" to efficiently sample a search space of agentic and non-agentic flows to estimate a Pareto-frontier (optimal trade-off curve) between accuracy and objectives that compete like cost, latency, throughput.
 
-![syftr](docs/flowgen_headliner.png)
+![syftr](https://raw.githubusercontent.com/datarobot/syftr/refs/heads/main/docs/flowgen_headliner.png)
 
 Please read more details in our [blogpost](https://www.datarobot.com/blog/pareto-optimized-ai-workflows-syftr)
 and full [technical paper](https://arxiv.org/abs/2505.20266).
