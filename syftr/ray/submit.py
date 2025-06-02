@@ -32,7 +32,7 @@ def _get_metadata(study_config: StudyConfig) -> Dict[str, Any]:
         sha = repo.head.commit.hexsha
         short_sha = repo.git.rev_parse(sha, short=True)
     except git.exc.InvalidGitRepositoryError:
-        # We are not in git repo, syftr used as a library, so generating a random sha.
+        # We are not in a git repo, syftr used as a library, so generating a random sha.
         short_sha = secrets.token_hex(nbytes=8)
         sha = "library"
     return {
