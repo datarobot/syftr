@@ -26,17 +26,22 @@ def get_client() -> JobSubmissionClient:
 
 
 def _get_metadata(study_config: StudyConfig) -> Dict[str, Any]:
-    repo = git.Repo(cfg.paths.root_dir)
-    sha = repo.head.commit.hexsha
-    short_sha = repo.git.rev_parse(sha, short=True)
-    return {
+    try:
+        repo = git.Repo(cfg.paths.root_dir)
+        sha = repo.head.commit.hexsha
+        short_sha = repo.git.rev_parse(sha, short=True)
+    except git.exc.InvalidGitRepositoryError:
+        # We are not in a git repo, syftr is used as a library,
+        short_sha = None
+    metadata = {
         "study_name": study_config.name,
-        "git_sha": sha,
-        "git_short_sha": short_sha,
         "submitted_by": getpass.getuser(),
         "study_config": study_config.model_dump_json(),
         "config": cfg.model_dump_json(),
     }
+    if short_sha:
+        metadata["git_short_sha"] = short_sha
+    return metadata
 
 
 def _get_submission_id(metadata: Dict[str, Any]):
@@ -44,9 +49,12 @@ def _get_submission_id(metadata: Dict[str, Any]):
     current_time_utc = datetime.now(utc)
     t = current_time_utc.strftime("%Y-%m-%d-%H:%M:%S")
     s = metadata["study_name"]
-    g = metadata["git_short_sha"]
     u = metadata["submitted_by"]
-    return f"{t}--{u}--{s}--{g}"
+    submission_id = f"{t}--{u}--{s}"
+    short_sha = metadata.get("git_short_sha")
+    if short_sha:
+        submission_id += f"--{short_sha}"
+    return submission_id
 
 
 def start_study(
