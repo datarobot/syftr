@@ -1,5 +1,6 @@
 import logging
 import os
+from importlib.metadata import version as _get_version
 from pathlib import Path
 
 import click
@@ -12,10 +13,13 @@ from syftr.configuration import cfg
 from syftr.optuna_helper import get_study_names
 from syftr.ray import submit
 
+__version__ = _get_version("syftr")
+
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 
 @click.group(invoke_without_command=True)
+@click.version_option(__version__, prog_name="syftr")
 @click.pass_context
 def main(ctx):
     """syftr command‐line interface for running and managing studies."""
