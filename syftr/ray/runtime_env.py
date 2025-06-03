@@ -42,6 +42,8 @@ def _build_excludes() -> List[str]:
         "data/financebench/**",
         "data/hotpot/**",
         "data/synth/**",
+        "results/**",
+        "studies/**",
     }
     return sorted(list(excludes))
 
