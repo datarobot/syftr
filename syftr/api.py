@@ -307,7 +307,11 @@ class Study:
         """Stop running study."""
         if not hasattr(self, "job_id"):
             raise SyftrUserAPIError("This study is not running. Run it first.")
-        stop_ray_job(self.job_id, self.client)
+        try:
+            self.client.stop_job(self.job_id)
+            logger.info(f"Job {self.job_id} stopped.")
+        except Exception as e:
+            raise SyftrUserAPIError(f"Failed to stop job {self.job_id}. Error: {e}")
 
     def delete(self):
         """Remove study records and metadata from Optuna storage."""
@@ -328,14 +332,3 @@ class Study:
 
     def __repr__(self):
         return f"Study(name={self.study_config.name}, remote={self.remote})"
-
-
-def stop_ray_job(job_id: str, client=None):
-    """Stop a Ray job by its ID."""
-    if client is None:
-        client = submit.get_client()
-    try:
-        client.stop_job(job_id)
-        logger.info(f"Job {job_id} stopped.")
-    except Exception as e:
-        raise SyftrUserAPIError(f"Failed to stop job {job_id}. Error: {e}")

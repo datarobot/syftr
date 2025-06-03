@@ -8,7 +8,7 @@ import optuna
 from ray.job_submission import JobSubmissionClient
 
 import syftr.scripts.system_check as system_check
-from syftr.api import Study, SyftrUserAPIError, stop_ray_job
+from syftr.api import Study, SyftrUserAPIError
 from syftr.configuration import cfg
 from syftr.optuna_helper import get_study_names
 from syftr.ray import submit
@@ -93,8 +93,9 @@ def stop(study_name: str):
         if not job_ids:
             raise SyftrUserAPIError(f"No running job found with name '{study_name}'")
         for jid in job_ids:
-            stop_ray_job(jid)
-    except SyftrUserAPIError as e:
+            client.stop_job(jid)
+            click.echo(f"✓ Job {jid} stopped.")
+    except Exception as e:
         click.echo(f"✗ {e}", err=True)
         raise click.Abort()
 
