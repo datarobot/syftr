@@ -79,7 +79,7 @@ dependencies = [
     "python-dotenv",
     "python-slugify",
     "rapidfuzz",
-    "ray[client,data,default,serve,tune]",
+    "ray[client,data,default,serve,tune]==2.39.0",
     "rich",
     "rouge_score",
     "s3fs",
