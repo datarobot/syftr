@@ -65,10 +65,13 @@ import tempfile
 import typing as T
 from pathlib import Path
 
+from google.cloud.aiplatform_v1beta1.types import content
+from llama_index.core.base.llms.types import LLMMetadata
 from optuna.storages import RDBStorage
 from pydantic import (
     AnyUrl,
     BaseModel,
+    ConfigDict,
     Field,
     HttpUrl,
     SecretStr,
@@ -326,6 +329,179 @@ class HFEmbeddings(BaseModel, APIKeySerializationMixin):
     }
 
 
+class AzureOAI(BaseModel, APIKeySerializationMixin):
+    # Use cfg.azure_oai.api_key.get_secret_value() to get value
+    api_key: SecretStr = SecretStr("NOT SET")
+    default_deployment: str = "gpt-4o-mini"
+    api_url: HttpUrl = HttpUrl("http://NOT.SET")
+
+    api_version: str = "2024-07-18"
+    api_type: str = "azure"
+
+
+class GCPVertex(BaseModel, APIKeySerializationMixin):
+    # Use cfg.gcp_vertex.credentials.get_secret_value() to get value
+    # Note credentials are a string, typically will need to do a json.loads
+    project_id: str = "NOT SET"
+    region: str = "NOT SET"
+    credentials: SecretStr = SecretStr("NOT SET")
+
+
+class LLMCostTokens(BaseModel):
+    type: T.Literal["tokens"] = "tokens"
+    input: float = Field(description="Cost per million input tokens")
+    output: float = Field(description="Cost per million output tokens")
+
+
+class LLMCostCharacters(BaseModel):
+    type: T.Literal["characters"] = "characters"
+    input: float = Field(description="Cost per million input characters")
+    output: float = Field(description="Cost per million output characters")
+
+
+class LLMCostHourly(BaseModel):
+    type: T.Literal["hourly"] = "hourly"
+    rate: float = Field(
+        description="Average inference cost per hour "
+        "(eg. machine hourly rate divided by average number of concurrent requests)"
+    )
+
+
+class LLMConfig(BaseModel):
+    cost: Annotated[
+        T.Union[LLMCostTokens, LLMCostCharacters, LLMCostHourly],
+        Field(discriminator="type"),
+    ] = Field(description="LLM inference costs by token, character, or hourly rate.")
+
+    metadata: LLMMetadata = Field(
+        description="LLM Metadata such as context window and capabilities"
+    )
+
+    temperature: float = 0.0
+
+    model_config = ConfigDict(extra="forbid")
+
+
+# Specific LLM Instance Configurations
+class AzureOpenAILLM(LLMConfig):
+    provider: T.Literal["azure_openai"] = "azure_openai"
+    deployment_name: T.Optional[str] = None
+    api_version: T.Optional[str] = None
+    max_retries: int = 0
+    additional_kwargs: T.Optional[T.Dict[str, T.Any]] = None
+
+
+GCP_SAFETY_SETTINGS = {
+    content.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: content.SafetySetting.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    content.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: content.SafetySetting.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    content.HarmCategory.HARM_CATEGORY_HARASSMENT: content.SafetySetting.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    content.HarmCategory.HARM_CATEGORY_HATE_SPEECH: content.SafetySetting.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+}
+
+
+class VertexAILLM(LLMConfig):
+    provider: T.Literal["vertex_ai"] = "vertex_ai"
+    model: T.Optional[str] = None
+    safety_settings: dict = GCP_SAFETY_SETTINGS
+    max_retries: int = 0
+    additional_kwargs: T.Optional[T.Dict[str, T.Any]] = None
+
+
+class AnthropicVertexLLM(LLMConfig):
+    provider: T.Literal["anthropic_vertex"] = Field(
+        "anthropic_vertex", description="Provider identifier."
+    )
+    model: str = Field(
+        description="Name of the Anthropic model on Vertex AI (e.g., claude-3-5-sonnet-v2@20241022)."
+    )
+    project_id: T.Optional[str] = Field(
+        default=None,
+        description="GCP Project ID. If None, uses global cfg.gcp_vertex.project_id.",
+    )
+    region: T.Optional[str] = Field(
+        default=None,
+        description="GCP Region. If None, uses global cfg.gcp_vertex.region.",
+    )
+    max_retries: int = Field(
+        default=0, description="Maximum number of retries for API calls."
+    )
+    additional_kwargs: T.Dict[str, T.Any] = Field(
+        default_factory=dict,
+        description="Additional keyword arguments for the Anthropic model.",
+    )
+
+
+class AzureAICompletionsLLM(LLMConfig):
+    provider: T.Literal["azure_ai"] = Field(
+        "azure_ai", description="Provider identifier."
+    )
+    model_name: str = Field(
+        description="Model name as recognized by Azure AI Completions (e.g., Llama-3.3-70B-Instruct)."
+    )
+    endpoint: HttpUrl = Field(description="API URL for this model")
+    api_key: SecretStr = Field(description="API key for this model")
+    max_retries: int = Field(
+        default=0, description="Maximum number of retries for API calls."
+    )
+    additional_kwargs: T.Dict[str, T.Any] = Field(
+        default_factory=dict,
+        description="Additional keyword arguments for the Azure AI Completions model.",
+    )
+
+
+class CerebrasLLM(LLMConfig):
+    provider: T.Literal["cerebras"] = Field(
+        "cerebras", description="Provider identifier."
+    )
+    model: str = Field(description="Name of the Cerebras model (e.g., llama3.1-8b).")
+    # API key and URL are typically derived from cfg.cerebras.
+    max_retries: int = Field(
+        default=0, description="Maximum number of retries for API calls."
+    )
+    additional_kwargs: T.Dict[str, T.Any] = Field(
+        default_factory=dict,
+        description="Additional keyword arguments for the Cerebras model.",
+    )
+
+
+class OpenAILikeLLM(LLMConfig):
+    provider: T.Literal["openai_like"] = Field(
+        "openai_like", description="Provider identifier for OpenAI-compatible APIs."
+    )
+    model: str = Field(
+        description="Name of the OpenAI-like model (e.g., meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo)."
+    )
+    api_base: HttpUrl = Field(description="API base URL for the OpenAI-like model.")
+    api_key: SecretStr = Field(description="API key for this endpoint")
+    api_version: T.Optional[str] = Field(
+        default=None, description="API version to use for this endpoint"
+    )
+    timeout: int = Field(
+        default=120, description="Timeout in seconds for API requests."
+    )
+    max_retries: int = Field(
+        default=0, description="Maximum number of retries for API calls."
+    )
+    additional_kwargs: T.Dict[str, T.Any] = Field(
+        default_factory=dict,
+        description="Additional keyword arguments for the OpenAI-like model.",
+    )
+
+
+# Update LLMConfigUnion by adding the new classes
+LLMConfigUnion = Annotated[
+    T.Union[
+        AzureOpenAILLM,
+        VertexAILLM,
+        AnthropicVertexLLM,
+        AzureAICompletionsLLM,
+        CerebrasLLM,
+        OpenAILikeLLM,
+    ],
+    Field(discriminator="provider"),
+]
+
+
 class AzureInferenceLlama33(BaseModel, APIKeySerializationMixin):
     # Use cfg.azure_inference_llama.api_key.get_secret_value() to get value
     api_key: SecretStr = SecretStr("NOT SET")
@@ -372,24 +548,6 @@ class TogetherAI(BaseModel, APIKeySerializationMixin):
 class DataRobot(BaseModel, APIKeySerializationMixin):
     api_key: SecretStr = SecretStr("NOT SET")
     endpoint: HttpUrl = HttpUrl("http://NOT.SET")
-
-
-class AzureOAI(BaseModel, APIKeySerializationMixin):
-    # Use cfg.azure_oai.api_key.get_secret_value() to get value
-    api_key: SecretStr = SecretStr("NOT SET")
-    default_deployment: str = "gpt-4o-mini"
-    api_url: HttpUrl = HttpUrl("http://NOT.SET")
-
-    api_version: str = "2024-07-18"
-    api_type: str = "azure"
-
-
-class GCPVertex(BaseModel, APIKeySerializationMixin):
-    # Use cfg.gcp_vertex.credentials.get_secret_value() to get value
-    # Note credentials are a string, typically will need to do a json.loads
-    project_id: str = "NOT SET"
-    region: str = "NOT SET"
-    credentials: SecretStr = SecretStr("NOT SET")
 
 
 class LocalOpenAILikeModel(BaseModel, APIKeySerializationMixin):
@@ -518,6 +676,9 @@ class Settings(BaseSettings):
     cerebras: Cerebras = Cerebras()
     togetherai: TogetherAI = TogetherAI()
     local_models: LocalOpenAILikeModels = LocalOpenAILikeModels()
+    generative_models: T.Dict[str, LLMConfigUnion] = Field(
+        default_factory=dict, description="User-provided LLM definitions"
+    )
     logging: Logging = Logging()
     optuna: Optuna = Optuna()
     paths: Paths = Paths()

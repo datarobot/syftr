@@ -37,6 +37,7 @@ from opentelemetry.trace import NoOpTracer
 from pydantic import BaseModel, PrivateAttr
 from vertexai.preview.tokenization import get_tokenizer_for_model
 
+from syftr.configuration import LLMCostCharacters, LLMCostHourly, LLMCostTokens, cfg
 from syftr.logger import logger
 
 # Unit: $ / token
@@ -100,6 +101,70 @@ MODEL_PRICING_INFO: Dict[str, Dict[str, Dict[str, float]]] = {
         "datarobot/DeepSeek-Llama": {"cost_per_second": 12.06654 / 3600},
     },
 }
+
+if cfg.generative_models:
+    logger.debug(
+        f"Updating MODEL_PRICING_INFO from cfg.generative_models: {list(cfg.generative_models.keys())}"
+    )
+    for config_key, llm_config_item in cfg.generative_models.items():
+        # model_key should match the identifier used by TokenTrackingSpan (usually llm.metadata.model_name)
+        model_key = llm_config_item.metadata.model_name
+
+        if not model_key:
+            logger.warning(
+                f"Model with configuration key '{config_key}' is missing 'metadata.model_name'. "
+                "Skipping its cost info update for MODEL_PRICING_INFO."
+            )
+            continue
+
+        cost_config = llm_config_item.cost
+        cost_type = getattr(cost_config, "type", "unknown")
+
+        if cost_type == "tokens":
+            assert isinstance(cost_config, LLMCostTokens), cost_config
+            # Ensure the sub-dictionary for 'tokens' exists
+            MODEL_PRICING_INFO["tokens"].setdefault(model_key, {})
+            # cost_config.input/output are "Cost per million tokens"
+            # MODEL_PRICING_INFO stores "Cost per token"
+            MODEL_PRICING_INFO["tokens"][model_key]["input"] = (
+                cost_config.input / 1_000_000.0
+            )
+            MODEL_PRICING_INFO["tokens"][model_key]["output"] = (
+                cost_config.output / 1_000_000.0
+            )
+            logger.debug(
+                f"Updated token pricing for '{model_key}' from cfg ('{config_key}')."
+            )
+        elif cost_type == "characters":
+            assert isinstance(cost_config, LLMCostCharacters), cost_config
+            MODEL_PRICING_INFO["characters"].setdefault(model_key, {})
+            # cost_config.input/output are "Cost per million characters"
+            # MODEL_PRICING_INFO stores "Cost per character"
+            MODEL_PRICING_INFO["characters"][model_key]["input"] = (
+                cost_config.input / 1_000_000.0
+            )
+            MODEL_PRICING_INFO["characters"][model_key]["output"] = (
+                cost_config.output / 1_000_000.0
+            )
+            logger.debug(
+                f"Updated character pricing for '{model_key}' from cfg ('{config_key}')."
+            )
+        elif cost_type == "hourly":
+            assert isinstance(cost_config, LLMCostHourly), cost_config
+            MODEL_PRICING_INFO["seconds"].setdefault(model_key, {})
+            # cost_config.rate is "Average inference cost per hour"
+            # MODEL_PRICING_INFO stores "Cost per second"
+            MODEL_PRICING_INFO["seconds"][model_key]["cost_per_second"] = (
+                cost_config.rate / 3600.0
+            )
+            logger.debug(
+                f"Updated hourly (per second) pricing for '{model_key}' from cfg ('{config_key}')."
+            )
+        else:
+            logger.warning(
+                f"Unknown or unsupported cost type '{cost_type}' for model '{model_key}' "
+                f"(from cfg key '{config_key}'). Pricing not updated."
+            )
 
 
 class LLMCallData(BaseModel):

@@ -82,34 +82,69 @@ print(s.pareto_flows)
 ]
 ```
 
-## Custom LLMs
+## LLM Configuration
 
-In addition to the built-in LLMs, you may enable additional OpenAI-API-compatible API endpoints in the ``config.yaml``.
+__syftr__ can be configured to use a wide variety of LLMs from a variety of LLM providers.
+These are configured using the ``generative_models`` section of ``config.yaml``.
 
-For example:
+Each LLM provider has some different configuration options as well as some common ones.
+Let's look at an example using ``gpt-4.5-preview`` hosted in Azure OpenAI:
 
 ```yaml
-local_models:
-  default_api_key: "YOUR_API_KEY_HERE"
-  generative:
-    - model_name: "microsoft/Phi-4-multimodal-instruct"
-      api_base: "http://phi-4-host.com/openai/v1"
-      max_tokens: 2000
-      context_window: 129072
+generative_models:
+  # azure_openai Provider Example
+  azure_gpt_45_preview:
+    provider: azure_openai
+
+    temperature: 0.0
+    max_retries: 0
+
+    # Provider-specific configurations
+    deployment_name: "gpt-4.5-preview"
+    api_version: "2024-12-01-preview"
+    additional_kwargs:
+      user: syftr
+
+    # Cost example - options are the same for all models (required)
+    cost:
+      type: tokens                      # tokens, characters, or hourly
+      input: 75
+      output: 150.00
+      # rate: 12.00
+
+    # LLamaIndex LLMetadata Example - keys and defaults are the same for all models
+    metadata:
+      model_name: gpt-4.5-preview
+      context_window: 100000
+      num_output: 2048
+      is_chat_model: true
       is_function_calling_model: true
-      additional_kwargs:
-        frequency_penalty: 1.0
-        temperature: 0.1
-    - model_name: "deepseek-ai/DeepSeek-R1-Distill-Llama-70B"
-      api_base: "http://big-vllm-host:8000/v1"
-      max_tokens: 2000
-      context_window: 129072
-      is_function_calling_model: true
-      additional_kwargs:
-        temperature: 0.6
+      system_role: SYSTEM
 ```
 
-And you may also enable additional embedding model endpoints:
+### Provider-specific options
+
+All LLM configurations defined under `generative_models:` share a common set of options inherited from the base `LLMConfig`:
+
+* **`cost`**: (Object, Required) Defines the cost structure for the LLM.
+    * `type`: (String, Required) Type of cost calculation: `tokens`, `characters`, or `hourly`.
+    * `input`: (Float, Required) Cost for input (e.g., per million tokens/characters).
+    * `output`: (Float, Required if `type` is `tokens` or `characters`) Cost for output.
+    * `rate`: (Float, Required if `type` is `hourly`) Average cost per hour.
+* **`metadata`**: (Object, Required) Contains essential metadata about the LLM.
+    * `model_name`: (String, Required) The specific model identifier (e.g., "gpt-4o-mini", "gemini-1.5-pro-001").
+    * `context_window`: (Integer, Optional) The maximum context window size. Defaults to `3900`.
+    * `num_output`: (Integer, Optional) Default number of output tokens the model is expected to generate. Defaults to `256`.
+    * `is_chat_model`: (Boolean, Optional) Indicates if the model is a chat-based model. Defaults to `false`.
+    * `is_function_calling_model`: (Boolean, Optional) Indicates if the model supports function calling. Defaults to `false`.
+    * `system_role`: (String, Optional) The expected role name for system prompts (e.g., `SYSTEM`, `USER`). Defaults to `SYSTEM`.
+* **`temperature`**: (Float, Optional) The sampling temperature for generation. Defaults to `0.0`.
+
+See [LLM provider-specific configuration](docs/llm-providers.md) to configure each supported provider.
+
+
+### Embedding models
+You may also enable additional embedding model endpoints:
 
 ```yaml
 local_models:
