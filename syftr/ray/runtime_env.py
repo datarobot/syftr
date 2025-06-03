@@ -24,7 +24,9 @@ def _build_pip() -> List[str]:
         return pyproject_data["project"]["dependencies"]
     except FileNotFoundError:
         # We are not in a git repo, syftr is used as a library.
-        return ["syftr"]
+        from importlib.metadata import version
+        curr_syftr_ver = version('syftr')
+        return [f"syftr=={curr_syftr_ver}"]
 
 
 def _build_env(delete_confirmed: bool) -> Dict[str, str]:
