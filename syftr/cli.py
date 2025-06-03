@@ -97,7 +97,12 @@ def stop(study_name: str):
 
 @main.command()
 @click.argument("study_name", type=str)
-def resume(study_name: str):
+@click.option(
+    "--follow/--no-follow",
+    default=False,
+    help="Stream logs until the study completes.",
+)
+def resume(study_name: str, follow: bool):
     """
     syftr resume STUDY_NAME
     ---
@@ -106,6 +111,8 @@ def resume(study_name: str):
     try:
         study = Study.from_db(study_name)
         study.resume()
+        if follow:
+            study.wait_for_completion(stream_logs=True)
     except SyftrUserAPIError as e:
         click.echo(f"✗ {e}", err=True)
         raise click.Abort()
@@ -119,28 +126,25 @@ def status(study_name: str):
     ---
     Get the status of a study.
     """
-    # First check if the study is running in Ray
-    found_running = False
+    # Check if the study is running in Ray
+    found_ray_job = False
     client = submit.get_client()
     job_ids = _get_ray_job_ids_from_name(client, study_name)
     for job_id in job_ids:
         try:
             job_details = client.get_job_info(job_id)
         except RuntimeError:
-            click.echo(
-                f"✗ Could not get job info for {job_id}. It may have been deleted."
-            )
             continue
         if job_details.status.name == "RUNNING":
             dashboard_url = f"{client._address}/#/jobs/{job_id}"
             click.echo(
-                f"✓ Study '{study_name}' is currently running at {dashboard_url}"
+                f"✓ Study '{study_name}' is currently running in Ray at {dashboard_url}"
             )
-            found_running = True
-    if found_running:
-        return
+            found_ray_job = True
+    if not found_ray_job:
+        click.echo(f"✗ Study '{study_name}' is not currently running in Ray.")
 
-    # If not running in Ray, check the Optuna DB
+    # Also check the Optuna DB
     try:
         study = optuna.load_study(
             study_name=study_name,
@@ -150,9 +154,7 @@ def status(study_name: str):
             f"✓ Study '{study_name}' found in Optuna DB with {len(study.trials)} completed trials."
         )
     except KeyError:
-        click.echo(
-            f"✗ Study '{study_name}' not found. It may not have been started or may have been deleted."
-        )
+        click.echo(f"✗ Study '{study_name}' not found in Optuna DB.")
 
 
 @main.command()
