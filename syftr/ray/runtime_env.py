@@ -25,7 +25,8 @@ def _build_pip() -> List[str]:
     except FileNotFoundError:
         # We are not in a git repo, syftr is used as a library.
         from importlib.metadata import version
-        curr_syftr_ver = version('syftr')
+
+        curr_syftr_ver = version("syftr")
         return [f"syftr=={curr_syftr_ver}"]
 
 
