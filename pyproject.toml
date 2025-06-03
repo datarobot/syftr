@@ -10,6 +10,7 @@ dependencies = [
     "asyncio",
     "boto3",
     "botocore",
+    "click",
     "cloudpickle",
     "colorlog",
     "datasets>=3.3",

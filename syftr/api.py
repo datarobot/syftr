@@ -330,7 +330,7 @@ class Study:
         return f"Study(name={self.study_config.name}, remote={self.remote})"
 
 
-def stop_ray_job(job_id: int, client=None):
+def stop_ray_job(job_id: str, client=None):
     """Stop a Ray job by its ID."""
     if client is None:
         client = submit.get_client()
