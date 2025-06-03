@@ -1,6 +1,6 @@
 try:
-    from importlib.metadata import version as _version
+    from importlib.metadata import version
 
-    __version__ = _version("syftr")
+    __version__ = version("syftr")
 except Exception:
     __version__ = "0.0.0"
