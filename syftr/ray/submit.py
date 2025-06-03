@@ -58,7 +58,7 @@ def _get_submission_id(metadata: Dict[str, Any]):
 
 
 def start_study(
-    client,
+    client: JobSubmissionClient,
     study_config_file: Path,
     study_config: StudyConfig,
     delete_confirmed: bool = False,
