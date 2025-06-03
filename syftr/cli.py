@@ -253,6 +253,7 @@ def delete(study_name_regex: str, exclude_regex: str, yes: bool):
 @main.command()
 @click.argument("study_name", type=str)
 @click.option(
+    "--results-dir",
     "results_dir",
     type=click.Path(file_okay=False, writable=True),
     default="results",
@@ -260,13 +261,13 @@ def delete(study_name_regex: str, exclude_regex: str, yes: bool):
 )
 def analyze(study_name: str, results_dir: str):
     """
-    syftr analyze STUDY_NAME [--RESULTS_DIR]
+    syftr analyze STUDY_NAME [--results-dir RESULTS_DIR]
 
     Fetch Pareto/frontier data for STUDY_NAME and write:
-      • pareto_flows.parquet
-      • all_flows.parquet
-      • pareto_plot.png
-    into RESULTS_DIR.
+      • {STUDY_NAME}_pareto_flows.parquet
+      • {STUDY_NAME}_all_flows.parquet
+      • {STUDY_NAME}_pareto_plot.png
+    into RESULTS_DIR (default: ./results).
     """
     os.makedirs(results_dir, exist_ok=True)
     try:
@@ -278,7 +279,7 @@ def analyze(study_name: str, results_dir: str):
             Path(results_dir) / f"{study_name}_all_flows.parquet", index=False
         )
         study.plot_pareto(Path(results_dir) / f"{study_name}_pareto_plot.png")
-        click.echo(f"Results saved under `{results_dir}`.")
+        click.echo(f"✓ Results saved to `{results_dir}`.")
     except SyftrUserAPIError as e:
         click.echo(f"✗ {e}", err=True)
         raise click.Abort()
