@@ -61,7 +61,6 @@ How to override default configuration values (in resolution priority order):
 import logging
 import os
 import socket
-import tempfile
 import typing as T
 from pathlib import Path
 
@@ -125,7 +124,7 @@ class Paths(BaseModel):
     results_dir: Annotated[Path, Field(validate_default=True)] = REPO_ROOT / "results"
     studies_dir: Annotated[Path, Field(validate_default=True)] = REPO_ROOT / "studies"
     test_studies_dir: Path = REPO_ROOT / "tests/studies"
-    tmp_dir: Path = Path(tempfile.gettempdir()) / "syftr"
+    tmp_dir: Path = Path("/tmp/syftr")
     huggingface_cache: Annotated[Path, Field(validate_default=True)] = (
         tmp_dir / "huggingface"
     )
