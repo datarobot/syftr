@@ -3,4 +3,6 @@ try:
 
     __version__ = version("syftr")
 except Exception:
-    __version__ = "0.0.0"
+    import os
+
+    __version__ = os.getenv("SYFTR_VERSION", "0.0.0")
