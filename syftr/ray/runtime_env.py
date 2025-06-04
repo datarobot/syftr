@@ -18,9 +18,16 @@ from syftr.huggingface_helper import get_hf_token
 
 
 def _build_pip() -> List[str]:
-    with open(cfg.paths.root_dir / "pyproject.toml", "rb") as pyproject:
-        pyproject_data = tomllib.load(pyproject)
-    return pyproject_data["project"]["dependencies"]
+    try:
+        with open(cfg.paths.root_dir / "pyproject.toml", "rb") as pyproject:
+            pyproject_data = tomllib.load(pyproject)
+        return pyproject_data["project"]["dependencies"]
+    except FileNotFoundError:
+        # We are not in a git repo, syftr is used as a library.
+        from importlib.metadata import version
+
+        curr_syftr_ver = version("syftr")
+        return [f"syftr=={curr_syftr_ver}"]
 
 
 def _build_env(delete_confirmed: bool) -> Dict[str, str]:
