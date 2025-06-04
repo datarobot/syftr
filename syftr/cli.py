@@ -67,7 +67,9 @@ def run(config_path: str, follow: bool):
         raise click.Abort()
 
 
-def _get_ray_job_ids_from_name(client: JobSubmissionClient, job_name: str) -> List[str]:
+def _get_ray_job_ids_from_name(
+    client: JobSubmissionClient, study_name: str
+) -> List[str]:
     """
     Helper function to look through Ray jobs and find the job IDs matching a job name.
     """
@@ -76,7 +78,9 @@ def _get_ray_job_ids_from_name(client: JobSubmissionClient, job_name: str) -> Li
     except Exception as e:
         raise SyftrUserAPIError(f"Could not contact Ray: {e}")
 
-    matches = [job.job_id for job in jobs if job.metadata.get("study_name") == job_name]
+    matches = [
+        job.job_id for job in jobs if job.metadata.get("study_name") == study_name
+    ]
     return matches
 
 
