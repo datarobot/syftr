@@ -138,7 +138,7 @@ optimization_config = OptimizationConfig(
     cpus_per_trial=1,
     seeder_timeout=3600 * 0,  # None: wait until finished, 0: don't wait
     # -----------------------------------------------
-    num_random_trials=10,
+    num_random_trials=0,
     # -----------------------------------------------
     use_individual_baselines=False,
     use_agent_baselines=False,
