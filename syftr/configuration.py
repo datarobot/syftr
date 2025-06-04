@@ -352,11 +352,17 @@ class LLMCostTokens(BaseModel):
     input: float = Field(description="Cost per million input tokens")
     output: float = Field(description="Cost per million output tokens")
 
+    def as_tuple(self):
+        return (self.input, self.output)
+
 
 class LLMCostCharacters(BaseModel):
     type: T.Literal["characters"] = "characters"
     input: float = Field(description="Cost per million input characters")
     output: float = Field(description="Cost per million output characters")
+
+    def as_tuple(self):
+        return (self.input, self.output)
 
 
 class LLMCostHourly(BaseModel):
@@ -365,6 +371,9 @@ class LLMCostHourly(BaseModel):
         description="Average inference cost per hour "
         "(eg. machine hourly rate divided by average number of concurrent requests)"
     )
+
+    def as_tuple(self):
+        return (self.rate,)
 
 
 class LLMConfig(BaseModel):

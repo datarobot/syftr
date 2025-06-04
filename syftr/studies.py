@@ -206,70 +206,46 @@ DEFAULT_EMBEDDING_MODELS: T.List[str] = list(
 
 ALL_LLMS = list(LLMs.keys())
 
-LOCAL_LLMS = (
-    [model.model_name for model in cfg.local_models.generative]
-    if cfg.local_models.generative
-    else []
-)
+DEFAULT_LLMS: T.List[str] = ALL_LLMS
 
-DEFAULT_LLMS: T.List[str] = list(
-    set(
-        [
-            "gpt-4o-mini",  # first LLM is the default
-            "anthropic-haiku-35",
-            "gemini-flash",
-            # "gemini-flash2",
-            # "gemini-pro",
-            # "llama-33-70B",   # not enough capacity
-            # "mistral-large",  # not enough capacity
-            # "phi-4",          # not enough capacity
-            # "anthropic-sonnet-35",
-            # "gpt-4o-std",
-            "o3-mini",
-        ]
-        + LOCAL_LLMS
-    )
-)
-assert set(DEFAULT_LLMS).issubset(set(ALL_LLMS))
-
-RESPONSE_SYNTHESIZER_LLMS: T.List[str] = [
-    "gpt-4o-mini",  # first LLM is the default
-    "gpt-4o-std",
-    "gpt-35-turbo",
-    "anthropic-sonnet-35",
-    "anthropic-haiku-35",
-    "llama-33-70B",
-    "gemini-pro",
-    "gemini-flash",
-    "gemini-flash2",
-    # "gemini-flash-think-exp",
-    "mistral-large",
-    "together-r1",
-    "together-V3",
-] + LOCAL_LLMS
-assert set(RESPONSE_SYNTHESIZER_LLMS).issubset(set(ALL_LLMS))
+RESPONSE_SYNTHESIZER_LLMS: T.List[str] = ALL_LLMS
 
 FUNCTION_CALLING_LLMS: T.List[str] = [
-    "gpt-4o-mini",  # first LLM is the default
-    "gpt-4o-std",
-    "gpt-35-turbo",
-    "anthropic-sonnet-35",
-    "anthropic-haiku-35",
-    "llama-33-70B",
-    # "gemini-flash2",
-    # "gemini-pro",
-    # "gemini-flash",
-    # "gemini-flash-think-exp",
-    "mistral-large",
-] + LOCAL_LLMS
-assert set(FUNCTION_CALLING_LLMS).issubset(set(ALL_LLMS))
+    name for name, llm in ALL_LLMS.items() if llm.metadata.is_function_calling()
+]
+
+
+def get_cheapest_llms(llms: T.Dict[str, LLM]) -> T.Dict[str, LLM]:
+    """Need to get the cheapest llms, but need to normalize between hourly, token, and character pricing.
+
+    We can only do this with some assumptions.
+
+    * Output tokens per second is 100
+    * Input tokens per second is 10,000 (negligible)
+    * Input:output tokens is 4:1
+    * Characters per token is 4
+
+    So then we need to
+    - map a normalizing cost computation function across the llms dict
+    - sort the dict by value
+
+    Normalization is as follows:  # CHECK ME
+    * the 'normal unit' is hourly pricing
+    * $/Mln Output Token multiplied by 0.36 Mln Output Token per hour
+    * $/Mln Input Token multiplied by (4 * 0.36) Mln Input Token per hour
+    * For characters, multiply number of token numbers from above by 4
+    """
+    pass
+
 
 CHEAP_LLMS: T.List[str] = [
-    "gpt-4o-mini",  # first LLM is the default
-    "anthropic-haiku-35",
-    "gemini-flash2",
-] + LOCAL_LLMS
-assert set(CHEAP_LLMS).issubset(set(ALL_LLMS))
+    name
+    for name, llm in ALL_LLMS.items()
+    if getattr(
+        "rate",
+        llm.cost,
+    )
+]
 assert set(CHEAP_LLMS).issubset(set(ALL_LLMS))
 
 NON_REASONING_LLMS: T.List[str] = list(
