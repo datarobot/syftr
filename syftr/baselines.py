@@ -8,12 +8,13 @@ from optuna.distributions import (
 )
 
 from syftr.configuration import UNSUPPORTED_PARAMS
+from syftr.llm import LLMs
 from syftr.logger import logger
 from syftr.studies import SearchSpace, StudyConfig
 from syftr.transfer_learning import get_examples
 from syftr.validation import are_valid_parameters
 
-BASELINE_LLM = "anthropic-haiku-35"
+BASELINE_LLM = list(LLMs.keys())[0]
 BASELINE_RAG_EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 
 SIMPLE_FLOW_TEMPLATE: T.Dict[str, T.Any] = {

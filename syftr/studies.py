@@ -211,61 +211,9 @@ DEFAULT_LLMS: T.List[str] = ALL_LLMS
 RESPONSE_SYNTHESIZER_LLMS: T.List[str] = ALL_LLMS
 
 FUNCTION_CALLING_LLMS: T.List[str] = [
-    name for name, llm in ALL_LLMS.items() if llm.metadata.is_function_calling()
+    name for name, llm in LLMs.items() if llm.metadata.is_function_calling_model
 ]
 
-
-def get_cheapest_llms(llms: T.Dict[str, LLM]) -> T.Dict[str, LLM]:
-    """Need to get the cheapest llms, but need to normalize between hourly, token, and character pricing.
-
-    We can only do this with some assumptions.
-
-    * Output tokens per second is 100
-    * Input tokens per second is 10,000 (negligible)
-    * Input:output tokens is 4:1
-    * Characters per token is 4
-
-    So then we need to
-    - map a normalizing cost computation function across the llms dict
-    - sort the dict by value
-
-    Normalization is as follows:  # CHECK ME
-    * the 'normal unit' is hourly pricing
-    * $/Mln Output Token multiplied by 0.36 Mln Output Token per hour
-    * $/Mln Input Token multiplied by (4 * 0.36) Mln Input Token per hour
-    * For characters, multiply number of token numbers from above by 4
-    """
-    pass
-
-
-CHEAP_LLMS: T.List[str] = [
-    name
-    for name, llm in ALL_LLMS.items()
-    if getattr(
-        "rate",
-        llm.cost,
-    )
-]
-assert set(CHEAP_LLMS).issubset(set(ALL_LLMS))
-
-NON_REASONING_LLMS: T.List[str] = list(
-    set(
-        [
-            "gpt-4o-mini",  # first LLM is the default
-            "gpt-4o-std",
-            "gpt-35-turbo",
-            "anthropic-sonnet-35",
-            "anthropic-haiku-35",
-            "llama-33-70B",
-            "gemini-pro",
-            "gemini-flash",
-            "gemini-flash2",
-            "mistral-large",
-        ]
-        + LOCAL_LLMS
-    )
-)
-assert set(NON_REASONING_LLMS).issubset(set(ALL_LLMS))
 
 RAG_MODES: T.List[str] = [
     "rag",  #  first mode is the default
@@ -367,7 +315,7 @@ class Hybrid(BaseModel, SearchSpaceMixin):
 
 class QueryDecomposition(BaseModel, SearchSpaceMixin):
     llm_names: T.List[str] = Field(
-        default_factory=lambda: NON_REASONING_LLMS,
+        default_factory=lambda: DEFAULT_LLMS,
         description="List of LLM names to be used for query decomposition.",
     )
     num_queries_min: int = Field(

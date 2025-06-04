@@ -10,30 +10,18 @@ from syftr.logger import logger
 from syftr.optimization import user_confirm_delete
 from syftr.optuna_helper import get_pareto_flows
 from syftr.ray.submit import get_client, start_study
-from syftr.storage import (  # noqa
-    BrightHF,
-    CragTask3HF,
-    DRDocsHF,
+from syftr.storage import (
+    DRDocsHF,  # noqa
     FinanceBenchHF,
-    HotPotQAHF,
-    InfiniteBenchHF,
-    MultiHopRAGHF,
-    PhantomWikiv050,
-    SyftrQADataset,
-    SyntheticCragTask3HF,
-    SyntheticFinanceBenchHF,
-    SyntheticHotPotQAHF,
 )
-from syftr.studies import (  # noqa
-    DEFAULT_LLMS,
-    LOCAL_EMBEDDING_MODELS,
-    LOCAL_LLMS,
-    Block,
+from syftr.studies import (
+    Block,  # noqa
     CritiqueRAGAgent,
     Evaluation,
     FewShotRetriever,
     Hyde,
     LATSRagAgent,
+    LLMs,
     OptimizationConfig,
     QueryDecomposition,
     ReactRAGAgent,
@@ -41,11 +29,8 @@ from syftr.studies import (  # noqa
     Retriever,
     SearchSpace,
     Splitter,
-    StudyConfig,
     SubQuestionRAGAgent,
-    TimeoutConfig,
     TopK,
-    TransferLearningConfig,
 )
 from syftr.studyconfig_helper import build_configs
 
@@ -185,7 +170,7 @@ optimization_config = OptimizationConfig(
 #     embedding_model="BAAI/bge-large-en-v1.5",
 # )
 
-llms: T.List[str] = LOCAL_LLMS
+llms: T.List[str] = list(LLMs.keys())
 
 embedding_models = [
     "BAAI/bge-small-en-v1.5",
