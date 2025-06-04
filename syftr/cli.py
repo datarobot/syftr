@@ -221,7 +221,7 @@ def delete(study_name_regex: str, exclude_regex: str, yes: bool):
           syftr delete my_study_name
 
       • To delete multiple by regex:
-          syftr delete "foo.*" [--exclude-regex ".*_old"] [-y]
+          syftr delete 'foo.*' [--exclude-regex '.*_old'] [-y]
     """
     try:
         study_names = get_study_names(
