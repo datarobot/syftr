@@ -18,9 +18,16 @@ from syftr.huggingface_helper import get_hf_token
 
 
 def _build_pip() -> List[str]:
-    with open(cfg.paths.root_dir / "pyproject.toml", "rb") as pyproject:
-        pyproject_data = tomllib.load(pyproject)
-    return pyproject_data["project"]["dependencies"]
+    try:
+        with open(cfg.paths.root_dir / "pyproject.toml", "rb") as pyproject:
+            pyproject_data = tomllib.load(pyproject)
+        return pyproject_data["project"]["dependencies"]
+    except FileNotFoundError:
+        # We are not in a git repo, syftr is used as a library.
+        from importlib.metadata import version
+
+        curr_syftr_ver = version("syftr")
+        return [f"syftr=={curr_syftr_ver}"]
 
 
 def _build_env(delete_confirmed: bool) -> Dict[str, str]:
@@ -54,7 +61,11 @@ def _prepare_working_dir(study_config_path: Path) -> str:
         shutil.rmtree(dest)
     dest.mkdir(parents=True, exist_ok=False)
 
-    cfg_data = json.loads(cfg.model_dump_json())
+    cfg_data = json.loads(
+        # Don't send un-set configurations like default paths, as
+        # these will be auto-discovered on the cluster.
+        cfg.model_dump_json(exclude_unset=True, exclude_defaults=True)
+    )
     with open(dest / "config.yaml", "w") as cfg_file:
         yaml.safe_dump(cfg_data, cfg_file)
 
