@@ -1,7 +1,8 @@
 import logging
 import os
-from importlib.metadata import version as _get_version
+from importlib.metadata import version
 from pathlib import Path
+from typing import List
 
 import click
 import optuna
@@ -13,7 +14,7 @@ from syftr.configuration import cfg
 from syftr.optuna_helper import get_study_names
 from syftr.ray import submit
 
-__version__ = _get_version("syftr")
+__version__ = version("syftr")
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
@@ -66,7 +67,7 @@ def run(config_path: str, follow: bool):
         raise click.Abort()
 
 
-def _get_ray_job_ids_from_name(client: JobSubmissionClient, job_name: str) -> list[str]:
+def _get_ray_job_ids_from_name(client: JobSubmissionClient, job_name: str) -> List[str]:
     """
     Helper function to look through Ray jobs and find the job IDs matching a job name.
     """
