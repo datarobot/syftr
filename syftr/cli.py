@@ -79,7 +79,9 @@ def _get_ray_job_ids_from_name(
         raise SyftrUserAPIError(f"Could not contact Ray: {e}")
 
     matches = [
-        job.job_id for job in jobs if job.metadata.get("study_name") == study_name
+        job.job_id
+        for job in jobs
+        if job.metadata.get("study_name") == study_name and job.status.name == "RUNNING"
     ]
     return matches
 
