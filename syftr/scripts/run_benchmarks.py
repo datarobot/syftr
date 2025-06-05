@@ -49,12 +49,12 @@ from syftr.studies import (  # noqa
 )
 from syftr.studyconfig_helper import build_configs
 
-PREFIX = "silver"
+PREFIX = "test"
 BENCH_NUM = 1
 NUM_TRIALS = 600
 USE_PARETO_BASELINES = False
 RUN_NAME = "in-sample"
-REUSE_STUDY = False
+REUSE_STUDY = True
 RECREATE_STUDY = True
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
@@ -265,19 +265,19 @@ datasets = [
     # CragTask3HF(subset="music"),
     # CragTask3HF(subset="sports"),
     # DRDocsHF(),
-    # FinanceBenchHF(),
+    FinanceBenchHF(),
     # HotPotQAHF(subset="train_hard"),
     # InfiniteBenchHF(),
     # MultiHopRAGHF(),
     # PhantomWikiv050(),
     # -----------------------------------------------
-    BrightHF(subset="earth_science"),
-    BrightHF(subset="economics"),
-    BrightHF(subset="psychology"),
-    BrightHF(subset="robotics"),
-    # BrightHF(subset="stackoverflow"),
-    BrightHF(subset="sustainable_living"),
-    BrightHF(subset="pony"),
+    # BrightHF(subset="earth_science"),
+    # BrightHF(subset="economics"),
+    # BrightHF(subset="psychology"),
+    # BrightHF(subset="robotics"),
+    # # BrightHF(subset="stackoverflow"),
+    # BrightHF(subset="sustainable_living"),
+    # BrightHF(subset="pony"),
     # -----------------------------------------------
     # SyntheticHotPotQAHF(subset="train_hard"),
     # SyntheticFinanceBenchHF(),
