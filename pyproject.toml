@@ -81,7 +81,7 @@ dependencies = [
     "python-dotenv",
     "python-slugify",
     "rapidfuzz",
-    "ray[client,data,default,serve,tune]",
+    "ray[client,data,default,serve,tune]==2.46.0",
     "rich",
     "rouge_score",
     "s3fs",
@@ -151,7 +151,7 @@ syftr = "syftr"
 
 [tool.ruff]
 target-version = "py312"
-exclude = ["notebooks", "plotting.py", "examples"]
+exclude = ["notebooks", "examples"]
 line-length = 88
 indent-width = 4
 lint.select = [
