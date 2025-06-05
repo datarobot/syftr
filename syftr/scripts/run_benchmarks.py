@@ -49,11 +49,11 @@ from syftr.studies import (  # noqa
 )
 from syftr.studyconfig_helper import build_configs
 
-PREFIX = "rank"
+PREFIX = "test"
 BENCH_NUM = 0
 NUM_TRIALS = 10
 USE_PARETO_BASELINES = False
-RUN_NAME = "rag-and-agents"
+RUN_NAME = "rerun"
 REUSE_STUDY = True
 RECREATE_STUDY = True
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
@@ -156,7 +156,7 @@ optimization_config = OptimizationConfig(
     cpus_per_trial=1,
     seeder_timeout=3600 * 10,  # None: wait until finished, 0: don't wait
     # -----------------------------------------------
-    num_random_trials=0,
+    num_random_trials=10,
     # -----------------------------------------------
     use_individual_baselines=False,
     use_agent_baselines=False,
