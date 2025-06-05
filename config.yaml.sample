@@ -30,6 +30,33 @@ gcp_vertex:
   #     "universe_domain": "googleapis.com"
   #   }
 
+generative_models:
+  # # azure_openai Provider Example
+  # azure_gpt_35_turbo:
+  #   provider: azure_openai            # Client type to use (required)
+  #
+  #   # Provider-specific configurations
+  #   deployment_name: "gpt-35-turbo"   # Required for Azure OpenAI models
+  #   api_version: "2024-06-01"         # Optional?
+  #   additional_kwargs:                # Add additional parameters to OpenAI request body
+  #     user: syftr
+  #
+  #   # Cost example - options are the same for all models (required)
+  #   cost:
+  #     type: tokens                    # tokens, characters, or hourly
+  #     input: 1.00                     # Cost in USD per million
+  #     output: 2.00                    # Cost in USD per million
+  #     # rate: 12.00                   # Average cost per hour of inference server, when type is hourly
+  #
+  #   # LLamaIndex LLMetadata Example - keys and defaults are the same for all models
+  #   metadata:
+  #     model_name: gpt-35-turbo          # example value (required)
+  #     context_window: 3900              # default
+  #     num_output: 256                   # default
+  #     is_chat_model: false              # default
+  #     is_function_calling_model: false  # default
+  #     system_role: SYSTEM               # default
+
 # Required for mistral-large LLM
 azure_inference_mistral:
   api_key: "<your-api-key>"
