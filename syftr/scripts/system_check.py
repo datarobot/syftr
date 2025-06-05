@@ -9,7 +9,7 @@ from rich.text import Text
 from sqlalchemy.exc import OperationalError
 from transformers import AutoConfig
 
-from syftr import __version__ as version
+from syftr import __version__
 from syftr.configuration import SYFTR_CONFIG_FILE_ENV_NAME, cfg
 from syftr.llm import get_llm
 from syftr.optuna_helper import get_study_names
@@ -30,7 +30,7 @@ Welcome to
 \__ \ \  /  )__)   )(   )   /
 (___/ (__) (__)   (__) (_)\_)
 
-version {version}.
+version {__version__}.
 Running system check..."""
     # Print the ASCII art as a Text object, ensuring it's treated literally
     # and doesn't get misinterpreted by console markup.

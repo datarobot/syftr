@@ -86,8 +86,6 @@ from pydantic_settings import (
 from sqlalchemy import Engine, create_engine
 from typing_extensions import Annotated
 
-from syftr import __version__
-
 REPO_ROOT = Path(os.getenv("REPO_ROOT", Path(__file__).parent.parent))
 logging.info(f"Repository root is: {REPO_ROOT}")
 HOSTNAME = socket.gethostname()
@@ -98,7 +96,6 @@ NON_OPENAI_CONTEXT_WINDOW_FACTOR = 0.85
 NDIGITS = 4
 UNSUPPORTED_PARAMS = ["splitter_chunk_size"]
 SYFTR_CONFIG_FILE_ENV_NAME = "SYFTR_CONFIG_FILE"
-VERSION = __version__
 
 
 class APIKeySerializationMixin:

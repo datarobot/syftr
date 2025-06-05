@@ -13,7 +13,8 @@ from typing import Any, Dict, List
 
 import yaml
 
-from syftr.configuration import VERSION, cfg
+from syftr import __version__
+from syftr.configuration import cfg
 from syftr.huggingface_helper import get_hf_token
 
 
@@ -27,7 +28,7 @@ def _build_env(delete_confirmed: bool) -> Dict[str, str]:
     env = {
         "TOKENIZERS_PARALLELISM": "true",
         "NLTK_DATA": cfg.paths.nltk_dir.as_posix(),
-        "SYFTR_VERSION": VERSION,
+        "SYFTR_VERSION": __version__,
     }
     if delete_confirmed:
         env["SYFTR_OPTUNA__NOCONFIRM"] = "true"
