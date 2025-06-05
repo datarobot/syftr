@@ -19,7 +19,6 @@ from llama_index.core.schema import NodeWithScore, TextNode
 from ray.util import state
 
 from syftr.baselines import set_baselines
-from syftr.configuration import VERSION
 from syftr.evaluation import eval_dataset
 from syftr.flows import (
     CritiqueAgentFlow,
@@ -544,5 +543,4 @@ def main():
 
 
 if __name__ == "__main__":
-    logger.info("Running syftr %s", VERSION)
     main()
