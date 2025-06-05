@@ -51,10 +51,10 @@ from syftr.studyconfig_helper import build_configs
 
 PREFIX = "silver"
 BENCH_NUM = 1
-NUM_TRIALS = 1000
+NUM_TRIALS = 600
 USE_PARETO_BASELINES = False
 RUN_NAME = "in-sample"
-REUSE_STUDY = True
+REUSE_STUDY = False
 RECREATE_STUDY = True
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
@@ -129,7 +129,7 @@ optimization_config = OptimizationConfig(
     baselines=baselines,
     baselines_cycle_llms=True,
     shuffle_baselines=True,
-    max_concurrent_trials=20,
+    max_concurrent_trials=30,
     num_eval_samples=100,
     num_eval_batch=5,
     rate_limiter_max_coros=30,
