@@ -5589,7 +5589,6 @@ wheels = [
 
 [[package]]
 name = "syftr"
-version = "0.0.2"
 source = { editable = "." }
 dependencies = [
     { name = "aiolimiter" },
@@ -5824,7 +5823,7 @@ requires-dist = [
     { name = "python-slugify", marker = "extra == 'dev'" },
     { name = "pytz", marker = "extra == 'dev'" },
     { name = "rapidfuzz" },
-    { name = "ray", extras = ["client", "data", "default", "serve", "tune"] },
+    { name = "ray", extras = ["client", "data", "default", "serve", "tune"], specifier = "==2.46.0" },
     { name = "rich" },
     { name = "rouge-score" },
     { name = "rpdb", marker = "extra == 'dev'" },
