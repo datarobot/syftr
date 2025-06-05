@@ -11,6 +11,7 @@ dependencies = [
     "asyncio",
     "boto3",
     "botocore",
+    "click",
     "cloudpickle",
     "colorlog",
     "datasets>=3.3",
@@ -98,6 +99,9 @@ dependencies = [
     "types-tabulate",
     "vertexai==1.68.0",
 ]
+
+[project.scripts]
+syftr = "syftr.cli:main"
 
 [tool.hatch.version]
 path = "syftr/__init__.py"

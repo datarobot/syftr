@@ -32,6 +32,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv venv --python 3.12.7
 source .venv/bin/activate
 uv sync --extra dev
+uv pip install -e .
 ```
 
 ### Required Credentials
@@ -56,10 +57,10 @@ You can rename this file to `config.yaml` and fill in all necessary details acco
 
 ## Quickstart
 
-First, run `make check` to validate your credentials and configuration.
+First, run `syftr check` to validate your credentials and configuration.
 Note that most LLM connections are likely to fail if you have not provided configuration for them.
 Next, try the example Jupyter notebooks located in the [`examples`](/examples) directory.
-Or directly run a __syftr__ study with user API:
+Or directly run a __syftr__ study using the CLI `syftr run studies/example-dr-docs.yaml --follow` or with the API:
 
 ```python
 from syftr import api
