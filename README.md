@@ -34,7 +34,7 @@ source .venv/bin/activate
 uv sync --extra dev
 uv pip install -e .
 ```
-or
+or to use syftr as a library, install directly from PyPi:
 ```bash
 pip install syftr
 ```
