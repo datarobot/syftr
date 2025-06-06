@@ -75,6 +75,61 @@ RETRIABLE_EXCEPTIONS = (
 )
 
 
+class ExactMatchEvaluator(BaseEvaluator):
+    """
+    Evaluator that calculates exact match by comparing reference contexts
+    with retrieved contexts.
+    """
+
+    async def aevaluate(
+        self,
+        query: T.Optional[str] = None,
+        response: T.Optional[str] = None,
+        contexts: T.Optional[T.Sequence[str]] = None,
+        **kwargs: T.Any,
+    ) -> EvaluationResult:
+        """
+        Evaluate exact match by computing the proportion of reference contexts
+        that are present in the retrieved contexts.
+        """
+        reference = kwargs.get("reference")
+
+        if not reference:
+            raise ValueError("Reference contexts are empty.")
+        if not contexts:
+            raise ValueError("Retrieved contexts are empty.")
+
+        matched = sum(any(ref in context for context in contexts) for ref in reference)
+        recall = matched / len(reference) if reference else 0.0
+        return EvaluationResult(
+            passing=recall > 0,
+            score=recall,
+        )
+
+    def evaluate(
+        self,
+        query: T.Optional[str] = None,
+        response: T.Optional[str] = None,
+        contexts: T.Optional[T.Sequence[str]] = None,
+        **kwargs: T.Any,
+    ) -> EvaluationResult:
+        """
+        Synchronous version of the evaluation method for compatibility with base class.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self.aevaluate(query, response, contexts, **kwargs)
+        )
+
+    def _get_prompts(self) -> PromptDictType:
+        """Get prompts."""
+        return {}
+
+    def _update_prompts(self, prompts_dict: PromptDictType) -> None:
+        """Update prompts."""
+        pass
+
+
 class FuzzyRecallEvaluator(BaseEvaluator):
     """
     Evaluator that calculates fuzzy recall by comparing reference contexts
@@ -319,25 +374,13 @@ async def aretrieve_pair(
     raise_on_exception: bool | None = EVAL__RAISE_ON_EXCEPTION,
 ) -> T.Tuple[T.List[NodeWithScore] | None, float, Exception | None]:
     """Get flow's retrieved documents from an Q&A pair asynchronously."""
-    # random wait to avoid thundering herd
-    await asyncio.sleep(random.uniform(0.1, 0.5))
-    async with rate_limiter:
-        result, run_time, exception = await exception_catcher(
-            func=flow.aretrieve,
-            return_values_on_exception=(None, np.nan),
-            raise_on_exception=raise_on_exception,
-            query=qa_pair.question,
-        )
-        return result, run_time, exception
-
-
-def _flatten_context(v: dict | str | list) -> list[str]:
-    if isinstance(v, dict):
-        return sum((_flatten_context(val) for val in v.values()), [])
-    elif isinstance(v, list):
-        return [str(item).strip() for item in v]
-    else:
-        return [str(v).strip()]
+    result, run_time, exception = await exception_catcher(
+        func=flow.aretrieve,
+        return_values_on_exception=(None, np.nan),
+        raise_on_exception=raise_on_exception,
+        query=qa_pair.question,
+    )
+    return result, run_time, exception
 
 
 async def _aeval_retriever_pair(
@@ -348,8 +391,8 @@ async def _aeval_retriever_pair(
     raise_on_exception: bool | None = EVAL__RAISE_ON_EXCEPTION,
 ) -> SyftrEvaluationResult:
     """Evaluate retrieval performance on a single Q&A item."""
-    if not qa_pair.context:
-        raise ValueError("QAPair context is empty: %s", qa_pair)
+    if not qa_pair.gold_evidence:
+        raise ValueError("QAPair gold_evidence is empty: %s", qa_pair)
     retrieval_results, run_time, retrieval_exception = await aretrieve_pair(
         qa_pair, flow, rate_limiter
     )
@@ -358,19 +401,12 @@ async def _aeval_retriever_pair(
             n.node.get_content(metadata_mode=MetadataMode.NONE)
             for n in retrieval_results or []
         ]
-        retrieved_contexts_length = sum(
-            len(flow.tokenizer(s))  # type: ignore
-            for s in retrieved_contexts
-        )
-        reference_contexts: T.List[str] = []
-        for ctx in qa_pair.context:
-            reference_contexts.extend(_flatten_context(ctx))
-        if not reference_contexts:
-            raise ValueError("QAPair reference_contexts is empty: %s", qa_pair)
+        # Approimate token length
+        retrieved_contexts_length = sum(len(s) // 4 for s in retrieved_contexts)
         evaluator = evaluators[0]
         result = await evaluator.aevaluate(
             contexts=retrieved_contexts,
-            reference=reference_contexts,
+            reference=qa_pair.gold_evidence,
         )
     return SyftrEvaluationResult(
         qa_pair=qa_pair,
@@ -784,11 +820,10 @@ def eval_dataset(
                 rate_limiter=rate_limiter,
             )
         case "retriever":
-            # Filter the dataset to remove any qa_pairs with empty context
-            filtered_dataset = [
-                pair for pair in dataset if pair.context and len(pair.context) > 0
-            ]
-            assert len(filtered_dataset) > 2, filtered_dataset
+            # Filter the dataset to remove any qa_pairs without gold_evidence
+            filtered_dataset = [pair for pair in dataset if pair.gold_evidence]
+            if not filtered_dataset:
+                raise ValueError("No QAPairs with gold_evidence found in the dataset.")
             results, prune_reason = _async_eval_runner(
                 pair_eval_runner=_aeval_retriever_pair,
                 items=filtered_dataset,

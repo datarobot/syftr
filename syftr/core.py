@@ -2,7 +2,7 @@ import re
 import string
 import typing as T
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 def normalize_text(s):
@@ -50,3 +50,7 @@ class QAPair(BaseModel):
     supporting_facts: T.List[T.Any]
     difficulty: str
     qtype: str
+    gold_evidence: T.List[str] = Field(
+        default_factory=list,
+        description="List of gold text snippets that must be retrieved exactly for full recall",
+    )

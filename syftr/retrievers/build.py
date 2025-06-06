@@ -6,7 +6,7 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.retrievers import BaseRetriever, QueryFusionRetriever
 from llama_index.core.retrievers.fusion_retriever import FUSION_MODES
-from llama_index.core.schema import TransformComponent
+from llama_index.core.schema import NodeWithScore, TransformComponent
 from llama_index.core.storage.docstore.types import BaseDocumentStore
 from llama_index.core.storage.storage_context import StorageContext
 from llama_index.retrievers.bm25 import BM25Retriever
@@ -219,3 +219,31 @@ def build_rag_retriever(
 
     fusion_retriever = QueryFusionRetriever(**fusion_retriever_params)
     return fusion_retriever, docstore
+
+
+def build_dummy_retriever(
+    study_config: StudyConfig,
+) -> T.Tuple[BaseRetriever, BaseDocumentStore]:
+    """Builds a dummy retriever that returns all documents in the corpus."""
+    logger.info("Building dummy retriever that returns all documents")
+    documents = list(study_config.dataset.iter_grounding_data())
+
+    from syftr.configuration import cfg
+
+    pipeline = IngestionPipeline(transformations=[])
+    nodes = pipeline.run(
+        documents=documents,
+        show_progress=cfg.optuna.show_progress,
+    )
+
+    docstore = StorageContext.from_defaults().docstore
+    docstore.add_documents(nodes)
+
+    class DummyRetriever(BaseRetriever):
+        async def aretrieve(self, query: str) -> T.List:
+            return [NodeWithScore(node=n) for n in docstore.docs.values()]
+
+        def _retrieve(self, query: str) -> T.List[NodeWithScore]:
+            raise NotImplementedError("DummyRetriever only supports async retrieval.")
+
+    return DummyRetriever(), docstore

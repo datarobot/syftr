@@ -210,14 +210,11 @@ class FinanceBenchHF(SyftrQADataset):
             question=row["question"],
             answer=row["answer"],
             id=str(row["financebench_id"]),
-            context=(
-                [{"html_evidence": row["html_evidence"]}]
-                if row["html_evidence"]
-                else []
-            ),
+            context=row["evidence"],
             supporting_facts=[row["justification"]],
             difficulty="",
             qtype=row["question_type"],
+            gold_evidence=row["html_evidence"],
         )
 
     @overrides
@@ -332,6 +329,7 @@ class HotPotQAHF(SyftrQADataset):
             supporting_facts=row["supporting_facts"],
             difficulty=row["level"],
             qtype=row["type"],
+            gold_evidence=[sentence for _, sentence in row["context"]],
         )
 
     @overrides
@@ -825,6 +823,7 @@ class MultiHopRAGHF(SyftrQADataset):
             supporting_facts=row["evidence_list"],
             difficulty="",
             qtype=str(row["question_type"]),
+            gold_evidence=[item["fact"] for item in row["evidence_list"]],
         )
 
     @overrides
