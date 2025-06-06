@@ -34,6 +34,20 @@ source .venv/bin/activate
 uv sync --extra dev
 uv pip install -e .
 ```
+or to use syftr as a library, install directly from PyPi:
+```bash
+pip install syftr
+```
+NOTE: __syftr__ works as a library, but still needs easy access to `config.yaml` and study files you intend to run. Config file should be present as `~/.syftr/config.yaml`, or in your current working directory.
+You can download sample config file to your `~/.syftr` directory with this command
+```bash
+curl -L https://raw.githubusercontent.com/datarobot/syftr/main/config.yaml.sample \
+     -o ~/.syftr/config.yaml
+```
+You also need studies to run __syftr__. You can write your own or download our example study with this command to current working directory
+```bash
+curl -L https://raw.githubusercontent.com/datarobot/syftr/main/studies/example-dr-docs.yaml > example-dr-docs.yaml
+```
 
 ### Required Credentials
 
