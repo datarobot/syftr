@@ -39,7 +39,6 @@ or to use syftr as a library, install directly from PyPi:
 pip install syftr
 ```
 NOTE: __syftr__ works as a library, but still needs easy access to `config.yaml` and study files you intend to run. This file should be present in `~/.syftr/config.yaml`, or your current working directory.
-or current working directory.
 
 ### Required Credentials
 
