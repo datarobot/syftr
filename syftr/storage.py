@@ -861,112 +861,54 @@ class BrightHF(SyftrQADataset):
 
     _descriptions = {
         "earth_science": (
-            "This resource contains everything about earth science, including geology, "
-            "oceanography, meteorology, and more. "
-            "It contains historical data, live data, just about everything about earth science, for instance, "
-            "information about geological formations, ocean currents, or weather patterns, "
-            "key events or phenomena in earth science history, "
-            "information about climate change or environmental issues, and "
-            "information about earth science research methods or techniques."
+            "This resource covers earth science, including geology, oceanography, meteorology, and more. "
+            "It includes historical and live data, such as geological formations, ocean currents, weather patterns, "
+            "climate change, and earth science research methods."
         ),
         "biology": (
-            "This resource contains everything about biology, including genetics, "
-            "ecology, evolution, and more. "
-            "It contains historical data, live data, just about everything about biology, for instance, "
-            "information about cellular structures, ecosystems, or evolutionary processes, "
-            "key events or discoveries in biology history, "
-            "information about genetic engineering or biotechnology, and "
-            "information about biological research methods or techniques."
+            "This resource covers biology, including genetics, ecology, and evolution. "
+            "It includes historical and live data, such as cellular structures, ecosystems, evolutionary processes, "
+            "and biological research methods."
         ),
         "economics": (
-            "This resource contains everything about economics, including microeconomics, "
-            "macroeconomics, international trade, and more. "
-            "It contains historical data, live data, just about everything about economics, for instance, "
-            "information about supply and demand, market structures, or economic indicators, "
-            "key events or theories in economics history, "
-            "information about economic policies or regulations, and "
-            "information about economic research methods or techniques."
+            "This resource covers economics, including microeconomics, macroeconomics, and international trade. "
+            "It includes data on supply and demand, market structures, economic indicators, and economic research methods."
         ),
         "psychology": (
-            "This resource contains everything about psychology, including cognitive, "
-            "developmental, social, and clinical psychology. "
-            "It contains historical data, live data, just about everything about psychology, for instance, "
-            "information about brain structures, psychological disorders, or therapeutic techniques, "
-            "key events or theories in psychology history, "
-            "information about psychological research methods or techniques, and "
-            "information about psychological assessments or tests."
+            "This resource covers psychology, including cognitive, developmental, social, and clinical areas. "
+            "It includes data on brain structures, psychological disorders, therapeutic techniques, and research methods."
         ),
         "robotics": (
-            "This resource contains everything about robotics, including robot design, "
-            "control systems, and applications. "
-            "It contains historical data, live data, just about everything about robotics, for instance, "
-            "information about robot components, sensors, or actuators, "
-            "key events or advancements in robotics history, "
-            "information about robotic applications in various fields, and "
-            "information about robotics research methods or techniques."
+            "This resource covers robotics, including robot design, control systems, and applications. "
+            "It includes data on robot components, sensors, advancements, and robotics research methods."
         ),
         "stackoverflow": (
-            "This resource contains everything about StackOverflow, including programming, "
-            "software development, and more. "
-            "It contains historical data, live data, just about everything about StackOverflow, for instance, "
-            "information about programming languages, software frameworks, or development methodologies, "
-            "key events or trends in software development history, "
-            "information about software development best practices or tools, and "
-            "information about software development research methods or techniques."
+            "This resource covers StackOverflow, including programming and software development. "
+            "It includes data on programming languages, frameworks, methodologies, and development best practices."
         ),
         "sustainable_living": (
-            "This resource contains everything about sustainable living, including "
-            "environmental conservation, renewable energy, and more. "
-            "It contains historical data, live data, just about everything about sustainable living, for instance, "
-            "information about sustainable practices, technologies, or policies, "
-            "key events or movements in sustainability history, "
-            "information about environmental issues or challenges, and "
-            "information about sustainability research methods or techniques."
+            "This resource covers sustainable living, including environmental conservation and renewable energy. "
+            "It includes data on sustainable practices, technologies, environmental issues, and research methods."
         ),
         "pony": (
-            "This resource contains everything about the Pony programming language, including its syntax, "
-            "capabilities, compiler architecture, and more. "
-            "It contains documentation, examples, just about everything about Pony, for instance, "
-            "information about Pony's actor-based concurrency model, capabilities-secure type system, "
-            "key concepts like reference capabilities and behavior guarantees, "
-            "information about pattern matching, generics, and other language features, and "
-            "information about Pony's memory management, garbage collection, and runtime performance."
+            "This resource covers the Pony programming language, including syntax, concurrency, and compiler architecture. "
+            "It includes information on reference capabilities, memory management, and language features."
         ),
         "leetcode": (
-            "This resource contains everything about LeetCode, including its problems, "
-            "solutions, and more. "
-            "It contains documentation, examples, just about everything about LeetCode, for instance, "
-            "information about data structures, algorithms, or coding challenges, "
-            "key concepts like time complexity and space complexity, "
-            "information about problem-solving techniques and strategies, and "
-            "information about LeetCode's online judge system and coding environment."
+            "This resource covers LeetCode, including problems, solutions, and coding challenges. "
+            "It includes data on algorithms, data structures, problem-solving techniques, and the online judge system."
         ),
         "aops": (
-            "This resource contains everything about Art of Problem Solving (AoPS), including its curriculum, "
-            "problems, and more. "
-            "It contains documentation, examples, just about everything about AoPS, for instance, "
-            "information about problem-solving techniques, mathematical concepts, or competition preparation, "
-            "key events or competitions in mathematics history, "
-            "information about AoPS's online community and resources, and "
-            "information about AoPS's books and courses."
+            "This resource covers Art of Problem Solving (AoPS), including curriculum and problems. "
+            "It includes information on mathematical concepts, competition preparation, and AoPS resources."
         ),
         "theoremqa_theorems": (
-            "This resource contains everything about TheoremQA, including its theorems, "
-            "proofs, and more. "
-            "It contains documentation, examples, just about everything about TheoremQA, for instance, "
-            "information about mathematical theorems, proofs, or concepts, "
-            "key events or advancements in theorem proving history, "
-            "information about theorem proving techniques and strategies, and "
-            "information about TheoremQA's online community and resources."
+            "This resource covers TheoremQA, including theorems and proofs. "
+            "It includes information on mathematical theorems, proof strategies, and TheoremQA resources."
         ),
         "theoremqa_questions": (
-            "This resource contains everything about TheoremQA, including its questions, "
-            "answers, and more. "
-            "It contains documentation, examples, just about everything about TheoremQA, for instance, "
-            "information about mathematical questions, answers, or concepts, "
-            "key events or advancements in theorem proving history, "
-            "information about theorem proving techniques and strategies, and "
-            "information about TheoremQA's online community and resources."
+            "This resource covers TheoremQA, including questions and answers. "
+            "It includes information on mathematical questions, theorem proving techniques, and TheoremQA resources."
         ),
     }
 
