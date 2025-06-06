@@ -46,7 +46,7 @@ curl -L https://raw.githubusercontent.com/datarobot/syftr/main/config.yaml.sampl
 ```
 You also need studies to run __syftr__. You can write your own or download our example study with this command to current working directory
 ```bash
-curl -L https://raw.githubusercontent.com/datarobot/syftr/main/studies/example-dr-docs.yaml \
+curl -L https://raw.githubusercontent.com/datarobot/syftr/main/studies/example-dr-docs.yaml > example-dr-docs.yaml
 ```
 
 ### Required Credentials
