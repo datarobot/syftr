@@ -49,7 +49,7 @@ from syftr.studies import (  # noqa
 )
 from syftr.studyconfig_helper import build_configs
 
-PREFIX = "silver1"
+PREFIX = "silver"
 BENCH_NUM = 1
 NUM_TRIALS = 600
 USE_PARETO_BASELINES = False
@@ -129,8 +129,8 @@ optimization_config = OptimizationConfig(
     baselines=baselines,
     baselines_cycle_llms=True,
     shuffle_baselines=True,
-    max_concurrent_trials=30,
-    num_eval_samples=100,
+    max_concurrent_trials=40,
+    num_eval_samples=50,
     num_eval_batch=5,
     rate_limiter_max_coros=30,
     rate_limiter_period=60,
