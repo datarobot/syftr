@@ -38,8 +38,8 @@ or to use syftr as a library, install directly from PyPi:
 ```bash
 pip install syftr
 ```
-NOTE: __syftr__ works as a library, but still needs easy access to `config.yaml` and study files you intend to run. This file should be present in `~/.syftr/config.yaml`, or your current working directory.
-You can download sample config file to your `~/.syftr/` directory with this command
+NOTE: __syftr__ works as a library, but still needs easy access to `config.yaml` and study files you intend to run. Config file should be present as `~/.syftr/config.yaml`, or in your current working directory.
+You can download sample config file to your `~/.syftr` directory with this command
 ```bash
 curl -L https://raw.githubusercontent.com/datarobot/syftr/main/config.yaml.sample \
      -o ~/.syftr/config.yaml
