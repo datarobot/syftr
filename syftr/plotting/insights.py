@@ -21,7 +21,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from slugify import slugify
 
 from syftr.configuration import cfg
-from syftr.llm import AZURE_GPT4O_STD
+from syftr.llm import get_llm
 from syftr.studies import get_response_synthesizer_llm, get_template_name
 
 SHOW_TITLE = False
@@ -544,7 +544,8 @@ def generate(prompt):
     cache_key = ("generate", prompt)
     if cache_key in CACHE:
         return CACHE[cache_key]
-    response = AZURE_GPT4O_STD.complete(prompt=prompt, temperature=0)
+    llm = get_llm("gpt-4o")
+    response = llm.complete(prompt=prompt, temperature=0)
     CACHE.set(cache_key, response.text, expire=60 * 60 * 24 * 7)
     return response.text
 
