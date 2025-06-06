@@ -49,11 +49,11 @@ from syftr.studies import (  # noqa
 )
 from syftr.studyconfig_helper import build_configs
 
-PREFIX = "rank"
-BENCH_NUM = 0
-NUM_TRIALS = 10
+PREFIX = "silver"
+BENCH_NUM = 1
+NUM_TRIALS = 600
 USE_PARETO_BASELINES = False
-RUN_NAME = "rag-and-agents"
+RUN_NAME = "in-sample"
 REUSE_STUDY = True
 RECREATE_STUDY = True
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
@@ -71,7 +71,7 @@ blocks = [
             "few_shot_retriever",
             "hyde",
             "critique_rag_agent",
-            "lats_rag_agent",
+            # "lats_rag_agent",
             "react_rag_agent",
             "rag_mode",
             "reranker",
@@ -82,12 +82,12 @@ blocks = [
     ),
     # Block(
     #     name="rag_retriever",
-    #     num_trials=100,
+    #     num_trials=200,
     #     components=["rag_retriever"],
     # ),
     # Block(
     #     name="main",
-    #     num_trials=900,
+    #     num_trials=NUM_TRIALS - 200,
     #     components=[
     #         "splitter",
     #         "additional_context",
@@ -106,26 +106,8 @@ blocks = [
 ]
 
 
-baseline_studies = [
-    "rank0--rag-and-agents--financebench_hf",
-    "rank1--rag-and-agents--bright_hf",
-    "rank1--rag-and-agents--crag_hf-music",
-    "rank1--rag-and-agents--crag_hf-sports",
-    "rank1--rag-and-agents--drdocs_hf",
-    "rank1--rag-and-agents--financebench_hf",
-    "rank1--rag-and-agents--hotpotqa_hf-train_hard",
-    "rank1--rag-and-agents--infinitebench_hf",
-    "rank1--rag-and-agents--multihoprag_hf",
-    "rank1--rag-and-agents--phantomwikiv050_hf",
-    "rank2--rag-and-agents--bright_hf",
-    "rank2--rag-and-agents--crag_hf-music",
-    "rank2--rag-and-agents--crag_hf-sports",
-    "rank2--rag-and-agents--drdocs_hf",
-    "rank2--rag-and-agents--financebench_hf",
-    "rank2--rag-and-agents--hotpotqa_hf-train_hard",
-    "rank2--rag-and-agents--infinitebench_hf",
-    "rank2--rag-and-agents--multihoprag_hf",
-    "rank2--rag-and-agents--phantomwikiv050_hf",
+baseline_studies: T.List[str] = [
+    # "silver1--in-sample--",
 ]
 baselines = []
 if USE_PARETO_BASELINES:
@@ -135,26 +117,26 @@ if USE_PARETO_BASELINES:
                 baselines.append(flow)
     print(f"We have {len(baselines)} Pareto-baselines for seeding")
 
-# baselines = json.load(
-#     open(cfg.paths.results_dir / "silver-bullet-like-flows.json", "r")
-# )
+# import json
+
+# baselines = json.load(open(cfg.paths.results_dir / "silver-bullets.json", "r"))
 
 optimization_config = OptimizationConfig(
     method="expanding",
-    # blocks=blocks,
+    blocks=blocks,
     shuffle_blocks=False,
     num_trials=NUM_TRIALS,
     baselines=baselines,
-    baselines_cycle_llms=False,
+    baselines_cycle_llms=True,
     shuffle_baselines=True,
-    max_concurrent_trials=10,
+    max_concurrent_trials=40,
     num_eval_samples=50,
     num_eval_batch=5,
-    rate_limiter_max_coros=30,
+    rate_limiter_max_coros=40,
     rate_limiter_period=60,
     max_trial_cost=40.0,
     cpus_per_trial=1,
-    seeder_timeout=3600 * 10,  # None: wait until finished, 0: don't wait
+    seeder_timeout=3600 * 0,  # None: wait until finished, 0: don't wait
     # -----------------------------------------------
     num_random_trials=0,
     # -----------------------------------------------
@@ -221,7 +203,7 @@ search_space = SearchSpace(
     rag_modes=[
         # "no_rag",
         "rag",
-        "lats_rag_agent",
+        # "lats_rag_agent",
         "react_rag_agent",
         "critique_rag_agent",
         "sub_question_rag",
@@ -258,7 +240,7 @@ search_space = SearchSpace(
         critique_agent_llms=llms,
         reflection_agent_llms=llms,
     ),
-    lats_rag_agent=LATSRagAgent(),
+    # lats_rag_agent=LATSRagAgent(),
     reranker=Reranker(llms=llms),
     hyde=Hyde(llms=llms),
     few_shot_retriever=FewShotRetriever(
@@ -278,24 +260,24 @@ evaluation = Evaluation(
 )
 
 datasets = [
-    FinanceBenchHF(),
     # -----------------------------------------------
     # BrightHF(subset="biology"),
     # CragTask3HF(subset="music"),
     # CragTask3HF(subset="sports"),
     # DRDocsHF(),
+    # FinanceBenchHF(),
     # HotPotQAHF(subset="train_hard"),
     # InfiniteBenchHF(),
     # MultiHopRAGHF(),
     # PhantomWikiv050(),
     # -----------------------------------------------
-    # BrightHF(subset="earth_science"),
-    # BrightHF(subset="economics"),
-    # BrightHF(subset="psychology"),
-    # BrightHF(subset="robotics"),
+    BrightHF(subset="earth_science"),
+    BrightHF(subset="economics"),
+    BrightHF(subset="psychology"),
+    BrightHF(subset="robotics"),
     # BrightHF(subset="stackoverflow"),
-    # BrightHF(subset="sustainable_living"),
-    # BrightHF(subset="pony"),
+    BrightHF(subset="sustainable_living"),
+    BrightHF(subset="pony"),
     # -----------------------------------------------
     # SyntheticHotPotQAHF(subset="train_hard"),
     # SyntheticFinanceBenchHF(),
