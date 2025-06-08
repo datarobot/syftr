@@ -20,6 +20,10 @@ from syftr.logger import logger
 from syftr.studies import StudyConfig
 
 
+def get_flows_from_trials(df: pd.DataFrame) -> T.List[T.Dict[str, T.Any]]:
+    return df["user_attrs_flow"].apply(json.loads).unique().tolist()
+
+
 def get_study_names(
     include_regex: T.Union[str, T.List[str]],
     exclude_regex: T.Optional[T.Union[str, T.List[str]]] = None,
@@ -174,6 +178,21 @@ def get_completed_trials(
     return pd.DataFrame()
 
 
+def get_completed_flows(
+    study: T.Union[optuna.Study, str, T.List[optuna.Study], T.List[str]],
+    storage: str | BaseStorage | None = None,
+    success_rate: float | None = None,
+    drop_inf_latency: bool | None = True,
+) -> pd.DataFrame:
+    df_trials: pd.DataFrame = get_completed_trials(
+        study=study,
+        storage=storage,
+        success_rate=success_rate,
+        drop_inf_latency=drop_inf_latency,
+    )
+    return get_flows_from_trials(df_trials)
+
+
 def get_pareto_mask(
     study: optuna.Study | str | pd.DataFrame,
     success_rate: float | None = None,
@@ -211,10 +230,6 @@ def get_pareto_df(
     df_trials: pd.DataFrame = get_completed_trials(study, success_rate=success_rate)
     pareto_mask = get_pareto_mask(df_trials)
     return df_trials[pareto_mask]
-
-
-def get_flows_from_trials(df: pd.DataFrame) -> T.List[T.Dict[str, T.Any]]:
-    return df["user_attrs_flow"].apply(json.loads).tolist()
 
 
 def get_pareto_flows(

@@ -92,7 +92,6 @@ REPO_ROOT = Path(os.getenv("REPO_ROOT", Path(__file__).parent.parent))
 logging.info(f"Repository root is: {REPO_ROOT}")
 HOSTNAME = socket.gethostname()
 EVAL__RAISE_ON_EXCEPTION = False
-EVAL__ENABLE_RETRY = True
 S3_TIMEOUT = 3600
 NON_OPENAI_CONTEXT_WINDOW_FACTOR = 0.85
 NDIGITS = 4

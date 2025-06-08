@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import json
 import time
 import typing as T
 
@@ -51,14 +52,18 @@ from syftr.studyconfig_helper import build_configs
 
 PREFIX = "silver"
 BENCH_NUM = 1
-NUM_TRIALS = 600
-USE_PARETO_BASELINES = False
+NUM_TRIALS = 100
 RUN_NAME = "in-sample"
 REUSE_STUDY = True
 RECREATE_STUDY = True
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
+CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
+
+baseline_studies: T.List[str] = [
+    # "silver1--in-sample--",
+]
 
 blocks = [
     Block(
@@ -106,20 +111,25 @@ blocks = [
 ]
 
 
-baseline_studies: T.List[str] = [
-    # "silver1--in-sample--",
-]
 baselines = []
-if USE_PARETO_BASELINES:
+if CUSTOM_BASELINES == "pareto":
     for study in baseline_studies:
         for flow in get_pareto_flows(study, 0.9):
             if flow not in baselines:
                 baselines.append(flow)
     print(f"We have {len(baselines)} Pareto-baselines for seeding")
+elif CUSTOM_BASELINES == "all":
+    for study in baseline_studies:
+        for flow in get_pareto_flows(study, 0.9):
+            if flow not in baselines:
+                baselines.append(flow)
+    print(f"We have {len(baselines)} baselines for seeding")
+elif CUSTOM_BASELINES == "silver":
+    baselines = json.load(open(cfg.paths.results_dir / "silver-bullets.json", "r"))
+    print(f"We have {len(baselines)} silver bullet baselines for seeding")
+else:
+    print("No custom baselines provided")
 
-# import json
-
-# baselines = json.load(open(cfg.paths.results_dir / "silver-bullets.json", "r"))
 
 optimization_config = OptimizationConfig(
     method="expanding",
@@ -129,10 +139,10 @@ optimization_config = OptimizationConfig(
     baselines=baselines,
     baselines_cycle_llms=True,
     shuffle_baselines=True,
-    max_concurrent_trials=40,
+    max_concurrent_trials=20,
     num_eval_samples=50,
     num_eval_batch=5,
-    rate_limiter_max_coros=40,
+    rate_limiter_max_coros=30,
     rate_limiter_period=60,
     max_trial_cost=40.0,
     cpus_per_trial=1,
@@ -271,11 +281,13 @@ datasets = [
     # MultiHopRAGHF(),
     # PhantomWikiv050(),
     # -----------------------------------------------
+    # BrightHF(subset="stackoverflow"),
+    # -----------------------
+    # BrightHF(subset="psychology"),
+    # -----------------------
     BrightHF(subset="earth_science"),
     BrightHF(subset="economics"),
-    BrightHF(subset="psychology"),
     BrightHF(subset="robotics"),
-    # BrightHF(subset="stackoverflow"),
     BrightHF(subset="sustainable_living"),
     BrightHF(subset="pony"),
     # -----------------------------------------------
