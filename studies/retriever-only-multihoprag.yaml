@@ -1,4 +1,4 @@
-name: "v7-retriever-only-multihoprag"
+name: "retriever-only-multihoprag"
 dataset:
   dataset_dir: partitioned
   description: multihoprag dataset
@@ -115,7 +115,8 @@ optimization:
   # use_hf_embedding_models: true
   gpus_per_trial: 0.2
   max_concurrent_trials: 40
-  num_eval_samples: 500
+  num_eval_samples: 100
+  num_eval_batch: 10
   num_retries_unique_params: 10
   num_trials: 500
   objective_1_name: retriever_recall
