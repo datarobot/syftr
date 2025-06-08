@@ -1,3 +1,5 @@
+import asyncio
+import json
 import logging
 import os
 from importlib.metadata import version
@@ -6,12 +8,14 @@ from typing import List
 
 import click
 import optuna
+from ray.dashboard.modules.job.pydantic_models import JobDetails
 from ray.job_submission import JobSubmissionClient
 
 import syftr.scripts.system_check as system_check
 from syftr.api import Study, SyftrUserAPIError
 from syftr.configuration import cfg
 from syftr.optuna_helper import get_study_names
+from syftr.plotting.insights import create_pdf_report
 from syftr.ray import submit
 
 __version__ = version("syftr")
@@ -69,7 +73,7 @@ def run(config_path: str, follow: bool):
 
 def _get_ray_job_ids_from_name(
     client: JobSubmissionClient, study_name: str
-) -> List[str]:
+) -> List[JobDetails]:
     """
     Helper function to look through Ray jobs and find the job IDs matching a job name.
     """
@@ -78,11 +82,8 @@ def _get_ray_job_ids_from_name(
     except Exception as e:
         raise SyftrUserAPIError(f"Could not contact Ray: {e}")
 
-    matches = [
-        job.job_id
-        for job in jobs
-        if job.metadata.get("study_name") == study_name and job.status.name == "RUNNING"
-    ]
+    matches = [job for job in jobs if job.metadata.get("study_name")]
+    matches = [job for job in matches if job.job_id]
     return matches
 
 
@@ -96,7 +97,8 @@ def stop(study_name: str):
     """
     try:
         client = submit.get_client()
-        job_ids = _get_ray_job_ids_from_name(client, study_name)
+        jobs = _get_ray_job_ids_from_name(client, study_name)
+        job_ids = [jid.job_id for jid in jobs if jid.status.name == "RUNNING"]
         if not job_ids:
             raise SyftrUserAPIError(f"No running job found with name '{study_name}'")
         for jid in job_ids:
@@ -141,20 +143,15 @@ def status(study_name: str):
     # Check if the study is running in Ray
     found_ray_job = False
     client = submit.get_client()
-    job_ids = _get_ray_job_ids_from_name(client, study_name)
-    for job_id in job_ids:
-        try:
-            job_details = client.get_job_info(job_id)
-        except RuntimeError:
-            continue
-        if job_details.status.name == "RUNNING":
-            dashboard_url = f"{client._address}/#/jobs/{job_id}"
-            click.echo(
-                f"✓ Study '{study_name}' is currently running in Ray at {dashboard_url}"
-            )
-            found_ray_job = True
+    jobs = _get_ray_job_ids_from_name(client, study_name)
+    for job in jobs:
+        dashboard_url = f"{client._address}/#/jobs/{job.job_id}"
+        click.echo(
+            f"✓ Job '{study_name}' found in Ray at {dashboard_url} with status {job.status.name}"
+        )
+        found_ray_job = True
     if not found_ray_job:
-        click.echo(f"✗ Study '{study_name}' is not currently running in Ray.")
+        click.echo(f"✗ Study '{study_name}' not found in Ray.")
 
     # Also check the Optuna DB
     try:
@@ -162,9 +159,19 @@ def status(study_name: str):
             study_name=study_name,
             storage=cfg.database.get_optuna_storage(),
         )
+        from optuna.trial import TrialState
+
+        state_counts = {state.name: 0 for state in TrialState}
+        for t in study.trials:
+            state_counts[t.state.name] += 1
+
         click.echo(
-            f"✓ Study '{study_name}' found in Optuna DB with {len(study.trials)} completed trials."
+            f"✓ Study '{study_name}' found in Optuna with {len(study.trials)} total trials:"
         )
+        for state_name, count in state_counts.items():
+            if count > 0:
+                click.echo(f"  • {count} {state_name} trial(s)")
+
     except KeyError:
         click.echo(f"✗ Study '{study_name}' not found in Optuna DB.")
 
@@ -273,27 +280,81 @@ def delete(study_name_regex: str, exclude_regex: str, yes: bool):
     default="results",
     help="Directory to save results (default: 'results').",
 )
-def analyze(study_name: str, results_dir: str):
+@click.option(
+    "--save-pareto-plot/--no-save-pareto-plot",
+    default=False,
+    help="Saves a pareto plot to disk.",
+)
+@click.option(
+    "--save-flows-df/--no-save-flows-df",
+    default=False,
+    help="Save flows dataframes to disk.",
+)
+@click.option(
+    "--save-report/--no-save-report",
+    default=False,
+    help="Saves a pdf study report to disk.",
+)
+def analyze(
+    study_name: str,
+    results_dir: str,
+    save_pareto_plot: bool,
+    save_flows_df: bool,
+    save_report: bool,
+):
     """
-    syftr analyze STUDY_NAME [--results-dir RESULTS_DIR]
+    syftr analyze STUDY_NAME [--results-dir RESULTS_DIR] [--save-pareto-plot] [--save-flows-df] [--save-report]
 
-    Fetch Pareto/frontier data for STUDY_NAME and write:
-      • {STUDY_NAME}_pareto_flows.parquet
-      • {STUDY_NAME}_all_flows.parquet
-      • {STUDY_NAME}_pareto_plot.png
-    into RESULTS_DIR (default: ./results).
+    Fetch Pareto frontier data for STUDY_NAME and print out pareto-optimal flows.
+    Optionally save the following files:
+      • If --save-flows-df: {RESULTS_DIR}/{STUDY_NAME}_pareto_flows.parquet
+      • If --save-flows-df: {RESULTS_DIR}/{STUDY_NAME}_all_flows.parquet
+      • If --save-pareto-plot: {RESULTS_DIR}/{STUDY_NAME}_pareto_plot.png
+      • If --save-report: {RESULTS_DIR}/{STUDY_NAME}_report.pdf
     """
     os.makedirs(results_dir, exist_ok=True)
     try:
         study = Study.from_db(study_name)
-        study.pareto_df.to_parquet(
-            Path(results_dir) / f"{study_name}_pareto_flows.parquet", index=False
-        )
-        study.flows_df.to_parquet(
-            Path(results_dir) / f"{study_name}_all_flows.parquet", index=False
-        )
-        study.plot_pareto(Path(results_dir) / f"{study_name}_pareto_plot.png")
-        click.echo(f"✓ Results saved to `{results_dir}`.")
+        click.echo("✓ Loaded study from database. Printing Pareto-optimal flows...")
+        for flow in study.pareto_flows:
+            metrics = ", ".join(f"{k} {v:.3f}" for k, v in flow["metrics"].items())
+            parsed_params = (
+                json.loads(flow["params"])
+                if isinstance(flow["params"], str)
+                else flow["params"]
+            )
+            click.echo(f"• {metrics}: {json.dumps(parsed_params)}")
+
+        if save_flows_df:
+            pareto_df_path = Path(results_dir) / f"{study_name}_pareto_flows.parquet"
+            study.pareto_df.to_parquet(pareto_df_path, index=False)
+            click.echo(
+                f"✓ Saved pareto flow dataframe to `{pareto_df_path}`.", color="green"
+            )
+
+            all_flows_df_path = Path(results_dir) / f"{study_name}_all_flows.parquet"
+            study.flows_df.to_parquet(all_flows_df_path, index=False)
+            click.echo(
+                f"✓ Saved all flows dataframe to `{all_flows_df_path}`.", color="green"
+            )
+
+        if save_pareto_plot:
+            pareto_plot_path = Path(results_dir) / f"{study_name}_pareto_plot.png"
+            study.plot_pareto(pareto_plot_path)
+            click.echo(f"✓ Saved pareto plot to `{pareto_plot_path}`.")
+
+        if save_report:
+            pdf_filename = Path(results_dir) / f"{study_name}_report.pdf"
+            asyncio.run(
+                create_pdf_report(
+                    study_name,
+                    all_study_names=[study_name],
+                    pdf_filename=pdf_filename,
+                    insights_prefix="",
+                    show=False,
+                )
+            )
+            click.echo(f"✓ Saved full report to {pdf_filename}")
     except SyftrUserAPIError as e:
         click.echo(f"✗ {e}", err=True)
         raise click.Abort()

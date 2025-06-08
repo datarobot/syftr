@@ -54,9 +54,20 @@ def is_cost_objective(data: pd.DataFrame):
     return True
 
 
+def is_retriever_study(data: pd.DataFrame):
+    """Check if the study is a retriever study based on the presence of specific parameters."""
+    assert data is not None, "Data must be provided."
+    assert isinstance(data, pd.DataFrame), "Data must be a DataFrame"
+    assert not data.empty, "Data must not be empty."
+    objective_1_name = data.iloc[0]["user_attrs_metric_objective_1_name"]
+    if objective_1_name == "retriever_recall":
+        return True
+    return False
+
+
 def get_objective_2_name(data: pd.DataFrame = None, is_cost: bool | None = None):
     if is_cost is None:
-        if data is None:
+        if data is None or data.empty:
             return "Objective 2"
         if is_cost_objective(data):
             return "Cost"
@@ -1181,15 +1192,24 @@ def pareto_plot_and_table(df, study_name, ax=None, titles=None):
         ["values_0", "values_1"], ascending=[False, True]
     )
     df_desc = generate_trial_description_table(df_pareto)
-    fig, title = plot_pareto_plot(
-        df_desc,
-        study_name,
-        is_cost,
-        df_trials,
-        ax=ax,
-        titles=titles,
-        show_title=SHOW_TITLE,
-    )
+    if is_retriever_study(df_trials):
+        fig, title = plot_retriever_pareto(
+            df_trials,
+            study_name,
+            ax=ax,
+            titles=titles,
+            show_title=SHOW_TITLE,
+        )
+    else:
+        fig, title = plot_pareto_plot(
+            df_desc,
+            study_name,
+            is_cost,
+            df_trials,
+            ax=ax,
+            titles=titles,
+            show_title=SHOW_TITLE,
+        )
     table = style_pareto_table(df_desc, is_cost=is_cost)
     return fig, table, title
 
@@ -3642,3 +3662,180 @@ def plot_retriever_pareto(
     ax.set_ylabel(df_pareto_desc["user_attrs_metric_objective_1_name"].unique()[0])
 
     return fig, title
+
+
+async def create_pdf_report(
+    study_name,
+    all_study_names=None,
+    pdf_filename=None,
+    titles=None,
+    insights_prefix=None,
+    show=True,
+):
+    # load all studies
+    df, study_stats_table, exceptions_table = load_studies(all_study_names)
+    df_study = df[df["study_name"] == study_name]
+
+    # show most interesting parameters first then append others
+    param_cols = [
+        (
+            "params_rag_mode",
+            "params_llm_name",
+            "params_template_name",
+        ),
+        "params_rag_mode",
+        "params_llm_name",
+        "params_template_name",
+        "params_rag_method",
+        "params_rag_embedding_model",
+        "params_splitter_method",
+        "params_splitter_chunk_exp",
+        "params_splitter_chunk_overlap_frac",
+        "params_rag_top_k",
+        "params_reranker_enabled",
+        "params_hyde_enabled",
+    ]
+    param_cols += [
+        c for c in df_study.columns if c.startswith("params_") and c not in param_cols
+    ]
+
+    def valid_param_set(cols, df):
+        if isinstance(cols, str):
+            cols = [cols]
+        for c in cols:
+            if c not in df.columns:
+                return False
+            if df[c].nunique(dropna=False) <= 1:
+                return False
+        return True
+
+    param_cols = [c for c in param_cols if valid_param_set(c, df)]
+
+    # start writing a pdf report
+    if pdf_filename is None:
+        cfg.paths.results_dir.mkdir(parents=True, exist_ok=True)
+        path = cfg.paths.results_dir.resolve()
+        pdf_filename = str(path / f"insights_{study_name}.pdf")
+    with PdfPages(pdf_filename) as pdf:
+        # study stats table
+        await append_table(pdf, study_stats_table, show=show, title="Study Stats")
+
+        # exceptions table
+        table = create_exceptions_table(df, exceptions_table)
+        await append_table(pdf, table, show=show, title="Top Exceptions")
+
+        # error here if the focus study isn't valid
+        if len(df_study) == 0:
+            raise ValueError(f"The focus study '{study_name}' contains 0 trials.")
+
+        # benchmark accuracy table
+        fig, table = create_benchmark_plot_and_table(df)
+        if fig is not None:
+            append_figure(pdf, fig, insights_prefix, show=show)
+        if table is not None:
+            await append_table(pdf, table, show=show, title="Benchmark Performance")
+
+        # metric variability chart
+        fig = plot_metric_variability(df, study_name)
+        if fig is not None:
+            append_figure(pdf, fig, insights_prefix, show=show)
+
+        # all pareto fronts
+        fig, title = plot_all_paretos(df, all_study_names, titles=titles)
+        append_figure(pdf, fig, insights_prefix, title=title, show=show)
+
+        # pareto front with descriptions
+        fig, table, fig_title = pareto_plot_and_table(df, study_name, titles=titles)
+        append_figure(pdf, fig, insights_prefix, title=fig_title, show=show)
+        await append_table(
+            pdf,
+            table,
+            show=show,
+            title=f"Pareto Frontier ({get_name(study_name, titles)})",
+        )
+
+        # optimization focus over time
+        fig = focus_over_time_plot(df, study_name, titles=titles)
+        append_figure(pdf, fig, insights_prefix, show=show)
+
+        # compute trial rate plot
+        fig = compute_trial_rate_plot(df, study_name, titles=titles)
+        append_figure(pdf, fig, insights_prefix, show=show)
+
+        # compute plot
+        fig = compute_plot(df, study_name, titles=titles)
+        append_figure(pdf, fig, insights_prefix, show=show)
+
+        # cost plot
+        fig = cost_plot(df, study_name, titles=titles)
+        append_figure(pdf, fig, insights_prefix, show=show)
+
+        # hist of trials
+        fig = trial_duration_hist(df, study_name, titles=titles)
+        append_figure(pdf, fig, insights_prefix, show=show)
+
+        # historical pareto plots
+        fig = pareto_comparison_plot(df, study_name, titles=titles)
+        if fig is not None:
+            append_figure(pdf, fig, insights_prefix, show=show)
+
+        # pareto area plot
+        fig = pareto_area_plot(df, study_name, titles=titles)
+        append_figure(pdf, fig, insights_prefix, show=show)
+
+        # accuracy plot
+        fig = accuracy_plot(df, study_name, titles=titles)
+        append_figure(pdf, fig, insights_prefix, show=show)
+
+        # latency plot
+        fig = latency_plot(df, study_name)
+        if fig is not None:
+            append_figure(pdf, fig, insights_prefix, show=show)
+
+        # plot summary of all params
+        fig, title = all_parameters_all_studies_plot(
+            df, param_cols, group_col="study_name", titles=titles
+        )
+        append_figure(pdf, fig, insights_prefix, title=title, show=show)
+
+        # plots for each parameter
+        for param_col in param_cols:
+            # param stats across all studies
+            # if df["study_name"].nunique() > 1:
+            #     fig, title = param_plot_all_studies(df, study_name, param_col)
+            #     if fig is not None:
+            #         append_figure(pdf, fig, insights_prefix, title=title)
+
+            # param stats of invidual study
+            fig, title = param_plot(df, study_name, param_col, titles=titles)
+            append_figure(pdf, fig, insights_prefix, title=title, show=show)
+
+            # parameter pareto frontier for individual study
+            if (
+                isinstance(param_col, str)
+                and df[param_col].dtype == "O"
+                and df[param_col].nunique(dropna=False) <= 10
+            ):
+                fig, title = param_pareto_plot(df, study_name, param_col, titles=titles)
+                append_figure(pdf, fig, insights_prefix, title=title, show=show)
+
+        if df["study_name"].nunique() > 1:
+            # single study similar to all others
+            fig = study_similarity_plot(df, study_name, titles=titles)
+            append_figure(pdf, fig, insights_prefix, show=show)
+
+            # correlation matrix of all studies
+            fig = study_similarity_all_pairs_plot(df, study_name, titles=titles)
+            append_figure(pdf, fig, insights_prefix, show=show)
+
+            # matrix display of scatter plots
+            fig, title = study_similarity_all_pairs_scatters_plot(
+                df, study_name, titles=titles
+            )
+            append_figure(pdf, fig, insights_prefix, title=title, show=show)
+
+        # plot slowest components and params
+        fig = slowest_components_plot(df, study_name)
+        append_figure(pdf, fig, insights_prefix, show=show)
+
+    return pdf_filename
