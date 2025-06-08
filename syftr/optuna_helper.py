@@ -21,7 +21,7 @@ from syftr.studies import StudyConfig
 
 
 def get_flows_from_trials(df: pd.DataFrame) -> T.List[T.Dict[str, T.Any]]:
-    return df["user_attrs_flow"].apply(json.loads).unique().tolist()
+    return df["user_attrs_flow"].apply(json.loads).tolist()
 
 
 def get_study_names(
