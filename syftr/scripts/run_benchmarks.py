@@ -52,14 +52,14 @@ from syftr.studyconfig_helper import build_configs
 
 PREFIX = "silver"
 BENCH_NUM = 1
-NUM_TRIALS = 10
+NUM_TRIALS = 0
 RUN_NAME = "in-sample"
 REUSE_STUDY = True
-RECREATE_STUDY = True
+RECREATE_STUDY = False
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
+CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
 NUM_BASELINES_PER_SUBMISSION = (
     100  # we require batching of baselines to avoid Ray issues
 )
@@ -256,10 +256,10 @@ DATASETS = [
     # BrightHF(subset="stackoverflow"),
     # -----------------------
     BrightHF(subset="psychology"),
-    # BrightHF(subset="earth_science"),
-    # BrightHF(subset="economics"),
-    # BrightHF(subset="robotics"),
-    # BrightHF(subset="sustainable_living"),
+    BrightHF(subset="earth_science"),
+    BrightHF(subset="economics"),
+    BrightHF(subset="robotics"),
+    BrightHF(subset="sustainable_living"),
     BrightHF(subset="pony"),
     # -----------------------------------------------
     # SyntheticHotPotQAHF(subset="train_hard"),
@@ -300,10 +300,10 @@ def get_optimization_parameters():
         baselines=BASELINES,
         baselines_cycle_llms=True,
         shuffle_baselines=True,
-        max_concurrent_trials=100,
+        max_concurrent_trials=5,
         num_eval_samples=50,
         num_eval_batch=5,
-        rate_limiter_max_coros=30,
+        rate_limiter_max_coros=20,
         rate_limiter_period=60,
         max_trial_cost=40.0,
         cpus_per_trial=1,
