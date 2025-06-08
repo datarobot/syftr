@@ -197,7 +197,7 @@ class Study:
         obj2_name = self.study_config.optimization.objective_2_name
         df = df.sort_values(by="values_0", ascending=False)
         for _, row in df.iterrows():
-            flow_params = row["user_attrs_flow"]  # json.loads(row["user_attrs_flow"])
+            flow_params = json.loads(row["user_attrs_flow"])
             flow_metrics = {
                 obj1_name: row["values_0"],
                 obj2_name: row["values_1"],
