@@ -1,6 +1,5 @@
 import asyncio
 import json
-import random
 from pathlib import Path
 from typing import List
 
@@ -8,6 +7,7 @@ import click
 import pandas as pd
 from aiolimiter import AsyncLimiter
 
+from syftr.core import RandomTrial
 from syftr.evaluation import (
     ExactMatchEvaluator,
     SyftrEvaluationResult,
@@ -19,20 +19,6 @@ from syftr.llm import get_llm
 from syftr.retrievers.build import build_dummy_retriever
 from syftr.studies import RetrieverStudyConfig
 from syftr.tuner.qa_tuner import build_flow
-
-
-class RandomTrial:
-    def suggest_categorical(self, name, choices):
-        return random.choice(choices)
-
-    def suggest_int(self, name, low, high, step=1, log=False):
-        return random.randrange(low, high + 1, step)
-
-    def suggest_float(self, name, low, high, step=None, log=False):
-        if step:
-            num_steps = int((high - low) / step)
-            return low + step * random.randint(0, num_steps)
-        return random.uniform(low, high)
 
 
 @click.command()
@@ -79,7 +65,7 @@ def main(
         click.secho("Built dummy retriever flow", fg="green")
     else:
         if flow_json:
-            click.secho(f"Building flow from JSON: {flow_json}", fg="yellow")
+            click.secho(f"Building flow from JSON: '{flow_json}'", fg="yellow")
             flow_params = json.loads(flow_json)
 
         else:
@@ -108,7 +94,8 @@ def main(
     evaluator = ExactMatchEvaluator()
 
     results = []
-    avg_recall = 0.0
+    total_recall = 0.0
+    total_context_length = 0.0
     for i, pair in enumerate(filtered_dataset):
         click.secho("Question: ", fg="blue", nl=False)
         click.echo(f"{pair.question}")
@@ -126,6 +113,7 @@ def main(
             )
         )
         recall = result.retriever_recall
+        context_length = result.retriever_context_length
         passing = result.passing
         if result.generation_exception:
             click.secho(
@@ -136,7 +124,7 @@ def main(
                 f"Evaluation Exception: {result.evaluation_exception}", fg="red"
             )
         click.secho(
-            f"Recall: {recall} with context length {result.retriever_context_length}",
+            f"Recall: {recall} with context length {context_length}",
             fg="green" if recall and recall >= 1.0 else "red",
         )
         click.secho(
@@ -144,20 +132,14 @@ def main(
             fg="green" if passing else "red",
         )
         results.append(result)
-        avg_recall += recall if recall is not None else 0.0
+        total_recall += recall if recall is not None else 0.0
+        total_context_length += context_length if context_length is not None else 0.0
 
+    avg_recall = total_recall / len(filtered_dataset)
+    avg_context_length = total_context_length / len(filtered_dataset)
     click.echo(
-        f"Average recall on dataset: {avg_recall / len(filtered_dataset)} in {len(filtered_dataset)} QA pairs"
+        f"Average Recall: {avg_recall} Avg Context: {avg_context_length} in {len(filtered_dataset)} QA pairs"
     )
-
-    # df = write_results(results)
-    # if len(df[~pd.isna(df.passing)]) > 0:
-    #     accuracy = len(df[df.passing]) / len(df)
-    # else:
-    #     accuracy = 0
-    # click.echo(f"Current accuracy: {accuracy} ({i + 1}/{len(dataset)} QA pairs)")
-    # click.echo("=" * 20)
-    # click.echo("\n")
 
 
 def write_results(results: List[SyftrEvaluationResult]):

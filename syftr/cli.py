@@ -93,7 +93,7 @@ def stop(study_name: str):
     """
     syftr stop STUDY_NAME
     ---
-    Stop all running Ray jobs whose name (or metadata.study_name) matches.
+    Stop all running Ray jobs with STUDY_NAME.
     """
     try:
         client = submit.get_client()
@@ -141,17 +141,21 @@ def status(study_name: str):
     Get the status of a study.
     """
     # Check if the study is running in Ray
-    found_ray_job = False
     client = submit.get_client()
     jobs = _get_ray_job_ids_from_name(client, study_name)
-    for job in jobs:
-        dashboard_url = f"{client._address}/#/jobs/{job.job_id}"
-        click.echo(
-            f"✓ Job '{study_name}' found in Ray at {dashboard_url} with status {job.status.name}"
-        )
-        found_ray_job = True
-    if not found_ray_job:
-        click.echo(f"✗ Study '{study_name}' not found in Ray.")
+    running_jobs = [job for job in jobs if job.status.name == "RUNNING"]
+    if running_jobs:
+        for job in running_jobs:
+            dashboard_url = f"{client._address}/#/jobs/{job.job_id}"
+            click.echo(f"✓ Job '{study_name}' is running in Ray at {dashboard_url}")
+    else:
+        for job in jobs:
+            dashboard_url = f"{client._address}/#/jobs/{job.job_id}"
+            click.echo(
+                f"✓ Job '{study_name}' found in Ray at {dashboard_url} with status {job.status.name}"
+            )
+    if not jobs:
+        click.echo(f"✗ No Ray jobs found for '{study_name}'.")
 
     # Also check the Optuna DB
     try:
@@ -281,19 +285,22 @@ def delete(study_name_regex: str, exclude_regex: str, yes: bool):
     help="Directory to save results (default: 'results').",
 )
 @click.option(
+    "-p",
     "--save-pareto-plot/--no-save-pareto-plot",
     default=False,
-    help="Saves a pareto plot to disk.",
+    help="Save pareto plot to {RESULTS_DIR}/{STUDY_NAME}_pareto_plot.png.",
 )
 @click.option(
+    "-f",
     "--save-flows-df/--no-save-flows-df",
     default=False,
-    help="Save flows dataframes to disk.",
+    help="Save flows dataframes to {RESULTS_DIR}/{STUDY_NAME}_flows.parquet.",
 )
 @click.option(
+    "-r",
     "--save-report/--no-save-report",
     default=False,
-    help="Saves a pdf study report to disk.",
+    help="Save study report to {RESULTS_DIR}/{STUDY_NAME}_report.pdf.",
 )
 def analyze(
     study_name: str,
@@ -306,11 +313,7 @@ def analyze(
     syftr analyze STUDY_NAME [--results-dir RESULTS_DIR] [--save-pareto-plot] [--save-flows-df] [--save-report]
 
     Fetch Pareto frontier data for STUDY_NAME and print out pareto-optimal flows.
-    Optionally save the following files:
-      • If --save-flows-df: {RESULTS_DIR}/{STUDY_NAME}_pareto_flows.parquet
-      • If --save-flows-df: {RESULTS_DIR}/{STUDY_NAME}_all_flows.parquet
-      • If --save-pareto-plot: {RESULTS_DIR}/{STUDY_NAME}_pareto_plot.png
-      • If --save-report: {RESULTS_DIR}/{STUDY_NAME}_report.pdf
+    Optionally save the Pareto plot, flows dataframes, and a full report to RESULTS_DIR.
     """
     os.makedirs(results_dir, exist_ok=True)
     try:
@@ -328,20 +331,20 @@ def analyze(
         if save_flows_df:
             pareto_df_path = Path(results_dir) / f"{study_name}_pareto_flows.parquet"
             study.pareto_df.to_parquet(pareto_df_path, index=False)
-            click.echo(
-                f"✓ Saved pareto flow dataframe to `{pareto_df_path}`.", color="green"
+            click.secho(
+                f"✓ Saved pareto flow dataframe to `{pareto_df_path}`.", fg="green"
             )
 
             all_flows_df_path = Path(results_dir) / f"{study_name}_all_flows.parquet"
             study.flows_df.to_parquet(all_flows_df_path, index=False)
-            click.echo(
-                f"✓ Saved all flows dataframe to `{all_flows_df_path}`.", color="green"
+            click.secho(
+                f"✓ Saved all flows dataframe to `{all_flows_df_path}`.", fg="green"
             )
 
         if save_pareto_plot:
             pareto_plot_path = Path(results_dir) / f"{study_name}_pareto_plot.png"
             study.plot_pareto(pareto_plot_path)
-            click.echo(f"✓ Saved pareto plot to `{pareto_plot_path}`.")
+            click.secho(f"✓ Saved pareto plot to `{pareto_plot_path}`.", fg="green")
 
         if save_report:
             pdf_filename = Path(results_dir) / f"{study_name}_report.pdf"
@@ -354,7 +357,7 @@ def analyze(
                     show=False,
                 )
             )
-            click.echo(f"✓ Saved full report to {pdf_filename}")
+            click.secho(f"✓ Saved full report to {pdf_filename}", fg="green")
     except SyftrUserAPIError as e:
         click.echo(f"✗ {e}", err=True)
         raise click.Abort()

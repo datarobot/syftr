@@ -8,6 +8,7 @@ import pandas as pd
 from aiolimiter import AsyncLimiter
 from llama_index.core.evaluation import CorrectnessEvaluator
 
+from syftr.core import RandomTrial
 from syftr.evaluation import SyftrEvaluationResult, _aeval_pair
 from syftr.instrumentation.arize import instrument_arize
 from syftr.llm import get_llm
@@ -25,13 +26,10 @@ from syftr.tuner.qa_tuner import build_flow
 )
 @click.option("-i", "--interactive", is_flag=True)
 @click.option("-o", "--instrumentation", is_flag=True)
-@click.option(
-    "-f", "--flow-json", type=str, required=True, help="JSON string of flow parameters"
-)
+@click.option("-f", "--flow-json", type=str, help="JSON string of flow parameters")
 def main(
     study_config_path: Path, flow_json: str, instrumentation: bool, interactive: bool
 ):
-    flow_params = json.loads(flow_json)
     study_config: StudyConfig = StudyConfig.from_file(study_config_path)
     click.secho(
         f"Loaded study config for study {study_config.name}", bold=True, fg="green"
@@ -40,9 +38,18 @@ def main(
     if instrumentation:
         instrument_arize()
 
-    click.secho(f"Building flow `{flow_params}`", fg="yellow")
+    if flow_json:
+        click.secho(f"Building flow from JSON '{flow_json}'", fg="yellow")
+        flow_params = json.loads(flow_json)
+    else:
+        search_space = study_config.search_space
+        random_trial = RandomTrial()
+        flow_params = search_space.sample(random_trial)
+        flow_json = json.dumps(flow_params, ensure_ascii=False)
+        click.secho(f"Building random flow '{flow_json}'", fg="yellow")
+
     flow = build_flow(flow_params, study_config)
-    click.secho(f"Built flow `{flow_params}`", fg="green")
+    click.secho(f"Built flow '{flow_json}'", fg="green")
 
     click.secho(f"Loading QA Pairs from {study_config.dataset.name}", fg="yellow")
     dataset = list(study_config.dataset.iter_examples())

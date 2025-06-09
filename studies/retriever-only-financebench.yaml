@@ -121,9 +121,10 @@ optimization:
   # embedding_device: cuda
   # use_hf_embedding_models: true
   gpus_per_trial: 0
-  max_concurrent_trials: 40
-  num_eval_samples: 500
+  max_concurrent_trials: 50
+  num_eval_samples: 100
+  num_eval_batch: 10
   num_retries_unique_params: 10
-  num_trials: 2000
+  num_trials: 500
   objective_1_name: retriever_recall
   objective_2_name: retriever_context_length

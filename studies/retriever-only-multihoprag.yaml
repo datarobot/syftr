@@ -111,10 +111,10 @@ search_space:
 optimization:
   baselines: []
   cpus_per_trial: 5
-  embedding_device: cuda
+  # embedding_device: cuda
   # use_hf_embedding_models: true
-  gpus_per_trial: 0.2
-  max_concurrent_trials: 40
+  gpus_per_trial: 0
+  max_concurrent_trials: 50
   num_eval_samples: 100
   num_eval_batch: 10
   num_retries_unique_params: 10

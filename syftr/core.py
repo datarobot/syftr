@@ -1,3 +1,4 @@
+import random
 import re
 import string
 import typing as T
@@ -54,3 +55,19 @@ class QAPair(BaseModel):
         default_factory=list,
         description="List of gold text snippets that must be retrieved exactly for full recall",
     )
+
+
+class RandomTrial:
+    """A dummy trial class for generating random parameters."""
+
+    def suggest_categorical(self, name, choices):
+        return random.choice(choices)
+
+    def suggest_int(self, name, low, high, step=1, log=False):
+        return random.randrange(low, high + 1, step)
+
+    def suggest_float(self, name, low, high, step=None, log=False):
+        if step:
+            num_steps = int((high - low) / step)
+            return low + step * random.randint(0, num_steps)
+        return random.uniform(low, high)
