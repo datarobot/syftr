@@ -116,7 +116,7 @@ def optimize_prompt(
 
     @bundle()
     def merge_nodes(template, description):
-        """Use precomputed accuracy to connect existing nodes in graphs."""
+        """Use precomputed accuracy to connect existing nodes."""
         _ = template
         _ = description
         nonlocal curr_accuracy
