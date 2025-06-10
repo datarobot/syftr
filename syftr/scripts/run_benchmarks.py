@@ -50,20 +50,29 @@ from syftr.studies import (  # noqa
 )
 from syftr.studyconfig_helper import build_configs
 
-PREFIX = "silver"
-BENCH_NUM = 1
-NUM_TRIALS = 0
-RUN_NAME = "in-sample"
-REUSE_STUDY = True
-RECREATE_STUDY = False
+# -------------------------------------------------------
+PREFIX = "silver"  # this three parameters
+BENCH_NUM = 1  # are used to name
+# RUN_NAME = "in-sample"  # your config files and studies
+RUN_NAME = "out-of-sample"
+# -------------------------------------------------------
+# NUM_TRIALS = 0  # total number of optimization trials per submission
+NUM_TRIALS = 700  # total number of optimization trials per submission
+REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
+RECREATE_STUDY = False  # if set to True, recreating an existing study without failed or running trials
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
-NUM_BASELINES_PER_SUBMISSION = (
-    100  # we require batching of baselines to avoid Ray issues
+MINUTES_BEFORE_NEXT_SUBMISSION = 1
+# CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
+CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
+BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
+BASELINES_START = 600  # you can restrict the number of baselines ...
+BASELINES_END = 900  # ... to start with here to avoid OOM issues
+STOP_AFTER_ONE_BATCH_OF_BASELINES = (
+    False  # useful when recreating studies and using a lot of baselines
 )
-
+# -------------------------------------------------------
 BASELINE_STUDIES: T.List[str] = [
     "silver1--in-sample--bright_hf--earth_science",
     "silver1--in-sample--bright_hf--economics",
@@ -124,18 +133,18 @@ if CUSTOM_BASELINES == "pareto":
         for flow in get_pareto_flows(study, 0.9):
             if flow not in BASELINES:
                 BASELINES.append(flow)
-    print(f"We have {len(BASELINES)} Pareto-baselines for seeding")
+    logger.info(f"We have {len(BASELINES)} Pareto-baselines for seeding")
 elif CUSTOM_BASELINES == "all":
     for study in BASELINE_STUDIES:
         for flow in get_completed_flows(study):
             if flow not in BASELINES:
                 BASELINES.append(flow)
-    print(f"We have {len(BASELINES)} baselines for seeding")
+    logger.info(f"We have {len(BASELINES)} baselines for seeding")
 elif CUSTOM_BASELINES == "silver":
     BASELINES = json.load(open(cfg.paths.results_dir / "silver-bullets.json", "r"))
-    print(f"We have {len(BASELINES)} silver bullet baselines for seeding")
+    logger.info(f"We have {len(BASELINES)} silver bullet baselines for seeding")
 else:
-    print("No custom baselines provided")
+    logger.info("No custom baselines provided")
 
 # TRANSFER_LEARNING = TransferLearningConfig(
 #     studies=[
@@ -242,51 +251,24 @@ EVALUATION = Evaluation(
 )
 
 DATASETS = [
-    # -----------------------------------------------
     # BrightHF(subset="biology"),
     # CragTask3HF(subset="music"),
     # CragTask3HF(subset="sports"),
-    # DRDocsHF(),
-    # FinanceBenchHF(),
-    # HotPotQAHF(subset="train_hard"),
-    # InfiniteBenchHF(),
-    # MultiHopRAGHF(),
-    # PhantomWikiv050(),
+    DRDocsHF(),
+    FinanceBenchHF(),
+    HotPotQAHF(subset="train_hard"),
+    InfiniteBenchHF(),
+    MultiHopRAGHF(),
+    PhantomWikiv050(),
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
     # -----------------------
-    BrightHF(subset="psychology"),
-    BrightHF(subset="earth_science"),
-    BrightHF(subset="economics"),
-    BrightHF(subset="robotics"),
-    BrightHF(subset="sustainable_living"),
-    BrightHF(subset="pony"),
-    # -----------------------------------------------
-    # SyntheticHotPotQAHF(subset="train_hard"),
-    # SyntheticFinanceBenchHF(),
-    # SyntheticCragTask3HF(subset="sports"),
-    # CragTask3HF(subset="movie"),
-    # SyntheticCragTask3HF(subset="movie"),
-    # SyntheticCragTask3HF(subset="music"),
-    # -----------------------------------------------
-    # CragTask3HF(subset="finance"),
-    # SyntheticCragTask3HF(subset="finance"),
-    # -----------------------------------------------
-    # CragTask3HF(subset="open"),ms: List[str] = [
-    #     "anthropic-haiku-35",
-    #     "gemini-flash",
-    #     # "gemini-flash2",
-    #     # "gemini-pro",
-    #     "gpt-4o-mini",
-    #     # "llama-33-70B",   # not enough capacity
-    #     # "mistral-large",  # not enough capacity
-    #     # "phi-4",          # not enough capacity
-    #     # "anthropic-sonnet-35",
-    #     # "gpt-4o-std",
-    #     "o3-mini",
-    # ]
-    # SyntheticCragTask3HF(subset="open"),
-    # -----------------------------------------------
+    # BrightHF(subset="psychology"),
+    # BrightHF(subset="earth_science"),
+    # BrightHF(subset="economics"),
+    # BrightHF(subset="robotics"),
+    # BrightHF(subset="sustainable_living"),
+    # BrightHF(subset="pony"),
 ]
 assert DATASETS, "No datasets found. Please check the dataset list."
 
@@ -300,16 +282,17 @@ def get_optimization_parameters():
         baselines=BASELINES,
         baselines_cycle_llms=True,
         shuffle_baselines=True,
-        max_concurrent_trials=5,
+        max_concurrent_trials=50,
         num_eval_samples=50,
         num_eval_batch=5,
-        rate_limiter_max_coros=20,
-        rate_limiter_period=60,
+        rate_limiter_max_coros=30,  # control the number of concurrent evals ...
+        rate_limiter_period=60,  # ... per given time unit
         max_trial_cost=40.0,
         cpus_per_trial=1,
         seeder_timeout=None,  # None: wait until finished, 0: don't wait
         # -----------------------------------------------
-        num_random_trials=0,
+        # num_random_trials=0,
+        num_random_trials=100,
         # -----------------------------------------------
         use_individual_baselines=False,
         use_agent_baselines=False,
@@ -326,12 +309,15 @@ def get_optimization_parameters():
         sampler="tpe",
     )
     if BASELINES:
-        for i in range(0, len(BASELINES), NUM_BASELINES_PER_SUBMISSION):
+        start = BASELINES_START or 0
+        end = BASELINES_END or len(BASELINES)
+        for i in range(start, end, BASELINES_BATCH_SIZE):
             optimization_config = optimization_config.model_copy()
-            optimization_config.baselines = BASELINES[
-                i : i + NUM_BASELINES_PER_SUBMISSION
-            ]
+            optimization_config.baselines = BASELINES[i : i + BASELINES_BATCH_SIZE]
             yield DATASETS, SEARCH_SPACE, optimization_config, EVALUATION
+            if STOP_AFTER_ONE_BATCH_OF_BASELINES:
+                logger.warning("Stopping after one batch of baselines")
+                return  # single iteration through datasets with first batch of baselines
     else:
         yield DATASETS, SEARCH_SPACE, optimization_config, EVALUATION
 
@@ -407,7 +393,7 @@ def main():
             if i + 1 < len(configs):
                 # I think this might help the checkpointing bug
                 logger.info("Sleeping for 60 seconds before the next submission")
-                time.sleep(60)
+                time.sleep(int(60 * MINUTES_BEFORE_NEXT_SUBMISSION))
 
     # monitor benchmarks
     log_tailers = [client.tail_job_logs(job) for job in job_ids]
