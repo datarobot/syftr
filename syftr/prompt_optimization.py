@@ -14,6 +14,10 @@ from llama_index.core.llms.function_calling import FunctionCallingLLM
 from opto import trace
 from opto.optimizers import OptoPrime
 
+from opto.trace.nodes import ParameterNode
+from opto.trace.bundle import bundle
+from opto.trace.modules import model
+
 from syftr import evaluation
 from syftr.core import QAPair
 from syftr import flows
@@ -31,70 +35,6 @@ CorrectnessEvaluator.aevaluate = dispatcher.span(CorrectnessEvaluator.aevaluate)
 
 EVAL_LLM = "gpt-4o-mini"
 OPTIMIZER_LLM = "gpt-4o-std"
-OPTIMIZABLE_FLOW_PARAMETERS = {
-    flows.Flow.name: [
-        (
-            "template",
-            "A prompt for Q&A bot with instructions for complete and accurate answers",
-            "Should be an LLM prompt with instructions and template strings",
-        )
-    ],
-    flows.RAGFlow.name: [
-        (
-            "template",
-            "A prompt for Q&A bot with instructions for complete and accurate answers",
-            "Should be an LLM prompt with instructions and template strings",
-        )
-    ],
-    flows.ReActAgentFlow.name: [
-        (
-            "template",
-            "A prompt for Q&A bot with instructions for complete and accurate answers",
-            "Should be an LLM prompt with instructions and template strings",
-        ),
-        (
-            "dataset_description",
-            "A description of the dataset with the grounding data",
-            "Should be a string with a dataset description.",
-        ),
-    ],
-    flows.CritiqueAgentFlow.name: [
-        (
-            "template",
-            "A prompt for Q&A bot with instructions for complete and accurate answers",
-            "Should be an LLM prompt with instructions and template strings",
-        ),
-        (
-            "dataset_description",
-            "A description of the dataset with the grounding data",
-            "Should be a string with a dataset description.",
-        ),
-    ],
-    flows.SubQuestionRAGFlow.name: [
-        (
-            "template",
-            "A prompt for Q&A bot with instructions for complete and accurate answers",
-            "Should be an LLM prompt with instructions and template strings",
-        ),
-        (
-            "dataset_description",
-            "A description of the dataset with the grounding data",
-            "Should be a string with a dataset description.",
-        ),
-    ],
-    flows.LATSAgentFlow.name: [
-        (
-            "template",
-            "A prompt for Q&A bot with instructions for complete and accurate answers",
-            "Should be an LLM prompt with instructions and template strings",
-        ),
-        (
-            "dataset_description",
-            "A description of the dataset with the grounding data",
-            "Should be a string with a dataset description.",
-        ),
-    ],
-}
 
 
 async def quick_eval(
@@ -134,6 +74,22 @@ async def quick_eval(
     return 0.0, "The evluation has failed, the results are incorrect."
 
 
+class TracedFlow:
+    def __init__(self, flow):
+        object.__setattr__(self, "_flow", flow)
+        self.template = ParameterNode(
+            self._flow.template,
+            description="A prompt for Q&A bot with instructions for complete and accurate answers",
+        )
+        self.dataset_description = ParameterNode(
+            self._flow.dataset_description,
+            description="A description of the dataset with the grounding data",
+        )
+
+    def __getattr__(self, name):
+        return getattr(self._flow, name)
+
+
 def optimize_prompt(
     flow: flows.Flow,
     optimizer_llm: str,
@@ -146,7 +102,6 @@ def optimize_prompt(
     """The main prompt optimization function for a flow.
     Uses Trace library with an optimizer LLM to get better prompts using train and test datasets.
     """
-    breakpoint()
     llm = get_llm(optimizer_llm)
     evaluator_llm = get_llm(eval_llm)
     logger.info("Evaluating pareto flow on test dataset before optimization...")
@@ -158,57 +113,45 @@ def optimize_prompt(
     litellm_model = f"azure/{llm.model}"
     os.environ["TRACE_LITELLM_MODEL"] = litellm_model
 
-    optimizable_parameters = {}
-    for attr, desc, constraint in OPTIMIZABLE_FLOW_PARAMETERS.get(flow.name, []):
-        optimizable_parameters[attr] = trace.node(
-            getattr(flow, attr), description=desc, constraint=constraint, trainable=True
-        )
+    @bundle()
+    def merge_nodes(template, description):
+        _ = template
+        _ = description
+        nonlocal curr_accuracy
+        return curr_accuracy
 
-    breakpoint()
-    optimizer = OptoPrime(list(optimizable_parameters.values()))
+    tflow = TracedFlow(flow)
+    optimizer = OptoPrime([tflow.template, tflow.dataset_description])
     param_results = []
     for n_epoch in range(1, num_epochs + 1):
         logger.info("Starting optimization epoch %d", n_epoch)
-        for attr_name, param in optimizable_parameters.items():
-            setattr(flow, attr_name, param.data)
-        curr_accuracy, evals = asyncio.run(
-            quick_eval(flow, evaluator_llm, train, rate_limiter)
-        )
-        logger.info(
-            "Current optimizable parameters on epoch %d: %s",
-            n_epoch,
-            [par.data for _, par in optimizable_parameters.items()],
-        )
-        logger.info(
-            "Current flow parameters on epoch %d: %s",
-            n_epoch,
-            [getattr(flow, attr) for attr in optimizable_parameters],
-        )
 
-        logger.info("Accuracy on epoch %d: %f", n_epoch, curr_accuracy)
-        param_results.append((curr_accuracy, optimizable_parameters))
+        curr_accuracy, evals = asyncio.run(
+            quick_eval(flow, evaluator_llm, test, rate_limiter)
+        )
+        output = merge_nodes(tflow.template, tflow.dataset_description)
+
+        logger.info("Accuracy on epoch %d: %f", n_epoch, curr_accuracy.data)
         raw_summary = litellm.completion(
             model=litellm_model,
             messages=[
                 {
-                    "content": f"You are presented with a feedback from a question answering session. Summarize it briefly: {evals}",
+                    "content": f"You are presented with a feedback from a question answering session. Summarize it briefly: {evals.data}",
                     "role": "user",
                 }
             ],
         )
         eval_summary = raw_summary.choices[0].message.content
         feedback = (
-            f"The accuracy of question answering session is {curr_accuracy}."
             f"Evaluation summary of question answering session is '{eval_summary}'"
             f"Modify the parameter to help the LLM produce more accurate answers to the provided questions."
             f"Make sure template arguments are in place."
         )
         optimizer.zero_feedback()
-        for parameter in optimizable_parameters.values():
-            optimizer.backward(parameter, feedback, visualize=True)
+        optimizer.backward(output, feedback)
         try:
             logger.info("Generating a new prompt on epoch %s", n_epoch)
-            optimizer.step(verbose=False)
+            optimizer.step(verbose=True)
         except litellm.exceptions.ContentPolicyViolationError:
             logger.exception("Prompt optimizer hit content policy violation error")
             continue
@@ -319,12 +262,7 @@ def run_pareto_flows_prompt_optimization(study_path: str, remote: bool = False):
         study_name=study_config.name,
         storage=storage,
     )
-    # df_pareto = get_pareto_df(study_config, success_rate=0.5)
-    # df_pareto = get_pareto_df(study_config)
-    df = study.trials_dataframe()
-    df_agents = df[df["params_rag_mode"] != "rag"]
-    pareto_mask = get_pareto_mask(df_agents)
-    df_pareto = df_agents[pareto_mask]
+    df_pareto = get_pareto_df(study_config, success_rate=0.5)
     new_study_name = f"{study_config.name}_prompt_optimization"
     logger.info("Creating new study %s for optimized prompts...", new_study_name)
     po_study = optuna.create_study(
