@@ -75,6 +75,10 @@ async def quick_eval(
 
 
 class TracedFlow:
+    """
+    Proxy class that redirects not declared calls to its attributes.
+    Required to make our flows work with Trace optimization.
+    """
     def __init__(self, flow):
         object.__setattr__(self, "_flow", flow)
         self.template = ParameterNode(
@@ -115,6 +119,7 @@ def optimize_prompt(
 
     @bundle()
     def merge_nodes(template, description):
+        """Use precomputed accuracy to connect existing nodes in graphs."""
         _ = template
         _ = description
         nonlocal curr_accuracy
