@@ -11,20 +11,16 @@ import ray
 from aiolimiter import AsyncLimiter
 from llama_index.core.evaluation import CorrectnessEvaluator
 from llama_index.core.llms.function_calling import FunctionCallingLLM
-from opto import trace
 from opto.optimizers import OptoPrime
-
-from opto.trace.nodes import ParameterNode
 from opto.trace.bundle import bundle
-from opto.trace.modules import model
+from opto.trace.nodes import ParameterNode
 
-from syftr import evaluation
-from syftr.core import QAPair
-from syftr import flows
+from syftr import evaluation, flows
 from syftr.configuration import cfg
+from syftr.core import QAPair
 from syftr.llm import get_llm
 from syftr.logger import logger
-from syftr.optuna_helper import get_pareto_df, get_pareto_mask
+from syftr.optuna_helper import get_pareto_df
 from syftr.ray.utils import ray_init
 from syftr.studies import StudyConfig, get_default_study_name
 from syftr.tuner.qa_tuner import build_flow, eval_dataset
@@ -238,7 +234,7 @@ def opt_flow(
         state=optuna.trial.TrialState.COMPLETE,
     )
     new_trial.set_user_attr("parent_number", parent_number)
-    new_trial.set_user_attr("optimized_prompt", resulting_prompt)
+    new_trial.set_user_attr("optimized_prompt", flow.template)
     new_study.add_trial(new_trial)
     logger.info("Done optimizing prompt for %s", flow_params)
 
