@@ -133,12 +133,12 @@ def optimize_prompt(
         )
         output = merge_nodes(tflow.template, tflow.dataset_description)
 
-        logger.info("Accuracy on epoch %d: %f", n_epoch, curr_accuracy.data)
+        logger.info("Accuracy on epoch %d: %f", n_epoch, curr_accuracy)
         raw_summary = litellm.completion(
             model=litellm_model,
             messages=[
                 {
-                    "content": f"You are presented with a feedback from a question answering session. Summarize it briefly: {evals.data}",
+                    "content": f"You are presented with a feedback from a question answering session. Summarize it briefly: {evals}",
                     "role": "user",
                 }
             ],
@@ -151,6 +151,9 @@ def optimize_prompt(
         )
         optimizer.zero_feedback()
         optimizer.backward(output, feedback)
+        param_results.append(
+            (curr_accuracy, (tflow.template, tflow.dataset_description))
+        )
         try:
             logger.info("Generating a new prompt on epoch %s", n_epoch)
             optimizer.step(verbose=True)
@@ -162,7 +165,7 @@ def optimize_prompt(
     logger.info(
         "Optimized params after %s epochs: %s",
         n_epoch,
-        [par.data for par in argmax_params.values()],
+        [par.data for par in argmax_params],
     )
     logger.info("Evaluating pareto flow on test dataset after optimization...")
 
