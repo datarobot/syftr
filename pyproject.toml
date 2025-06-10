@@ -129,6 +129,7 @@ dev = [
     "optuna-dashboard",
     "paretoset",
     "pre-commit",
+    "py-irt",
     "pytest-rerunfailures",
     "python-slugify",
     "pytz",
