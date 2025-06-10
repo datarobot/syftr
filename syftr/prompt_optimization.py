@@ -79,6 +79,7 @@ class TracedFlow:
     Proxy class that redirects not declared calls to its attributes.
     Required to make our flows work with Trace optimization.
     """
+
     def __init__(self, flow):
         object.__setattr__(self, "_flow", flow)
         self.template = ParameterNode(
