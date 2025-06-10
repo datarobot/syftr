@@ -129,7 +129,7 @@ def optimize_prompt(
         logger.info("Starting optimization epoch %d", n_epoch)
 
         curr_accuracy, evals = asyncio.run(
-            quick_eval(flow, evaluator_llm, test, rate_limiter)
+            quick_eval(flow, evaluator_llm, train, rate_limiter)
         )
         output = merge_nodes(tflow.template, tflow.dataset_description)
 
