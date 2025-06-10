@@ -169,9 +169,6 @@ def optimize_prompt(
     )
     logger.info("Evaluating pareto flow on test dataset after optimization...")
 
-    for attr_name, param in argmax_params.items():
-        setattr(flow, attr_name, param.data)
-
     post_test_acc, _ = asyncio.run(quick_eval(flow, evaluator_llm, test, rate_limiter))
     logger.info("Post-optimiation accuracy on test: %f", post_test_acc)
     return flow
