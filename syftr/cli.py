@@ -82,6 +82,7 @@ def _get_ray_job_ids_from_name(
     except Exception as e:
         raise SyftrUserAPIError(f"Could not contact Ray: {e}")
 
+    # Filter for jobs that have metadata with the study name and have valid job IDs
     matches = [job for job in jobs if job.metadata.get("study_name")]
     matches = [job for job in matches if job.job_id]
     return matches

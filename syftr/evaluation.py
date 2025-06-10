@@ -401,7 +401,7 @@ async def _aeval_retriever_pair(
             n.node.get_content(metadata_mode=MetadataMode.NONE)
             for n in retrieval_results or []
         ]
-        # Approimate token length
+        # Approximate token length used here for speed of implementation.
         retrieved_contexts_length = sum(len(s) // 4 for s in retrieved_contexts)
         evaluator = evaluators[0]
         result = await evaluator.aevaluate(
