@@ -68,7 +68,7 @@ dependencies = [
     "opentelemetry-exporter-otlp",
     "opentelemetry-sdk",
     "optimum[exporters]>=1.24.0",
-    "optuna",
+    "optuna==4.2.1",
     "overrides",
     "pals",
     "pandas",
