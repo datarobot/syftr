@@ -543,14 +543,19 @@ CEREBRAS_LLAMA_33_70B = Cerebras(
 
 def _construct_azure_openai_llm(name: str, llm_config: AzureOpenAILLM) -> AzureOpenAI:
     return AzureOpenAI(
-        model=llm_config.metadata.model_name,
-        deployment_name=llm_config.deployment_name or llm_config.metadata.model_name,
-        api_key=cfg.azure_oai.api_key.get_secret_value(),
-        azure_endpoint=cfg.azure_oai.api_url.unicode_string(),
-        api_version=llm_config.api_version or cfg.azure_oai.api_version,
+        model=llm_config.model_name,
         temperature=llm_config.temperature,
-        max_tokens=llm_config.metadata.num_output,
+        max_tokens=llm_config.max_tokens,
         max_retries=llm_config.max_retries,
+        system_prompt=llm_config.system_prompt,
+        engine=llm_config.deployment_name,
+        api_key=llm_config.api_key.get_secret_value()
+        if llm_config.api_key
+        else cfg.azure_oai.api_key.get_secret_value(),
+        azure_endpoint=llm_config.api_url.unicode_string()
+        if llm_config.api_url
+        else cfg.azure_oai.api_url.unicode_string(),
+        api_version=llm_config.api_version or cfg.azure_oai.api_version,
         additional_kwargs=llm_config.additional_kwargs or {},
     )
 
@@ -562,16 +567,17 @@ def _construct_vertex_ai_llm(name: str, llm_config: VertexAILLM) -> Vertex:
         else {}
     )
     return Vertex(
-        model=llm_config.model or llm_config.metadata.model_name,
-        project=cfg.gcp_vertex.project_id,
-        credentials=credentials,
+        model=llm_config.model_name,
         temperature=llm_config.temperature,
-        safety_settings=llm_config.safety_settings or GCP_SAFETY_SETTINGS,
-        max_tokens=llm_config.metadata.num_output,
-        context_window=_scale(llm_config.metadata.context_window),
+        max_tokens=llm_config.max_tokens,
         max_retries=llm_config.max_retries,
+        system_prompt=llm_config.system_prompt,
+        project=llm_config.project_id or cfg.gcp_vertex.project_id,
+        location=llm_config.region or cfg.gcp_vertex.region,
+        safety_settings=llm_config.safety_settings or GCP_SAFETY_SETTINGS,
+        credentials=credentials,
+        context_window=_scale(llm_config.context_window),
         additional_kwargs=llm_config.additional_kwargs or {},
-        location=cfg.gcp_vertex.region,
     )
 
 
@@ -579,12 +585,14 @@ def _construct_anthropic_vertex_llm(
     name: str, llm_config: AnthropicVertexLLM
 ) -> Anthropic:
     anthropic_llm = Anthropic(
-        model=llm_config.model,
+        model=llm_config.model_name,
+        temperature=llm_config.temperature,
+        max_tokens=llm_config.max_tokens,
+        max_retries=llm_config.max_retries,
+        system_prompt=llm_config.system_prompt,
         project_id=llm_config.project_id or cfg.gcp_vertex.project_id,
         region=llm_config.region or cfg.gcp_vertex.region,
-        temperature=llm_config.temperature,
-        max_tokens=llm_config.metadata.num_output,
-        max_retries=llm_config.max_retries,
+        thinking_dict=llm_config.thinking_dict,
         additional_kwargs=llm_config.additional_kwargs or {},
     )
     return add_scoped_credentials_anthropic(anthropic_llm)
@@ -594,40 +602,48 @@ def _construct_azure_ai_completions_llm(
     name: str, llm_config: AzureAICompletionsLLM
 ) -> AzureAICompletionsModel:
     return AzureAICompletionsModel(
-        credential=llm_config.api_key.get_secret_value(),
-        endpoint=llm_config.endpoint.unicode_string(),
         model_name=llm_config.model_name,
         temperature=llm_config.temperature,
-        metadata=llm_config.metadata.model_dump(),
+        max_tokens=llm_config.max_tokens,
+        max_retries=llm_config.max_retries,
+        system_prompt=llm_config.system_prompt,
+        endpoint=llm_config.api_url.unicode_string(),
+        credential=llm_config.api_key.get_secret_value(),
+        client_kwargs=llm_config.client_kwargs,
+        api_version=llm_config.api_version,
     )
 
 
 def _construct_cerebras_llm(name: str, llm_config: CerebrasLLM) -> Cerebras:
     return Cerebras(
-        model=llm_config.model,
+        model=llm_config.model_name,
+        temperature=llm_config.temperature,
+        max_tokens=llm_config.max_tokens,
+        max_retries=llm_config.max_retries,
+        system_prompt=llm_config.system_prompt,
         api_key=cfg.cerebras.api_key.get_secret_value(),
         api_base=cfg.cerebras.api_url.unicode_string(),
-        temperature=llm_config.temperature,
-        max_tokens=llm_config.metadata.num_output,
-        context_window=llm_config.metadata.context_window,  # Use raw value as per existing Cerebras configs
-        is_function_calling_model=llm_config.metadata.is_function_calling_model,
-        max_retries=llm_config.max_retries,
+        context_window=llm_config.context_window,  # Use raw value as per existing Cerebras configs
+        is_chat_model=llm_config.is_chat_model,
+        is_function_calling_model=llm_config.is_function_calling_model,
         additional_kwargs=llm_config.additional_kwargs or {},
     )
 
 
 def _construct_openai_like_llm(name: str, llm_config: OpenAILikeLLM) -> OpenAILike:
     return OpenAILike(
-        model=llm_config.model,
+        model=llm_config.model_name,
+        temperature=llm_config.temperature,
+        max_tokens=llm_config.max_tokens,
+        max_retries=llm_config.max_retries,
+        system_prompt=llm_config.system_prompt,
         api_base=str(llm_config.api_base),
         api_key=llm_config.api_key.get_secret_value(),
         api_version=llm_config.api_version,  # type: ignore
-        max_tokens=llm_config.metadata.num_output,
-        context_window=_scale(llm_config.metadata.context_window),
-        is_chat_model=llm_config.metadata.is_chat_model,
-        is_function_calling_model=llm_config.metadata.is_function_calling_model,
+        context_window=_scale(llm_config.context_window),
+        is_chat_model=llm_config.is_chat_model,
+        is_function_calling_model=llm_config.is_function_calling_model,
         timeout=llm_config.timeout,
-        max_retries=llm_config.max_retries,
         additional_kwargs=llm_config.additional_kwargs or {},
     )
 
