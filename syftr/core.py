@@ -5,6 +5,8 @@ import typing as T
 
 from pydantic import BaseModel, Field
 
+from syftr.configuration import NDIGITS
+
 
 def normalize_text(s):
     def remove_articles(text):
@@ -70,4 +72,5 @@ class RandomTrial:
         if step:
             num_steps = int((high - low) / step)
             return low + step * random.randint(0, num_steps)
-        return random.uniform(low, high)
+        value = random.uniform(low, high)
+        return round(value, NDIGITS)
