@@ -7,7 +7,7 @@ import typing as T
 import optuna
 import pandas as pd
 import ray
-from optuna.storages import BaseStorage, RDBStorage
+from optuna.storages import BaseStorage
 from ray import tune
 from ray._private.worker import RemoteFunction1
 
@@ -73,7 +73,7 @@ def save_study_config_to_db(study: optuna.Study, study_config: StudyConfig):
 
 
 def get_study(
-    study_config: StudyConfig, storage: RDBStorage | None = None
+    study_config: StudyConfig, storage: BaseStorage | None = None
 ) -> optuna.Study:
     study_name = study_config.name
     storage = storage or cfg.database.get_optuna_storage()
@@ -120,8 +120,8 @@ def _get_user_attrs(row: pd.Series) -> T.Dict[str, T.Any]:
 def initialize_from_study(
     src_config: StudyConfig,
     dst_config: StudyConfig,
-    src_storage: str | BaseStorage | None = None,
-    dst_storage: str | BaseStorage | None = None,
+    src_storage: BaseStorage | None = None,
+    dst_storage: BaseStorage | None = None,
     success_rate: float | None = None,
     src_df: pd.DataFrame | None = None,
 ) -> optuna.Study:
