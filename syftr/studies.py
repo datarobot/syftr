@@ -88,9 +88,11 @@ class SearchSpaceMixin(ABC):
             )
             return round(value, ndigits=NDIGITS)
         elif isinstance(dist, LogUniformDistribution):
-            return trial.suggest_loguniform(name, low=dist.low, high=dist.high)
+            value = trial.suggest_loguniform(name, low=dist.low, high=dist.high)
+            return round(value, ndigits=NDIGITS)
         elif isinstance(dist, UniformDistribution):
-            return trial.suggest_uniform(name, low=dist.low, high=dist.high)
+            value = trial.suggest_uniform(name, low=dist.low, high=dist.high)
+            return round(value, ndigits=NDIGITS)
         else:
             raise NotImplementedError(f"Unsupported distribution type: {type(dist)}")
 
@@ -150,11 +152,14 @@ class Splitter(BaseModel, SearchSpaceMixin):
                 f"{prefix}splitter_chunk_exp", self.chunk_min_exp, self.chunk_max_exp
             ),
         }
-        params[f"{prefix}splitter_chunk_overlap_frac"] = trial.suggest_float(
-            f"{prefix}splitter_chunk_overlap_frac",
-            self.chunk_overlap_frac_min,
-            self.chunk_overlap_frac_max,
-            step=self.chunk_overlap_frac_step,
+        params[f"{prefix}splitter_chunk_overlap_frac"] = round(
+            trial.suggest_float(
+                f"{prefix}splitter_chunk_overlap_frac",
+                self.chunk_overlap_frac_min,
+                self.chunk_overlap_frac_max,
+                step=self.chunk_overlap_frac_step,
+            ),
+            ndigits=NDIGITS,
         )
         return params
 
