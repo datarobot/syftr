@@ -368,12 +368,9 @@ class LLMCostHourly(BaseModel):
 class LLMConfig(BaseModel):
     model_name: str = Field(description="Name of the llm to use")
     temperature: float = 0.0
-    max_tokens: T.Optional[int] = Field(default=2048, description="Max output tokens")
+    max_tokens: int = Field(default=2048, description="Max output tokens")
     system_prompt: T.Optional[str] = Field(
         default=None, description="Custom system prompt"
-    )
-    max_retries: int = Field(
-        default=0, description="Maximum number of retries for API calls."
     )
 
     cost: Annotated[
@@ -410,9 +407,7 @@ class VertexAILLM(LLMConfig):
     provider: T.Literal["vertex_ai"] = "vertex_ai"
     safety_settings: dict = GCP_SAFETY_SETTINGS
     additional_kwargs: T.Optional[T.Dict[str, T.Any]] = None
-    context_window: T.Optional[int] = Field(
-        default=4096, description="Max input tokens"
-    )
+    context_window: int = Field(default=4096, description="Max input tokens")
     project_id: T.Optional[str] = Field(
         default=None, description="Overrides gcp_vertex.project_id"
     )
@@ -466,9 +461,7 @@ class CerebrasLLM(LLMConfig):
         "cerebras", description="Provider identifier."
     )
     # API key and URL are typically derived from cfg.cerebras.
-    context_window: T.Optional[int] = Field(
-        default=3900, description="Max input tokens"
-    )
+    context_window: int = Field(default=3900, description="Max input tokens")
     additional_kwargs: T.Dict[str, T.Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments for the Cerebras model.",
@@ -489,9 +482,7 @@ class OpenAILikeLLM(LLMConfig):
     timeout: int = Field(
         default=120, description="Timeout in seconds for API requests."
     )
-    context_window: T.Optional[int] = Field(
-        default=3900, description="Max input tokens"
-    )
+    context_window: int = Field(default=3900, description="Max input tokens")
     additional_kwargs: T.Dict[str, T.Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments for the OpenAI-like model.",
