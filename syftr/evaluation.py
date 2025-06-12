@@ -54,9 +54,9 @@ dispatcher = instrument.get_dispatcher()
 CorrectnessEvaluator.evaluate = dispatcher.span(CorrectnessEvaluator.evaluate)  # type: ignore
 CorrectnessEvaluator.aevaluate = dispatcher.span(CorrectnessEvaluator.aevaluate)  # type: ignore
 
-RETRY_ATTEMPTS = 10
-RETRY_MIN_SLEEP = 120
-RETRY_MAX_SLEEP = 1800
+RETRY_ATTEMPTS = 3
+RETRY_MIN_SLEEP = 2
+RETRY_MAX_SLEEP = 60
 
 RETRIABLE_EXCEPTIONS = (
     anthropic.RateLimitError,

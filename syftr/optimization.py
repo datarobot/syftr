@@ -53,7 +53,9 @@ def user_confirm_delete(study_config: StudyConfig) -> bool:
     study_name = study_config.name
 
     if cfg.optuna.noconfirm:
-        logger.warning("noconfirm set; going to delete %s if it exists", study_name)
+        logger.warning(
+            "noconfirm set; we are allowed to delete study %s if it exists", study_name
+        )
         return True
 
     confirm = input(
