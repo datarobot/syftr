@@ -153,8 +153,9 @@ def optimize_prompt(
             logger.exception("Prompt optimizer hit content policy violation error")
             continue
 
+        # TODO: Generalize this code so it won't crash if flow has no dataset description.
         flow.template = tflow.template.data
-        flow.dataset_description = tflow.dataset_description.data
+        flow.dataset_description = tflow.dataset_description.data  # type: ignore
         param_results.append((curr_accuracy, flow))
 
     _, argmax_flow = max(param_results, key=lambda x: x[0])
