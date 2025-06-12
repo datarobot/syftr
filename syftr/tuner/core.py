@@ -1,7 +1,7 @@
 import typing as T
 
 import optuna
-from langchain.text_splitter import RecursiveCharacterTextSplitter  # type: ignore
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from llama_index.core.node_parser import (
     CodeSplitter,
     LangchainNodeParser,
