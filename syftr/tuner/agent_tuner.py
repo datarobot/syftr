@@ -193,7 +193,7 @@ def _evaluate(
             get_examples=get_qa_examples,
         )
     elif params["rag_mode"] == "rag":
-        embedding_model_name = params.get("embedding_model", None)
+        embedding_model_name = params["embedding_model"]
         embedding_model, is_onnx = get_embedding_model(embedding_model_name)
         template = get_template("default", with_context=True)
         # AgentStudyConfig should be refactored
