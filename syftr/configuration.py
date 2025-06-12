@@ -124,6 +124,7 @@ class Paths(BaseModel):
     results_dir: Annotated[Path, Field(validate_default=True)] = REPO_ROOT / "results"
     studies_dir: Annotated[Path, Field(validate_default=True)] = REPO_ROOT / "studies"
     test_studies_dir: Path = REPO_ROOT / "tests/studies"
+    test_data_dir: Path = REPO_ROOT / "tests/data"
     tmp_dir: Path = Path("/tmp/syftr")
     huggingface_cache: Annotated[Path, Field(validate_default=True)] = (
         tmp_dir / "huggingface"
