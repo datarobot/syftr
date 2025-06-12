@@ -1,21 +1,14 @@
-name: "retriever-only-financebench"
+name: "retriever-only-multihoprag"
 dataset:
   dataset_dir: partitioned
-  description: Financial dataset that contains everything about finance, including
-    real-world financial documents, SEC filings, earning reports, call transcripts,
-    and much more. It has all the financial live data, historical data, just about
-    everything about finance, for instance, definitions and explanations of financial
-    term, insights on company revenues, mergers, founders, or stock performance, details
-    on financial laws, compliance, or government policies, information required to
-    evaluate finance risk, and information about banking operations, credit systems,
-    or loan structures.
+  description: multihoprag dataset
   examples_data_path: examples
-  grounding_data_path: aryn_html
+  grounding_data_path: grounding_data
   load_examples_timeout_s: 3600
   load_grounding_data_timeout_s: 3600
   partition_map:
     holdout: holdout
-    sample: pepsi
+    sample: sample
     test: test
     train: train
   path_root: octo-syftr-benchmarking-data
@@ -32,7 +25,7 @@ dataset:
   - train
   - test
   - holdout
-  xname: financebench_hf
+  xname: multihoprag_hf
 evaluation:
   mode: retriever
   raise_on_exception: false
@@ -57,7 +50,7 @@ search_space:
     - llama-33-70B
     - mistral-large
     - phi-4
-    - o3-mini
+    - o3-mini    
   response_synthesizer_llms:
     - gpt-4o-mini
   rag_retriever:
@@ -118,9 +111,9 @@ search_space:
 optimization:
   baselines: []
   cpus_per_trial: 5
-  embedding_device: cuda
+  # embedding_device: cuda
   # use_hf_embedding_models: true
-  gpus_per_trial: 0.2
+  gpus_per_trial: 0
   max_concurrent_trials: 50
   num_eval_samples: 100
   num_eval_batch: 10
