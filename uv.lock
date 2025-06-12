@@ -4059,9 +4059,9 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/98/23/d9710e7116e23d042539ff3355dbb058a78c1f5a3eb344c1784c6df99361/optuna-4.2.1.tar.gz", hash = "sha256:2ecd74cdc8aaf5dda1f2b9e267999bab21def9a33e0a4f415ecae0c468c401e0", size = 453220 }
+sdist = { url = "https://files.pythonhosted.org/packages/98/23/d9710e7116e23d042539ff3355dbb058a78c1f5a3eb344c1784c6df99361/optuna-4.2.1.tar.gz", hash = "sha256:2ecd74cdc8aaf5dda1f2b9e267999bab21def9a33e0a4f415ecae0c468c401e0", size = 453220, upload-time = "2025-02-12T07:57:25.146Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/28/09/c4d329f7969443cdd4d482048ca406b6f61cda3c8e99ace71feaec7c8734/optuna-4.2.1-py3-none-any.whl", hash = "sha256:6d38199013441d3f70fac27136e05c0188c5f4ec3848db708ac311cbdeb30dbf", size = 383562 },
+    { url = "https://files.pythonhosted.org/packages/28/09/c4d329f7969443cdd4d482048ca406b6f61cda3c8e99ace71feaec7c8734/optuna-4.2.1-py3-none-any.whl", hash = "sha256:6d38199013441d3f70fac27136e05c0188c5f4ec3848db708ac311cbdeb30dbf", size = 383562, upload-time = "2025-02-12T07:57:23.302Z" },
 ]
 
 [[package]]
@@ -5766,6 +5766,7 @@ dev = [
     { name = "paretoset" },
     { name = "pre-commit" },
     { name = "py-irt" },
+    { name = "pyro-ppl" },
     { name = "pytest-rerunfailures" },
     { name = "python-slugify" },
     { name = "pytz" },
@@ -5877,6 +5878,7 @@ requires-dist = [
     { name = "py-irt", marker = "extra == 'dev'" },
     { name = "pydantic-file-secrets" },
     { name = "pydantic-settings" },
+    { name = "pyro-ppl", marker = "extra == 'dev'" },
     { name = "pytest-rerunfailures", marker = "extra == 'dev'" },
     { name = "python-dotenv" },
     { name = "python-slugify" },
