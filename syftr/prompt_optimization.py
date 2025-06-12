@@ -71,11 +71,6 @@ async def quick_eval(
 
 
 class TracedFlow:
-    """
-    Proxy class that redirects not declared calls to its attributes.
-    Required to make our flows work with Trace optimization.
-    """
-
     def __init__(self, flow):
         object.__setattr__(self, "_flow", flow)
         self.template = ParameterNode(
@@ -116,7 +111,6 @@ def optimize_prompt(
 
     @bundle()
     def merge_nodes(template, description):
-        """Use precomputed accuracy to connect existing nodes."""
         _ = template
         _ = description
         nonlocal curr_accuracy
@@ -129,7 +123,7 @@ def optimize_prompt(
         logger.info("Starting optimization epoch %d", n_epoch)
 
         curr_accuracy, evals = asyncio.run(
-            quick_eval(flow, evaluator_llm, train, rate_limiter)
+            quick_eval(flow, evaluator_llm, test, rate_limiter)
         )
         output = merge_nodes(tflow.template, tflow.dataset_description)
 
@@ -145,15 +139,13 @@ def optimize_prompt(
         )
         eval_summary = raw_summary.choices[0].message.content
         feedback = (
+            f"The accuracy of question answering session is {curr_accuracy}."
             f"Evaluation summary of question answering session is '{eval_summary}'"
-            f"Modify the parameter to help the LLM produce more accurate answers to the provided questions."
+            f"Modify the prompts to help the LLM produce more accurate answers to the provided questions."
             f"Make sure template arguments are in place."
         )
         optimizer.zero_feedback()
         optimizer.backward(output, feedback)
-        param_results.append(
-            (curr_accuracy, (tflow.template, tflow.dataset_description))
-        )
         try:
             logger.info("Generating a new prompt on epoch %s", n_epoch)
             optimizer.step(verbose=True)
@@ -161,17 +153,18 @@ def optimize_prompt(
             logger.exception("Prompt optimizer hit content policy violation error")
             continue
 
-    _, argmax_params = max(param_results, key=lambda x: x[0])
-    logger.info(
-        "Optimized params after %s epochs: %s",
-        n_epoch,
-        [par.data for par in argmax_params],
-    )
+        flow.template = tflow.template.data
+        flow.dataset_description = tflow.dataset_description.data
+        param_results.append((curr_accuracy, flow))
+
+    _, argmax_flow = max(param_results, key=lambda x: x[0])
     logger.info("Evaluating pareto flow on test dataset after optimization...")
 
-    post_test_acc, _ = asyncio.run(quick_eval(flow, evaluator_llm, test, rate_limiter))
+    post_test_acc, _ = asyncio.run(
+        quick_eval(argmax_flow, evaluator_llm, test, rate_limiter)
+    )
     logger.info("Post-optimiation accuracy on test: %f", post_test_acc)
-    return flow
+    return argmax_flow
 
 
 def opt_flow(
@@ -207,7 +200,7 @@ def opt_flow(
     logger.info("Optimizing the prompt...")
     try:
         flow = optimize_prompt(
-            flow, OPTIMIZER_LLM, EVAL_LLM, train, test, rate_limiter, num_epochs=10
+            flow, OPTIMIZER_LLM, EVAL_LLM, train, test, rate_limiter, num_epochs=2
         )
     except Exception:
         logger.exception("Failed to optimize prompt for flow %s", flow)
@@ -234,7 +227,6 @@ def opt_flow(
         state=optuna.trial.TrialState.COMPLETE,
     )
     new_trial.set_user_attr("parent_number", parent_number)
-    new_trial.set_user_attr("optimized_prompt", flow.template)
     new_study.add_trial(new_trial)
     logger.info("Done optimizing prompt for %s", flow_params)
 
