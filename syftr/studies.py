@@ -211,90 +211,14 @@ DEFAULT_EMBEDDING_MODELS: T.List[str] = list(
 
 ALL_LLMS = list(LLMs.keys())
 
-LOCAL_LLMS = (
-    [model.model_name for model in cfg.local_models.generative]
-    if cfg.local_models.generative
-    else []
-)
+DEFAULT_LLMS: T.List[str] = ALL_LLMS
 
-DEFAULT_LLMS: T.List[str] = list(
-    set(
-        [
-            "gpt-4o-mini",  # first LLM is the default
-            "anthropic-haiku-35",
-            "gemini-flash",
-            # "gemini-flash2",
-            # "gemini-pro",
-            # "llama-33-70B",   # not enough capacity
-            # "mistral-large",  # not enough capacity
-            # "phi-4",          # not enough capacity
-            # "anthropic-sonnet-35",
-            # "gpt-4o-std",
-            "o3-mini",
-        ]
-        + LOCAL_LLMS
-    )
-)
-assert set(DEFAULT_LLMS).issubset(set(ALL_LLMS))
-
-RESPONSE_SYNTHESIZER_LLMS: T.List[str] = [
-    "gpt-4o-mini",  # first LLM is the default
-    "gpt-4o-std",
-    "gpt-35-turbo",
-    "anthropic-sonnet-35",
-    "anthropic-haiku-35",
-    "llama-33-70B",
-    "gemini-pro",
-    "gemini-flash",
-    "gemini-flash2",
-    # "gemini-flash-think-exp",
-    "mistral-large",
-    "together-r1",
-    "together-V3",
-] + LOCAL_LLMS
-assert set(RESPONSE_SYNTHESIZER_LLMS).issubset(set(ALL_LLMS))
+RESPONSE_SYNTHESIZER_LLMS: T.List[str] = ALL_LLMS
 
 FUNCTION_CALLING_LLMS: T.List[str] = [
-    "gpt-4o-mini",  # first LLM is the default
-    "gpt-4o-std",
-    "gpt-35-turbo",
-    "anthropic-sonnet-35",
-    "anthropic-haiku-35",
-    "llama-33-70B",
-    # "gemini-flash2",
-    # "gemini-pro",
-    # "gemini-flash",
-    # "gemini-flash-think-exp",
-    "mistral-large",
-] + LOCAL_LLMS
-assert set(FUNCTION_CALLING_LLMS).issubset(set(ALL_LLMS))
+    name for name, llm in LLMs.items() if llm.metadata.is_function_calling_model
+]
 
-CHEAP_LLMS: T.List[str] = [
-    "gpt-4o-mini",  # first LLM is the default
-    "anthropic-haiku-35",
-    "gemini-flash2",
-] + LOCAL_LLMS
-assert set(CHEAP_LLMS).issubset(set(ALL_LLMS))
-assert set(CHEAP_LLMS).issubset(set(ALL_LLMS))
-
-NON_REASONING_LLMS: T.List[str] = list(
-    set(
-        [
-            "gpt-4o-mini",  # first LLM is the default
-            "gpt-4o-std",
-            "gpt-35-turbo",
-            "anthropic-sonnet-35",
-            "anthropic-haiku-35",
-            "llama-33-70B",
-            "gemini-pro",
-            "gemini-flash",
-            "gemini-flash2",
-            "mistral-large",
-        ]
-        + LOCAL_LLMS
-    )
-)
-assert set(NON_REASONING_LLMS).issubset(set(ALL_LLMS))
 
 RAG_MODES: T.List[str] = [
     "rag",  #  first mode is the default
@@ -396,7 +320,7 @@ class Hybrid(BaseModel, SearchSpaceMixin):
 
 class QueryDecomposition(BaseModel, SearchSpaceMixin):
     llm_names: T.List[str] = Field(
-        default_factory=lambda: NON_REASONING_LLMS,
+        default_factory=lambda: DEFAULT_LLMS,
         description="List of LLM names to be used for query decomposition.",
     )
     num_queries_min: int = Field(
