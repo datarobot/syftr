@@ -108,16 +108,7 @@ if cfg.generative_models:
         f"Updating MODEL_PRICING_INFO from cfg.generative_models: {list(cfg.generative_models.keys())}"
     )
     for config_key, llm_config_item in cfg.generative_models.items():
-        # model_key should match the identifier used by TokenTrackingSpan (usually llm.metadata.model_name)
-        model_key = llm_config_item.metadata.model_name
-
-        if not model_key:
-            logger.warning(
-                f"Model with configuration key '{config_key}' is missing 'metadata.model_name'. "
-                "Skipping its cost info update for MODEL_PRICING_INFO."
-            )
-            continue
-
+        model_key = llm_config_item.model_name
         cost_config = llm_config_item.cost
         cost_type = getattr(cost_config, "type", "unknown")
 
@@ -162,7 +153,7 @@ if cfg.generative_models:
                 f"Updated hourly (per second) pricing for '{model_key}' from cfg ('{config_key}')."
             )
         else:
-            logger.warning(
+            raise ValueError(
                 f"Unknown or unsupported cost type '{cost_type}' for model '{model_key}' "
                 f"(from cfg key '{config_key}'). Pricing not updated."
             )
