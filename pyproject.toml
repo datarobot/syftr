@@ -130,6 +130,7 @@ dev = [
     "paretoset",
     "pre-commit",
     "py-irt",
+    "pyro-ppl",
     "pytest-rerunfailures",
     "python-slugify",
     "pytz",
