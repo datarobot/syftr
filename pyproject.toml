@@ -27,7 +27,8 @@ dependencies = [
     "ipdb",
     "kaleido==0.2.1",
     "kneed",
-    "langchain",
+    "langchain>0.3",
+    "langchain-community",
     "llama-index",
     "llama-index-agent-introspective",
     "llama-index-agent-lats",
@@ -60,15 +61,16 @@ dependencies = [
     "llama-index-retrievers-bm25",
     "llama-index-vector-stores-faiss",
     "llama-index-vector-stores-qdrant",
+    "llvmlite>=0.44",  # Explicitly installed and pinned to avoid package conflicts
     "lz4",
     "maincontentextractor",
-    "numba",
+    "numba>=0.60",  # Explicitly pinned to avoid package conflicts
     "numpy",
     "openinference-instrumentation-llama-index==3.3.1",
     "opentelemetry-exporter-otlp",
     "opentelemetry-sdk",
     "optimum[exporters]>=1.24.0",
-    "optuna",
+    "optuna==4.2.1",
     "overrides",
     "pals",
     "pandas",
@@ -100,6 +102,11 @@ dependencies = [
     "vertexai==1.68.0",
 ]
 
+[project.urls]
+"Homepage" = "https://datarobot.com"
+"Source" = "https://github.com/datarobot/syftr"
+"Issues" = "https://github.com/datarobot/syftr/issues"
+
 [project.scripts]
 syftr = "syftr.cli:main"
 
@@ -125,10 +132,11 @@ dev = [
     "mypy",
     "nbformat",
     "nbstripout",
-    "numba",
     "optuna-dashboard",
     "paretoset",
     "pre-commit",
+    "py-irt",
+    "pyro-ppl",
     "pytest-rerunfailures",
     "python-slugify",
     "pytz",

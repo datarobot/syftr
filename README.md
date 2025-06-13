@@ -34,6 +34,20 @@ source .venv/bin/activate
 uv sync --extra dev
 uv pip install -e .
 ```
+or to use syftr as a library, install directly from PyPi:
+```bash
+pip install syftr
+```
+NOTE: __syftr__ works as a library, but still needs easy access to `config.yaml` and study files you intend to run. Config file should be present as `~/.syftr/config.yaml`, or in your current working directory.
+You can download sample config file to your `~/.syftr` directory with this command
+```bash
+curl -L https://raw.githubusercontent.com/datarobot/syftr/main/config.yaml.sample \
+     -o ~/.syftr/config.yaml
+```
+You also need studies to run __syftr__. You can write your own or download our example study with this command to current working directory
+```bash
+curl -L https://raw.githubusercontent.com/datarobot/syftr/main/studies/example-dr-docs.yaml > example-dr-docs.yaml
+```
 
 ### Required Credentials
 
@@ -43,23 +57,23 @@ __syftr__'s examples require the following credentials:
 * Azure OpenAI endpoint URL (`api_url`)
 * PostgreSQL server dsn (if no dsn is provided, will use local SQLite)
 
-To enter these credentials, copy [config.yaml.sample](config.yaml.sample) to `config.yaml` and edit the required portions.
+To enter these credentials, copy [config.yaml.sample](https://github.com/datarobot/syftr/blob/main/config.yaml.sample) to `config.yaml` and edit the required portions.
 
 ## Additional Configuration Options
 
 __syftr__ uses many components including Ray for job scheduling and PostgreSQL for storing results. In this section we describe how to configure them to run __syftr__ successfully.
 
-* The main config file of __syftr__ is `config.yaml`. You can specify paths, logging, database and Ray parameters and many others. For detailed instructions and examples, please refer to [config.yaml.sample](config.yaml.sample).
+* The main config file of __syftr__ is `config.yaml`. You can specify paths, logging, database and Ray parameters and many others. For detailed instructions and examples, please refer to [config.yaml.sample](https://github.com/datarobot/syftr/blob/main/config.yaml.sample).
 You can rename this file to `config.yaml` and fill in all necessary details according to your infrastructure.
 * You can also configure __syftr__ with environment variables: `export SYFTR_PATHS__ROOT_DIR=/foo/bar`
-* When the configuration is correct, you should be able to run [`examples/1-welcome.ipynb`](examples/1-welcome.ipynb) without any problems.
+* When the configuration is correct, you should be able to run [`examples/1-welcome.ipynb`](https://github.com/datarobot/syftr/blob/main/examples/1-welcome.ipynb) without any problems.
 * __syftr__ uses SQLite by default for Optuna storage. The `database.dsn` configuration field can be used to configure any Optuna-supported relational database storage. We recommend Postgres for distributed workloads.
 
 ## Quickstart
 
 First, run `syftr check` to validate your credentials and configuration.
 Note that most LLM connections are likely to fail if you have not provided configuration for them.
-Next, try the example Jupyter notebooks located in the [`examples`](/examples) directory.
+Next, try the example Jupyter notebooks located in the [`examples`](https://github.com/datarobot/syftr/blob/main/examples) directory.
 Or directly run a __syftr__ study using the CLI `syftr run studies/example-dr-docs.yaml --follow` or with the API:
 
 ```python
@@ -141,7 +155,7 @@ All LLM configurations defined under `generative_models:` share a common set of 
     * `system_role`: (String, Optional) The expected role name for system prompts (e.g., `SYSTEM`, `USER`). Defaults to `SYSTEM`.
 * **`temperature`**: (Float, Optional) The sampling temperature for generation. Defaults to `0.0`.
 
-See [LLM provider-specific configuration](docs/llm-providers.md) to configure each supported provider.
+See [LLM provider-specific configuration](https://github.com/datarobot/syftr/blob/main/docs/llm-providers.md) to configure each supported provider.
 
 
 ### Embedding models
@@ -168,7 +182,7 @@ Models added in the ``config.yaml`` will be automatically added to the default s
 
 ## Custom Datasets
 
-See detailed instructions [here](docs/datasets.md).
+See detailed instructions [here](https://github.com/datarobot/syftr/blob/main/docs/datasets.md).
 
 ## Citation
 
@@ -185,6 +199,6 @@ If you use this code in your research please cite the following [publication](ht
 
 ## Contributing
 
-Please read our [contributing guide](/CONTRIBUTING) for details on how to contribute to the project. We welcome contributions in the form of bug reports, feature requests, and pull requests.
+Please read our [contributing guide](https://github.com/datarobot/syftr/blob/main/CONTRIBUTING) for details on how to contribute to the project. We welcome contributions in the form of bug reports, feature requests, and pull requests.
 
-Please note we have a [code of conduct](/CODE_OF_CONDUCT.md), please follow it in all your interactions with the project.
+Please note we have a [code of conduct](https://github.com/datarobot/syftr/blob/main/CODE_OF_CONDUCT.md), please follow it in all your interactions with the project.

@@ -1,3 +1,4 @@
+import getpass
 import typing as T
 from copy import deepcopy
 from pathlib import Path
@@ -28,12 +29,19 @@ from syftr.studies import (
 
 
 def _build_study_name(
-    dataset: SyftrQADataset, bench_num: int, prefix: str, run_name: str
+    dataset: SyftrQADataset,
+    bench_num: int,
+    prefix: str,
+    run_name: str,
+    add_username: bool | None = False,
 ) -> str:
     dataset_name = dataset.name.replace("/", "-")
     study_name = f"{prefix}{bench_num}--{run_name}--{dataset_name}"
     if hasattr(dataset, "subset") and dataset.subset:
         study_name += f"--{dataset.subset}"
+    if add_username:
+        username = getpass.getuser()
+        study_name = f"{username}--" + study_name
     return study_name
 
 
@@ -49,13 +57,16 @@ def build_configs(
     run_name: str,
     embedding_max_time: int,
     transfer_learning: TransferLearningConfig | None = None,
+    add_username: bool | None = False,
 ) -> T.Tuple[T.List[StudyConfig], T.List[Path]]:
     configs = []
     for dataset in datasets:
         _search_space = deepcopy(search_space)
         configs.append(
             StudyConfig(
-                name=_build_study_name(dataset, bench_num, prefix, run_name),
+                name=_build_study_name(
+                    dataset, bench_num, prefix, run_name, add_username
+                ),
                 dataset=dataset,
                 search_space=_search_space,
                 optimization=optimization_config,
@@ -90,6 +101,9 @@ def build_example_config(
     embedding_max_time: int | None = 3600 * 8,
     datasets: T.List[SyftrQADataset] | None = None,
     optimization_config: OptimizationConfig | None = None,
+    reuse_study: bool | None = True,
+    recreate_study: bool | None = False,
+    add_username: bool | None = False,
 ):
     assert isinstance(num_trials, int), "num_trials must be an int"
     assert isinstance(max_concurrent_trials, int), (
@@ -98,6 +112,9 @@ def build_example_config(
     assert isinstance(num_eval_samples, int), "num_eval_samples must be an int"
     assert isinstance(num_random_trials, int), "num_random_trials must be an int"
     assert isinstance(embedding_max_time, int), "embedding_max_time must be an int"
+    assert reuse_study is not None, "reuse_study must be a boolean"
+    assert recreate_study is not None, "recreate_study must be a boolean"
+    assert add_username is not None, "add_username must be a boolean"
 
     datasets = datasets or [DRDocsHF()]
 
@@ -204,11 +221,12 @@ def build_example_config(
         optimization_config=optimization_config,
         evaluation=evaluation,
         bench_num=1,
-        reuse_study=True,
-        recreate_study=True,
+        reuse_study=reuse_study,
+        recreate_study=recreate_study,
         prefix="example",
         run_name="small-study",
         embedding_max_time=embedding_max_time,
         transfer_learning=None,
+        add_username=add_username,
     )
     return configs, paths

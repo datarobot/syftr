@@ -206,8 +206,7 @@ studies/bench*
 studies/rank*
 studies/greedy*
 studies/box*
-studies/example1--small-study--drdocs_hf.yaml
-studies/box*
+studies/*example1--small-study--drdocs_hf.yaml
 studies/silver*
 studies/test*
 

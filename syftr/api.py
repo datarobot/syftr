@@ -193,10 +193,11 @@ class Study:
     def _extract_flows(self, df: pd.DataFrame) -> T.List[T.Dict[str, T.Any]]:
         """Helper method to extract flow dicts from a dataframe."""
         output = []
+        obj1_name = self.study_config.optimization.objective_1_name
+        obj2_name = self.study_config.optimization.objective_2_name
+        df = df.sort_values(by="values_0", ascending=False)
         for _, row in df.iterrows():
             flow_params = json.loads(row["user_attrs_flow"])
-            obj1_name = self.study_config.optimization.objective_1_name
-            obj2_name = self.study_config.optimization.objective_2_name
             flow_metrics = {
                 obj1_name: row["values_0"],
                 obj2_name: row["values_1"],
