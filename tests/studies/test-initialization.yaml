@@ -1,0 +1,298 @@
+dataset:
+  description: The dataset contains comprehensive information about DataRobot, including
+    its API, documentation, examples, key features, platform architecture, integrations,
+    setup guides, data handling, feature engineering, EDA tools, automated machine
+    learning, model management, deployment options, monitoring, REST API, batch predictions,
+    real-time scoring, custom recipes, retraining, lifecycle management, bias detection,
+    explainability, diagnostics, cross-validation, leaderboard insights, time series
+    modeling, data governance, security, user roles, Python/R usage, custom blueprints,
+    external model integration, Docker deployments, API reference, BI tool integration,
+    workflow automation, multimodal modeling, NLP, image recognition, hyperparameter
+    tuning, performance optimization, resource management, parallel processing, drift
+    detection, retraining triggers, industry use cases, tutorials, case studies, common
+    issues, debugging tips, FAQs, support access, community resources, and release
+    notes.
+  load_examples_timeout_s: 3600
+  load_grounding_data_timeout_s: 3600
+  partition_map:
+    holdout: holdout
+    sample: sample
+    test: test
+    train: train
+  storage_partitions:
+  - sample
+  - train
+  - test
+  - holdout
+  xname: drdocs_hf
+evaluation:
+  llms:
+  - cerebras-llama-31-8B
+  - cerebras-llama-33-70B
+  - together-V3
+  - together-r1
+  min_reporting_success_rate: 0.5
+  mode: random
+  raise_on_exception: false
+  use_tracing_metrics: false
+name: test-initialization
+optimization:
+  baselines: []
+  baselines_cycle_llms: false
+  blocks:
+  - components:
+    - rag_retriever
+    - splitter
+    - additional_context
+    - few_shot_retriever
+    - hyde
+    - reranker
+    - rag_mode
+    - sub_question_rag
+    - critique_rag_agent
+    - lats_rag_agent
+    - react_rag_agent
+    - response_synthesizer_llm
+    - template_name
+    name: global
+    num_trials: 10
+  cpus_per_trial: 1
+  embedding_device: null
+  gpus_per_trial: 0.0
+  max_concurrent_trials: 10
+  max_eval_failure_rate: 0.5
+  max_trial_cost: 40.0
+  method: expanding
+  num_eval_batch: 5
+  num_eval_samples: 50
+  num_prompt_optimization_batch: 50
+  num_random_trials: 10
+  num_retries_unique_params: 100
+  num_trials: 10
+  num_warmup_steps_costout: 2
+  num_warmup_steps_pareto: 30
+  num_warmup_steps_timeout: 3
+  obj1_zscore: 1.645
+  obj2_zscore: 1.645
+  objective_1_name: accuracy
+  objective_2_name: llm_cost_mean
+  pareto_eval_success_rate: 0.9
+  pareto_pruner_success_rate: 0.9
+  raise_on_failed_trial: false
+  raise_on_invalid_baseline: false
+  rate_limiter_max_coros: 10
+  rate_limiter_period: 60
+  sampler: tpe
+  seeder_timeout: 3600.0
+  shuffle_baselines: true
+  shuffle_blocks: false
+  skip_existing: true
+  use_agent_baselines: false
+  use_cost_pruner: true
+  use_hf_embedding_models: false
+  use_individual_baselines: false
+  use_pareto_baselines: false
+  use_pareto_pruner: true
+  use_runtime_pruner: true
+  use_toy_baselines: false
+  use_variations_of_baselines: false
+pareto: null
+recreate_study: true
+reuse_study: true
+search_space:
+  additional_context:
+    num_nodes_max: 20
+    num_nodes_min: 2
+  additional_context_enabled:
+  - false
+  - true
+  critique_rag_agent:
+    critique_agent_llms:
+    - cerebras-llama-31-8B
+    - cerebras-llama-33-70B
+    - together-V3
+    - together-r1
+    max_iterations_max: 11
+    max_iterations_min: 10
+    reflection_agent_llms:
+    - cerebras-llama-31-8B
+    - cerebras-llama-33-70B
+    - together-V3
+    - together-r1
+    subquestion_engine_llms:
+    - cerebras-llama-31-8B
+    - cerebras-llama-33-70B
+    - together-V3
+    - together-r1
+    subquestion_response_synthesizer_llms:
+    - cerebras-llama-31-8B
+    - cerebras-llama-33-70B
+    - together-V3
+    - together-r1
+  few_shot_enabled:
+  - false
+  - true
+  few_shot_retriever:
+    embedding_models:
+    - BAAI/bge-small-en-v1.5
+    - w601sxs/b1ade-embed
+    - mixedbread-ai/mxbai-embed-large-v1
+    - sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+    - baconnier/Finance2_embedding_small_en-V1.5
+    - WhereIsAI/UAE-Large-V1
+    - avsolatorio/GIST-large-Embedding-v0
+    - BAAI/bge-large-en-v1.5
+    - BAAI/bge-base-en-v1.5
+    - sentence-transformers/all-MiniLM-L12-v2
+    - FinLang/finance-embeddings-investopedia
+    - Labib11/MUG-B-1.6
+    - thenlper/gte-large
+    top_k:
+      kmax: 20
+      kmin: 2
+      log: false
+      step: 1
+  hyde:
+    llms:
+    - cerebras-llama-31-8B
+    - cerebras-llama-33-70B
+    - together-V3
+    - together-r1
+  hyde_enabled:
+  - false
+  - true
+  lats_rag_agent:
+    max_rollouts_max: 5
+    max_rollouts_min: 2
+    max_rollouts_step: 1
+    num_expansions_max: 3
+    num_expansions_min: 2
+    num_expansions_step: 1
+  non_search_space_params:
+  - enforce_full_evaluation
+  - retrievers
+  rag_modes:
+  - no_rag
+  - rag
+  - lats_rag_agent
+  - react_rag_agent
+  - critique_rag_agent
+  - sub_question_rag
+  rag_retriever:
+    embedding_models:
+    - BAAI/bge-small-en-v1.5
+    - w601sxs/b1ade-embed
+    - mixedbread-ai/mxbai-embed-large-v1
+    - sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+    - baconnier/Finance2_embedding_small_en-V1.5
+    - WhereIsAI/UAE-Large-V1
+    - avsolatorio/GIST-large-Embedding-v0
+    - BAAI/bge-large-en-v1.5
+    - BAAI/bge-base-en-v1.5
+    - sentence-transformers/all-MiniLM-L12-v2
+    - FinLang/finance-embeddings-investopedia
+    - Labib11/MUG-B-1.6
+    - thenlper/gte-large
+    fusion:
+      fusion_modes:
+      - simple
+      - reciprocal_rerank
+      - relative_score
+      - dist_based_score
+    hybrid:
+      bm25_weight_max: 0.9
+      bm25_weight_min: 0.1
+      bm25_weight_step: 0.1
+    methods:
+    - dense
+    - sparse
+    - hybrid
+    query_decomposition:
+      llm_names:
+      - cerebras-llama-31-8B
+      - cerebras-llama-33-70B
+      - together-V3
+      - together-r1
+      num_queries_max: 5
+      num_queries_min: 2
+      num_queries_step: 1
+    query_decomposition_enabled:
+    - true
+    - false
+    top_k:
+      kmax: 10
+      kmin: 1
+      log: false
+      step: 1
+  react_rag_agent:
+    max_iterations_max: 11
+    max_iterations_min: 10
+    subquestion_engine_llms:
+    - cerebras-llama-31-8B
+    - cerebras-llama-33-70B
+    - together-V3
+    - together-r1
+    subquestion_response_synthesizer_llms:
+    - cerebras-llama-31-8B
+    - cerebras-llama-33-70B
+    - together-V3
+    - together-r1
+  reranker:
+    llms:
+    - cerebras-llama-31-8B
+    - cerebras-llama-33-70B
+    - together-V3
+    - together-r1
+    top_k:
+      kmax: 128
+      kmin: 2
+      log: true
+      step: 1
+  reranker_enabled:
+  - false
+  - true
+  response_synthesizer_llms:
+  - cerebras-llama-31-8B
+  - cerebras-llama-33-70B
+  - together-V3
+  - together-r1
+  splitter:
+    chunk_max_exp: 10
+    chunk_min_exp: 7
+    chunk_overlap_frac_max: 0.5
+    chunk_overlap_frac_min: 0.0
+    chunk_overlap_frac_step: 0.05
+    methods:
+    - recursive
+    - sentence
+    - token
+  sub_question_rag:
+    subquestion_engine_llms:
+    - cerebras-llama-31-8B
+    - cerebras-llama-33-70B
+    - together-V3
+    - together-r1
+    subquestion_response_synthesizer_llms:
+    - cerebras-llama-31-8B
+    - cerebras-llama-33-70B
+    - together-V3
+    - together-r1
+  template_names:
+  - default
+  - concise
+  - CoT
+timeouts:
+  embedding_max_time: 28800
+  embedding_min_chunks_to_process: 100
+  embedding_min_time_to_process: 120
+  embedding_timeout_active: true
+  eval_timeout: 36000
+  onnx_timeout: 600
+  single_eval_timeout: 7200
+toy_mode: false
+transfer_learning:
+  embedding_model: BAAI/bge-large-en-v1.5
+  max_fronts: 2
+  max_total: 100
+  studies: []
+  success_rate: 0.9

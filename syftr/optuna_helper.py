@@ -193,7 +193,9 @@ def get_pareto_mask(
 
 
 def get_pareto_df(
-    study_config: StudyConfig | str, success_rate: float | None = None
+    study_config: StudyConfig | str,
+    success_rate: float | None = None,
+    storage: str | BaseStorage | None = None,
 ) -> pd.DataFrame:
     """
     Get the pareto front of the study in form of a Pandas DataFrame.
@@ -205,9 +207,8 @@ def get_pareto_df(
     study_name = (
         study_config.name if isinstance(study_config, StudyConfig) else study_config
     )
-    study: optuna.Study = optuna.load_study(
-        study_name=study_name, storage=cfg.database.get_optuna_storage()
-    )
+    storage = storage or cfg.database.get_optuna_storage()
+    study: optuna.Study = optuna.load_study(study_name=study_name, storage=storage)
     df_trials: pd.DataFrame = get_completed_trials(study, success_rate=success_rate)
     pareto_mask = get_pareto_mask(df_trials)
     return df_trials[pareto_mask]
