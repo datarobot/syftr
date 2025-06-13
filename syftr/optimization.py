@@ -130,6 +130,8 @@ def initialize_from_study(
     Args:
         src_config: Source study configuration.
         dst_config: Destination study configuration.
+        src_storage: Storage for the source study. If not provided, the default storage is used.
+        dst_storage: Storage for the destination study. If not provided, the source storage is used.
         storage: Storage for the studies.
         success_rate: Success rate for filtering trials.
         src_df: DataFrame containing trials to initialize from. If no DataFrame is provided, all trials will be fetched from the source study.
