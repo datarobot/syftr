@@ -101,9 +101,7 @@ class Study:
                 f"Study {study_name} has no study config in the database."
             )
         study_config = StudyConfig(**study.user_attrs)
-        with tempfile.NamedTemporaryFile(
-            mode="w", delete_on_close=False, delete=False
-        ) as tmp_study_file:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_study_file:
             yaml.dump(study_config.dict(), tmp_study_file)
             study_path = tmp_study_file.name
         return cls(study_config, study_path, remote=remote)

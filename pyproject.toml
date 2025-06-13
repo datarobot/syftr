@@ -156,7 +156,7 @@ dev = [
 syftr = "syftr"
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py311"
 exclude = ["notebooks", "examples"]
 line-length = 88
 indent-width = 4
@@ -174,7 +174,7 @@ lint.ignore = [
 ]
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.11"
 ignore_missing_imports = true
 exclude = ['.venv', 'build', 'notebooks']
 
