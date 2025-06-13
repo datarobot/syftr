@@ -4,7 +4,7 @@ description = "syftr is an agent optimizer that helps you find the best agentic 
 readme = "README.md"
 license = "MIT"
 dynamic = ["version"]
-requires-python = ">=3.12.3,<3.13"
+requires-python = ">=3.11.1,<3.13"
 dependencies = [
     "aiolimiter",
     "arize-phoenix",
@@ -60,10 +60,10 @@ dependencies = [
     "llama-index-retrievers-bm25",
     "llama-index-vector-stores-faiss",
     "llama-index-vector-stores-qdrant",
-    "llvmlite>=0.44",  # Explicitly installed and pinned to avoid package conflicts
+    "llvmlite>=0.44", # Explicitly installed and pinned to avoid package conflicts
     "lz4",
     "maincontentextractor",
-    "numba>=0.60",  # Explicitly pinned to avoid package conflicts
+    "numba>=0.60", # Explicitly pinned to avoid package conflicts
     "numpy",
     "openinference-instrumentation-llama-index==3.3.1",
     "opentelemetry-exporter-otlp",
@@ -99,6 +99,7 @@ dependencies = [
     "types-pytz",
     "types-tabulate",
     "vertexai==1.68.0",
+    "torch==2.7.0",
 ]
 
 [project.urls]
@@ -111,7 +112,7 @@ syftr = "syftr.cli:main"
 
 [tool.hatch.version]
 path = "syftr/__init__.py"
-requires-python = ">=3.12.3,<3.13"
+requires-python = ">=3.11.1,<3.13"
 source = "uv-dynamic-versioning"
 
 [project.optional-dependencies]
