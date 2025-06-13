@@ -16,7 +16,7 @@ from llama_index.core.retrievers import BaseRetriever
 from llama_index.core.storage.docstore.types import BaseDocumentStore
 from llama_index.llms.azure_openai import AzureOpenAI
 
-from syftr.configuration import AzureOpenAILLM, LLMCostTokens, LLMMetadata, cfg
+from syftr.configuration import AzureOpenAILLM, LLMCostTokens, cfg
 from syftr.configuration import Settings as CfgSettings
 from syftr.flows import Flow, RAGFlow, ReActAgentFlow
 from syftr.huggingface_helper import get_embedding_model
@@ -567,25 +567,17 @@ def config_with_models() -> CfgSettings:
         generative_models={
             "test_gpt_4o_mini": AzureOpenAILLM(
                 deployment_name="gpt-4o-mini",
+                model_name="gpt-4o-mini",
                 api_version="2024-06-01",
                 additional_kwargs={"user": "syftr"},
                 cost=LLMCostTokens(input=0.15, output=0.60),
-                metadata=LLMMetadata(
-                    model_name="gpt-4o-mini",
-                    context_window=128000,
-                    is_function_calling_model=True,
-                ),
             ),
             "test_gpt_4o": AzureOpenAILLM(
                 deployment_name="gpt-4o",
+                model_name="gpt-4o",
                 api_version="2024-06-01",
                 additional_kwargs={"user": "syftr"},
                 cost=LLMCostTokens(input=2.5, output=10.00),
-                metadata=LLMMetadata(
-                    model_name="gpt-4o",
-                    context_window=128000,
-                    is_function_calling_model=True,
-                ),
             ),
         }
     )
