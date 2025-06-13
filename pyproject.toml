@@ -101,6 +101,11 @@ dependencies = [
     "vertexai==1.68.0",
 ]
 
+[project.urls]
+"Homepage" = "https://datarobot.com"
+"Source" = "https://github.com/datarobot/syftr"
+"Issues" = "https://github.com/datarobot/syftr/issues"
+
 [project.scripts]
 syftr = "syftr.cli:main"
 
