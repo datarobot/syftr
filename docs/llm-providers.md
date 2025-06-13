@@ -9,10 +9,10 @@ azure_oai:
   ...  # Global provider config
 
   # azure_openai Provider Example
-  azure_gpt_35_turbo:
+  azure_gpt_4o_mini:
     # Common configuration keys
     provider: azure_openai            # Client type to use (required)
-    model_name: gpt-35-turbo          # Name of the model to use (required)
+    model_name: gpt-4o-mini           # Name of the model to use (required)
     temperature: 0.0                  # LLM temperature setting (optional)
     max_tokens: 2048                  # Max output tokens (optional)
     system_prompt: null               # Custom system prompt (optional)
