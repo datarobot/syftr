@@ -366,7 +366,7 @@ class LLMCostHourly(BaseModel):
 
 
 class LLMConfig(BaseModel):
-    model_name: str = Field(description="Name of the llm to use")
+    model_name: str = Field(description="Name of the LLM to use")
     temperature: float = Field(default=0.0, description="LLM temperature setting")
     max_tokens: int = Field(default=2048, description="Max output tokens")
     system_prompt: T.Optional[str] = Field(
