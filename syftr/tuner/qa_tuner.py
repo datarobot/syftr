@@ -41,6 +41,7 @@ from syftr.optuna_helper import (
 )
 from syftr.ray.utils import ray_init
 from syftr.retrievers.build import build_rag_retriever
+from syftr.retrievers.cached_retriever import get_retriever_fingerprint
 from syftr.startup import prepare_worker
 from syftr.studies import (
     RetrieverStudyConfig,
@@ -139,6 +140,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
             additional_context_num_nodes=params.get("additional_context_num_nodes", 0),
             params=params,
             enforce_full_evaluation=enforce_full_evaluation,
+            retriever_fingerprint=get_retriever_fingerprint(study_config, params),
         )
 
     get_qa_examples = None
