@@ -1013,7 +1013,6 @@ class SearchSpace(BaseModel):
 
         params: ParamDict = {}
         defaults = self.defaults()
-        defaults.update(self.custom_defaults)
 
         if "rag_mode" in parameters:
             params["rag_mode"] = trial.suggest_categorical("rag_mode", self.rag_modes)
@@ -1114,7 +1113,7 @@ class SearchSpace(BaseModel):
             if params["few_shot_enabled"]:
                 params.update(**self.few_shot_retriever.defaults())
 
-        # Use custom defaults to override any defaults
+        # Use custom defaults to override parameters
         params.update(self.custom_defaults)
 
         return params
