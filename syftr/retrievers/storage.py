@@ -85,7 +85,7 @@ def put_cache(cache_key, index, local_only: bool = False) -> None:
 
     with local_cache() as cache:
         logger.info(f"Storing index to {cache.directory}")
-        cache.add(cache_key, serialized_obj)
+        cache.set(cache_key, serialized_obj)
         logger.info(f"Done storing index to {cache.directory}")
 
     if not local_only and cfg.storage.s3_cache_enabled:

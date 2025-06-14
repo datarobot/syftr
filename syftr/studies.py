@@ -945,9 +945,12 @@ class SearchSpace(BaseModel):
         default_factory=LATSRagAgent,
         description="Configuration for the LATS RAG agent.",
     )
-    _custom_defaults: ParamDict = {}
+    custom_defaults: ParamDict = Field(
+        default_factory=dict,
+        description="Override default parameters for the search space.",
+    )
 
-    def _defaults(self) -> ParamDict:
+    def defaults(self) -> ParamDict:
         return {
             "rag_mode": self.rag_modes[0],
             "template_name": self.template_names[0],
@@ -962,15 +965,6 @@ class SearchSpace(BaseModel):
             **self.critique_rag_agent.defaults(),
             **self.sub_question_rag.defaults(),
             **self.lats_rag_agent.defaults(),
-        }
-
-    def update_defaults(self, defaults: ParamDict) -> None:
-        self._custom_defaults.update(defaults)
-
-    def defaults(self) -> ParamDict:
-        return {
-            **self._defaults(),
-            **self._custom_defaults,
         }
 
     def param_names(
@@ -1022,10 +1016,9 @@ class SearchSpace(BaseModel):
         for param in parameters:
             assert param in PARAMETERS, f"Invalid parameter: {param}"
 
-        params: ParamDict = {
-            "few_shot_enabled": False,
-        }
+        params: ParamDict = {}
         defaults = self.defaults()
+        defaults.update(self.custom_defaults)
 
         if "rag_mode" in parameters:
             params["rag_mode"] = trial.suggest_categorical("rag_mode", self.rag_modes)
@@ -1046,7 +1039,7 @@ class SearchSpace(BaseModel):
         else:
             params["response_synthesizer_llm"] = defaults["response_synthesizer_llm"]
 
-        # No-RAG general parameters
+        # RAG general parameters
         if params["rag_mode"] != "no_rag":
             if "rag_retriever" in parameters:
                 params.update(**self.rag_retriever.sample(trial))
@@ -1065,7 +1058,9 @@ class SearchSpace(BaseModel):
                 if params["reranker_enabled"]:
                     params.update(**self.reranker.sample(trial))
             else:
-                params["reranker_enabled"] = False
+                params["reranker_enabled"] = defaults["reranker_enabled"]
+                if params["reranker_enabled"]:
+                    params.update(**self.reranker.defaults())
 
             if "hyde" in parameters:
                 params["hyde_enabled"] = trial.suggest_categorical(
@@ -1074,7 +1069,9 @@ class SearchSpace(BaseModel):
                 if params["hyde_enabled"]:
                     params.update(**self.hyde.sample(trial))
             else:
-                params["hyde_enabled"] = False
+                params["hyde_enabled"] = defaults["hyde_enabled"]
+                if params["hyde_enabled"]:
+                    params.update(**self.hyde.defaults())
 
             if "additional_context" in parameters:
                 params["additional_context_enabled"] = trial.suggest_categorical(
@@ -1083,7 +1080,11 @@ class SearchSpace(BaseModel):
                 if params["additional_context_enabled"]:
                     params.update(**self.additional_context.sample(trial))
             else:
-                params["additional_context_enabled"] = False
+                params["additional_context_enabled"] = defaults[
+                    "additional_context_enabled"
+                ]
+                if params["additional_context_enabled"]:
+                    params.update(**self.additional_context.defaults())
 
         if params["rag_mode"] == "react_rag_agent":
             if "react_rag_agent" in parameters:
@@ -1105,13 +1106,21 @@ class SearchSpace(BaseModel):
                 params.update(**self.lats_rag_agent.sample(trial))
             else:
                 params.update(**self.lats_rag_agent.defaults())
-            params.update(**self.lats_rag_agent.sample(trial))
 
-        if few_shot_enabled := trial.suggest_categorical(
-            "few_shot_enabled", self.few_shot_enabled
-        ):
+        if "few_shot_retriever" in parameters:
+            few_shot_enabled = trial.suggest_categorical(
+                "few_shot_enabled", self.few_shot_enabled
+            )
             params["few_shot_enabled"] = few_shot_enabled
-            params.update(**self.few_shot_retriever.sample(trial))
+            if few_shot_enabled:
+                params.update(**self.few_shot_retriever.sample(trial))
+        else:
+            params["few_shot_enabled"] = defaults["few_shot_enabled"]
+            if params["few_shot_enabled"]:
+                params.update(**self.few_shot_retriever.defaults())
+
+        # Use custom defaults to override any defaults
+        params.update(self.custom_defaults)
 
         return params
 
@@ -1290,6 +1299,10 @@ class Block(BaseModel):
     num_trials: int = Field(default=1000, description="Number of trials.")
     components: T.List[str] = Field(
         default_factory=lambda: PARAMETERS, description="Block components"
+    )
+    custom_defaults: ParamDict = Field(
+        default_factory=dict,
+        description="Custom default parameters used for this block.",
     )
 
 
