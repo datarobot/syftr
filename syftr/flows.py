@@ -54,7 +54,12 @@ from syftr.instrumentation.arize import instrument_arize
 from syftr.instrumentation.tokens import LLMCallData, TokenTrackingEventHandler
 from syftr.llm import get_llm_name, get_tokenizer
 from syftr.logger import logger
-from syftr.studies import get_critique_template, get_react_template
+from syftr.retrievers.cached_retriever import (
+    get_retrieval_cache,
+    get_retrieval_cache_key,
+    put_retrieval_cache,
+)
+from syftr.studies import ParamDict, get_critique_template, get_react_template
 
 dispatcher = instrument.get_dispatcher()
 _event_handler = TokenTrackingEventHandler()
@@ -175,6 +180,8 @@ class RetrieverFlow(Flow):
     hyde_llm: LLM | None = None
     additional_context_num_nodes: int = 0
     name: str = "Retriever Only Flow"
+    # A unique fingerprint of the retriever, used for caching retrieved chunks
+    retriever_fingerprint: ParamDict | None = None
 
     def __repr__(self):
         return f"{self.name}: {self.params}"
@@ -217,34 +224,71 @@ class RetrieverFlow(Flow):
 
     @dispatcher.span
     def retrieve(self, query: str) -> T.Tuple[T.List[NodeWithScore], float]:
+        if self.retriever_fingerprint:
+            return self.cached_retrieve(query)
         start_time = time.perf_counter()
         qb = QueryBundle(query)
-        if isinstance(self.query_engine, TransformQueryEngine):
-            response = self.query_engine.query(qb)
-            assert isinstance(response, Response), (
-                f"Expected Response, got {type(response)=}"
-            )
-            retrieval_result = response.source_nodes
-        else:
-            retrieval_result = self.query_engine.retrieve(qb)
+        retrieval_result = self.query_engine.retrieve(qb)
+        duration = time.perf_counter() - start_time
+        return retrieval_result, duration
+
+    @dispatcher.span
+    def cached_retrieve(self, query: str) -> T.Tuple[T.List[NodeWithScore], float]:
+        assert self.retriever_fingerprint, (
+            "Retriever fingerprint must be set to use cache."
+        )
+        start_time = time.perf_counter()
+        with get_retrieval_cache_key(query, self.retriever_fingerprint) as key:
+            if (retrieval_result := get_retrieval_cache(key)) is not None:
+                logger.info(f"Cache hit for question: {query}")
+            else:
+                logger.info(f"Cache miss for question: {query}")
+                qb = QueryBundle(query)
+                retrieval_result = self.query_engine.retrieve(qb)
+                put_retrieval_cache(key, retrieval_result)
         duration = time.perf_counter() - start_time
         return retrieval_result, duration
 
     @dispatcher.span
     async def aretrieve(self, query: str) -> T.Tuple[T.List[NodeWithScore], float]:
+        if self.retriever_fingerprint:
+            return await self.cached_aretrieve(query)
         start_time = time.perf_counter()
         qb = QueryBundle(query)
         if isinstance(self.query_engine, TransformQueryEngine):
-            response = await self.query_engine.aquery(qb)
-            assert isinstance(response, Response), (
-                f"Expected Response, got {type(response)=}"
-            )
-            retrieval_result = response.source_nodes
+            # TransformQueryEngine does not have aretrieve method
+            retrieval_result = self.query_engine.retrieve(qb)
         else:
             assert hasattr(self.query_engine, "aretrieve"), (
                 f"{self.query_engine} does not have 'aretrieve' method"
             )
             retrieval_result = await self.query_engine.aretrieve(qb)
+        duration = time.perf_counter() - start_time
+        return retrieval_result, duration
+
+    @dispatcher.span
+    async def cached_aretrieve(
+        self, query: str
+    ) -> T.Tuple[T.List[NodeWithScore], float]:
+        assert self.retriever_fingerprint, (
+            "Retriever fingerprint must be set to use cache."
+        )
+        start_time = time.perf_counter()
+        with get_retrieval_cache_key(query, self.retriever_fingerprint) as key:
+            if (retrieval_result := get_retrieval_cache(key)) is not None:
+                logger.info(f"Cache hit for question: {query}")
+            else:
+                logger.info(f"Cache miss for question: {query}")
+                qb = QueryBundle(query)
+                if isinstance(self.query_engine, TransformQueryEngine):
+                    # TransformQueryEngine does not have aretrieve method
+                    retrieval_result = self.query_engine.retrieve(qb)
+                else:
+                    assert hasattr(self.query_engine, "aretrieve"), (
+                        f"{self.query_engine} does not have 'aretrieve' method"
+                    )
+                    retrieval_result = await self.query_engine.aretrieve(qb)
+                put_retrieval_cache(key, retrieval_result)
         duration = time.perf_counter() - start_time
         return retrieval_result, duration
 
