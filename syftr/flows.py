@@ -48,6 +48,7 @@ from llama_index.core.schema import NodeWithScore
 from llama_index.core.storage.docstore.types import BaseDocumentStore
 from llama_index.core.tools import BaseTool, QueryEngineTool, ToolMetadata
 from numpy import ceil
+from overrides import overrides
 
 from syftr.configuration import cfg
 from syftr.instrumentation.arize import instrument_arize
@@ -181,26 +182,18 @@ class RetrieverFlow(Flow):
     additional_context_num_nodes: int = 0
     name: str = "Retriever Only Flow"
     # A unique fingerprint of the retriever, used for caching retrieved chunks
-    retriever_fingerprint: ParamDict | None = None
+    retriever_cache_fingerprint: ParamDict | None = None
 
     def __repr__(self):
         return f"{self.name}: {self.params}"
 
     @cached_property
     def query_engine(self) -> BaseQueryEngine:
-        node_postprocessors: T.List[BaseNodePostprocessor] = []
-        if self.additional_context_num_nodes > 0:
-            assert self.docstore is not None
-            node_postprocessors.append(
-                PrevNextNodePostprocessor(
-                    docstore=self.docstore,
-                    num_nodes=int(ceil(self.additional_context_num_nodes / 2)),
-                    mode="both",
-                )
-            )
+        node_postprocessors = self._build_node_postprocessors()
         response_synthesizer = get_response_synthesizer(
             llm=self.response_synthesizer_llm,
             response_mode=ResponseMode.COMPACT,
+            text_qa_template=self.prompt_template,
         )
         base_engine = RetrieverQueryEngine(
             retriever=self.retriever,
@@ -212,19 +205,32 @@ class RetrieverFlow(Flow):
             return TransformQueryEngine(base_engine, query_transform=hyde)
         return base_engine
 
+    def _build_node_postprocessors(self) -> T.List[BaseNodePostprocessor]:
+        node_postprocessors: T.List[BaseNodePostprocessor] = []
+        if self.additional_context_num_nodes > 0:
+            assert self.docstore is not None
+            node_postprocessors.append(
+                PrevNextNodePostprocessor(
+                    docstore=self.docstore,
+                    num_nodes=int(ceil(self.additional_context_num_nodes / 2)),
+                    mode="both",
+                )
+            )
+        return node_postprocessors
+
     @cached_property
     def tokenizer(self) -> T.Callable:
         return get_tokenizer(get_llm_name(self.response_synthesizer_llm))
 
-    def generate(self, query: str, *args, **kwargs):
+    def _generate(self, query: str, *args, **kwargs):
         raise NotImplementedError("RetrieverFlow does not support generation.")
 
-    async def agenerate(self, query: str, *args, **kwargs):
+    async def _agenerate(self, query: str, *args, **kwargs):
         raise NotImplementedError("RetrieverFlow does not support generation.")
 
     @dispatcher.span
     def retrieve(self, query: str) -> T.Tuple[T.List[NodeWithScore], float]:
-        if self.retriever_fingerprint:
+        if self.retriever_cache_fingerprint:
             return self.cached_retrieve(query)
         start_time = time.perf_counter()
         qb = QueryBundle(query)
@@ -234,15 +240,15 @@ class RetrieverFlow(Flow):
 
     @dispatcher.span
     def cached_retrieve(self, query: str) -> T.Tuple[T.List[NodeWithScore], float]:
-        assert self.retriever_fingerprint, (
+        assert self.retriever_cache_fingerprint, (
             "Retriever fingerprint must be set to use cache."
         )
         start_time = time.perf_counter()
-        with get_retrieval_cache_key(query, self.retriever_fingerprint) as key:
+        with get_retrieval_cache_key(query, self.retriever_cache_fingerprint) as key:
             if (retrieval_result := get_retrieval_cache(key)) is not None:
-                logger.info(f"Cache hit for question: {query}")
+                logger.info(f"Retriever cache hit: {query}")
             else:
-                logger.info(f"Cache miss for question: {query}")
+                logger.info(f"Retriever cache miss: {query}")
                 qb = QueryBundle(query)
                 retrieval_result = self.query_engine.retrieve(qb)
                 put_retrieval_cache(key, retrieval_result)
@@ -251,7 +257,7 @@ class RetrieverFlow(Flow):
 
     @dispatcher.span
     async def aretrieve(self, query: str) -> T.Tuple[T.List[NodeWithScore], float]:
-        if self.retriever_fingerprint:
+        if self.retriever_cache_fingerprint:
             return await self.cached_aretrieve(query)
         start_time = time.perf_counter()
         qb = QueryBundle(query)
@@ -270,15 +276,15 @@ class RetrieverFlow(Flow):
     async def cached_aretrieve(
         self, query: str
     ) -> T.Tuple[T.List[NodeWithScore], float]:
-        assert self.retriever_fingerprint, (
+        assert self.retriever_cache_fingerprint, (
             "Retriever fingerprint must be set to use cache."
         )
         start_time = time.perf_counter()
-        with get_retrieval_cache_key(query, self.retriever_fingerprint) as key:
+        with get_retrieval_cache_key(query, self.retriever_cache_fingerprint) as key:
             if (retrieval_result := get_retrieval_cache(key)) is not None:
-                logger.info(f"Cache hit for question: {query}")
+                logger.info(f"Retriever cache hit: {query}")
             else:
-                logger.info(f"Cache miss for question: {query}")
+                logger.info(f"Retriever cache miss: {query}")
                 qb = QueryBundle(query)
                 if isinstance(self.query_engine, TransformQueryEngine):
                     # TransformQueryEngine does not have aretrieve method
@@ -294,21 +300,17 @@ class RetrieverFlow(Flow):
 
 
 @dataclass(kw_only=True)
-class RAGFlow(Flow):
-    retriever: BaseRetriever
-    docstore: BaseDocumentStore | None = None
-    hyde_llm: LLM | None = None
+class RAGFlow(RetrieverFlow):
     reranker_llm: LLM | None = None
     reranker_top_k: int | None = None
     name: str = "RAG Flow"
-    additional_context_num_nodes: int = 0
 
     def __repr__(self):
         return f"{self.name}: {self.params}"
 
-    @cached_property
-    def query_engine(self) -> BaseQueryEngine:
-        node_postprocessors: T.List[BaseNodePostprocessor] = []
+    @overrides
+    def _build_node_postprocessors(self) -> T.List[BaseNodePostprocessor]:
+        node_postprocessors = super()._build_node_postprocessors()
         if self.reranker_llm is not None:
             assert self.reranker_top_k, (
                 "Reranker enabled, need reranker_top_k param set"
@@ -316,29 +318,7 @@ class RAGFlow(Flow):
             node_postprocessors.append(
                 LLMRerank(top_n=self.reranker_top_k, llm=self.reranker_llm)
             )
-        if self.additional_context_num_nodes > 0:
-            assert self.docstore is not None
-            node_postprocessors.append(
-                PrevNextNodePostprocessor(
-                    docstore=self.docstore,
-                    num_nodes=int(ceil(self.additional_context_num_nodes / 2)),
-                    mode="both",
-                )
-            )
-        response_synthesizer = get_response_synthesizer(
-            llm=self.response_synthesizer_llm,
-            response_mode=ResponseMode.COMPACT,
-            text_qa_template=self.prompt_template,
-        )
-        retriever = RetrieverQueryEngine(
-            retriever=self.retriever,
-            response_synthesizer=response_synthesizer,
-            node_postprocessors=node_postprocessors,
-        )
-        if self.hyde_llm is not None:
-            hyde = HyDEQueryTransform(llm=self.hyde_llm, include_original=True)
-            retriever = TransformQueryEngine(retriever, query_transform=hyde)  # type: ignore
-        return retriever
+        return node_postprocessors
 
     def get_prompt(self, query) -> str:
         if self.template is None:
@@ -355,21 +335,16 @@ class RAGFlow(Flow):
             few_shot_examples=examples,
         )
 
-    def retrieve(self, query: str) -> T.List[NodeWithScore]:
-        return self.query_engine.retrieve(QueryBundle(query))
-
-    async def aretrieve(self, query: str) -> T.List[NodeWithScore]:
-        assert hasattr(self.query_engine, "aretrieve"), (
-            f"{self.query_engine} does not have 'aretrieve' method"
-        )
-        return await self.query_engine.aretrieve(QueryBundle(query))
-
     @dispatcher.span
     def _generate(
         self, query: str, invocation_id: str
     ) -> T.Tuple[CompletionResponse, float]:
         start_time = time.perf_counter()
-        response = self.query_engine.query(query)
+        nodes, _ = self.retrieve(query)
+        response = self.query_engine.synthesize(
+            query_bundle=QueryBundle(query),
+            nodes=nodes,
+        )
         assert isinstance(response, Response), (
             f"Expected Response, got {type(response)=}"
         )
@@ -388,7 +363,11 @@ class RAGFlow(Flow):
         self, query: str, invocation_id: str
     ) -> T.Tuple[CompletionResponse, float]:
         start_time = time.perf_counter()
-        response = await self.query_engine.aquery(query)
+        nodes, _ = await self.aretrieve(query)
+        response = await self.query_engine.asynthesize(
+            query_bundle=QueryBundle(query),
+            nodes=nodes,
+        )
         assert isinstance(response, Response), (
             f"Expected Response, got {type(response)=}"
         )
