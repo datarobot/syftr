@@ -4,7 +4,6 @@ from syftr.event_loop import fix_asyncio
 fix_asyncio()
 
 import asyncio
-import itertools
 import logging
 import math
 import random
@@ -550,10 +549,10 @@ def _async_eval_runner(
 
     prune_reason = None
     results = []
-    num_batches = math.ceil(len(items) / study_config.optimization.num_eval_batch)
-    for i, batch in enumerate(
-        itertools.batched(items, study_config.optimization.num_eval_batch)
-    ):
+    batch_size = study_config.optimization.num_eval_batch
+    num_batches = math.ceil(len(items) / batch_size)
+    batches = [items[i : i + batch_size] for i in range(0, len(items), batch_size)]
+    for i, batch in enumerate(batches):
         batch_result = loop.run_until_complete(
             _aeval_all_pair_runner(
                 pair_eval_runner,

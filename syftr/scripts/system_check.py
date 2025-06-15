@@ -487,7 +487,9 @@ You can run this script again to check your progress after addressing the issues
     console.print()
 
     if llms and embedding_models:
-        _, paths = build_example_config(llms, embedding_models)
+        configs, paths = build_example_config(
+            llms, embedding_models, reuse_study=False, add_username=True
+        )
         console.print(
             "We generated an example configuration based on the available models."
         )
@@ -497,6 +499,12 @@ You can run this script again to check your progress after addressing the issues
         console.print("You can edit it and then run it from your project root with:")
         console.print()
         console.print(f"[yellow]syftr run {paths[0]}[/yellow]")
+        console.print()
+        console.print(
+            "The optimization is currently configured to (re)create a study with name:"
+        )
+        console.print()
+        console.print(f"[cyan]{configs[0].name}[/cyan]")
         console.print()
     return True
 

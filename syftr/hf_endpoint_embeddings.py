@@ -1,4 +1,3 @@
-from itertools import batched
 from typing import Any, List, Sequence
 
 import requests
@@ -112,7 +111,8 @@ class HFEndpointEmbeddings(BaseEmbedding, EmbeddingTimeoutMixin):
         self, texts: List[str], prefix: str | None = None
     ) -> List[List[float]]:
         hf_embeds = []
-        for batch in batched(texts, self.embed_batch_size):
+        for i in range(0, len(texts), self.embed_batch_size):
+            batch = texts[i : i + self.embed_batch_size]
             # add prefix
             text_batch = [prefix + text for text in batch] if prefix else batch
             text_batch_truncated = self._truncate_tokens_to_max(

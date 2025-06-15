@@ -65,7 +65,6 @@ import typing as T
 from pathlib import Path
 
 from google.cloud.aiplatform_v1beta1.types import content
-from llama_index.core.base.llms.types import LLMMetadata
 from optuna.storages import RDBStorage
 from pydantic import (
     AnyUrl,
@@ -123,6 +122,7 @@ class Paths(BaseModel):
     results_dir: Annotated[Path, Field(validate_default=True)] = REPO_ROOT / "results"
     studies_dir: Annotated[Path, Field(validate_default=True)] = REPO_ROOT / "studies"
     test_studies_dir: Path = REPO_ROOT / "tests/studies"
+    test_data_dir: Path = REPO_ROOT / "tests/data"
     tmp_dir: Path = Path("/tmp/syftr")
     huggingface_cache: Annotated[Path, Field(validate_default=True)] = (
         tmp_dir / "huggingface"
@@ -366,16 +366,17 @@ class LLMCostHourly(BaseModel):
 
 
 class LLMConfig(BaseModel):
+    model_name: str = Field(description="Name of the LLM to use")
+    temperature: float = Field(default=0.0, description="LLM temperature setting")
+    max_tokens: int = Field(default=2048, description="Max output tokens")
+    system_prompt: T.Optional[str] = Field(
+        default=None, description="Custom system prompt"
+    )
+
     cost: Annotated[
         T.Union[LLMCostTokens, LLMCostCharacters, LLMCostHourly],
         Field(discriminator="type"),
     ] = Field(description="LLM inference costs by token, character, or hourly rate.")
-
-    metadata: LLMMetadata = Field(
-        description="LLM Metadata such as context window and capabilities"
-    )
-
-    temperature: float = 0.0
 
     model_config = ConfigDict(extra="forbid")
 
@@ -383,9 +384,14 @@ class LLMConfig(BaseModel):
 # Specific LLM Instance Configurations
 class AzureOpenAILLM(LLMConfig):
     provider: T.Literal["azure_openai"] = "azure_openai"
-    deployment_name: T.Optional[str] = None
+    deployment_name: str = Field(description="Name of the Azure OpenAI deployment")
+    api_url: T.Optional[HttpUrl] = Field(
+        default=None, description="Override azure_oai api_url setting"
+    )
+    api_key: T.Optional[SecretStr] = Field(
+        default=None, description="Override azure_oai api_key setting"
+    )
     api_version: T.Optional[str] = None
-    max_retries: int = 0
     additional_kwargs: T.Optional[T.Dict[str, T.Any]] = None
 
 
@@ -399,18 +405,20 @@ GCP_SAFETY_SETTINGS = {
 
 class VertexAILLM(LLMConfig):
     provider: T.Literal["vertex_ai"] = "vertex_ai"
-    model: T.Optional[str] = None
     safety_settings: dict = GCP_SAFETY_SETTINGS
-    max_retries: int = 0
     additional_kwargs: T.Optional[T.Dict[str, T.Any]] = None
+    context_window: int = Field(default=4096, description="Max input tokens")
+    project_id: T.Optional[str] = Field(
+        default=None, description="Overrides gcp_vertex.project_id"
+    )
+    region: T.Optional[str] = Field(
+        default=None, description="Overrides gcp_vertex.region"
+    )
 
 
 class AnthropicVertexLLM(LLMConfig):
     provider: T.Literal["anthropic_vertex"] = Field(
         "anthropic_vertex", description="Provider identifier."
-    )
-    model: str = Field(
-        description="Name of the Anthropic model on Vertex AI (e.g., claude-3-5-sonnet-v2@20241022)."
     )
     project_id: T.Optional[str] = Field(
         default=None,
@@ -420,12 +428,16 @@ class AnthropicVertexLLM(LLMConfig):
         default=None,
         description="GCP Region. If None, uses global cfg.gcp_vertex.region.",
     )
-    max_retries: int = Field(
-        default=0, description="Maximum number of retries for API calls."
-    )
     additional_kwargs: T.Dict[str, T.Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments for the Anthropic model.",
+    )
+    thinking_dict: T.Optional[T.Dict[str, T.Any]] = Field(
+        default=None,
+        description=(
+            "Configure thinking controls for the LLM. See the Anthropic API docs for more details. "
+            "For example: thinking_dict={'type': 'enabled', 'budget_tokens': 16000}"
+        ),
     )
 
 
@@ -433,17 +445,14 @@ class AzureAICompletionsLLM(LLMConfig):
     provider: T.Literal["azure_ai"] = Field(
         "azure_ai", description="Provider identifier."
     )
-    model_name: str = Field(
-        description="Model name as recognized by Azure AI Completions (e.g., Llama-3.3-70B-Instruct)."
-    )
-    endpoint: HttpUrl = Field(description="API URL for this model")
+    api_url: HttpUrl = Field(description="API URL for this model")
     api_key: SecretStr = Field(description="API key for this model")
-    max_retries: int = Field(
-        default=0, description="Maximum number of retries for API calls."
+    api_version: T.Optional[str] = Field(
+        default=None, description="API version to use for this endpoint"
     )
-    additional_kwargs: T.Dict[str, T.Any] = Field(
+    client_kwargs: T.Dict[str, T.Any] = Field(
         default_factory=dict,
-        description="Additional keyword arguments for the Azure AI Completions model.",
+        description="Additional keyword arguments for the Azure AI client.",
     )
 
 
@@ -451,23 +460,19 @@ class CerebrasLLM(LLMConfig):
     provider: T.Literal["cerebras"] = Field(
         "cerebras", description="Provider identifier."
     )
-    model: str = Field(description="Name of the Cerebras model (e.g., llama3.1-8b).")
     # API key and URL are typically derived from cfg.cerebras.
-    max_retries: int = Field(
-        default=0, description="Maximum number of retries for API calls."
-    )
+    context_window: int = Field(default=3900, description="Max input tokens")
     additional_kwargs: T.Dict[str, T.Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments for the Cerebras model.",
     )
+    is_chat_model: bool = True
+    is_function_calling_model: bool = False
 
 
 class OpenAILikeLLM(LLMConfig):
     provider: T.Literal["openai_like"] = Field(
         "openai_like", description="Provider identifier for OpenAI-compatible APIs."
-    )
-    model: str = Field(
-        description="Name of the OpenAI-like model (e.g., meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo)."
     )
     api_base: HttpUrl = Field(description="API base URL for the OpenAI-like model.")
     api_key: SecretStr = Field(description="API key for this endpoint")
@@ -477,13 +482,13 @@ class OpenAILikeLLM(LLMConfig):
     timeout: int = Field(
         default=120, description="Timeout in seconds for API requests."
     )
-    max_retries: int = Field(
-        default=0, description="Maximum number of retries for API calls."
-    )
+    context_window: int = Field(default=3900, description="Max input tokens")
     additional_kwargs: T.Dict[str, T.Any] = Field(
         default_factory=dict,
         description="Additional keyword arguments for the OpenAI-like model.",
     )
+    is_chat_model: bool = True
+    is_function_calling_model: bool = False
 
 
 # Update LLMConfigUnion by adding the new classes

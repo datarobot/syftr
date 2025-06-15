@@ -74,9 +74,11 @@ def save_study_config_to_db(study: optuna.Study, study_config: StudyConfig):
         study.set_user_attr(attr, value)
 
 
-def get_study(study_config: StudyConfig) -> optuna.Study:
+def get_study(
+    study_config: StudyConfig, storage: BaseStorage | None = None
+) -> optuna.Study:
     study_name = study_config.name
-    storage = cfg.database.get_optuna_storage()
+    storage = storage or cfg.database.get_optuna_storage()
     if study_config.reuse_study:
         logger.info(
             "We are going to reuse study '%s' if it exists or create a new one otherwise",
@@ -120,7 +122,8 @@ def _get_user_attrs(row: pd.Series) -> T.Dict[str, T.Any]:
 def initialize_from_study(
     src_config: StudyConfig,
     dst_config: StudyConfig,
-    storage: str | BaseStorage | None = None,
+    src_storage: BaseStorage | None = None,
+    dst_storage: BaseStorage | None = None,
     success_rate: float | None = None,
     src_df: pd.DataFrame | None = None,
 ) -> optuna.Study:
@@ -129,6 +132,8 @@ def initialize_from_study(
     Args:
         src_config: Source study configuration.
         dst_config: Destination study configuration.
+        src_storage: Storage for the source study. If not provided, the default storage is used.
+        dst_storage: Storage for the destination study. If not provided, the source storage is used.
         storage: Storage for the studies.
         success_rate: Success rate for filtering trials.
         src_df: DataFrame containing trials to initialize from. If no DataFrame is provided, all trials will be fetched from the source study.
@@ -137,18 +142,19 @@ def initialize_from_study(
         "Cannot use both success_rate and src_df"
     )
 
-    storage = storage or cfg.database.get_optuna_storage()
+    src_storage = src_storage or cfg.database.get_optuna_storage()
+    dst_storage = dst_storage or src_storage
 
     src_name = src_config.name
     dst_name = dst_config.name
 
     logger.info("Initializing study '%s' from study '%s'", dst_name, src_name)
 
-    study = get_study(dst_config)
+    study = get_study(dst_config, storage=dst_storage)
 
     if src_df is None:
         src_df = get_completed_trials(
-            src_name, storage=storage, success_rate=success_rate
+            src_name, storage=src_storage, success_rate=success_rate
         )
     for _, row in src_df.iterrows():
         if not isinstance(row["user_attrs_flow"], str):
@@ -162,7 +168,7 @@ def initialize_from_study(
         src_flow = without_non_search_space_params(src_flow, src_config)
 
         if dst_config.optimization.skip_existing and trial_exists(
-            dst_name, src_flow, storage
+            dst_name, src_flow, dst_storage
         ):
             logger.warning(
                 "Flow already exists in destination study '%s': %s",

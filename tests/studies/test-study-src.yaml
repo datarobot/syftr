@@ -23,7 +23,7 @@ evaluation:
   mode: random
   raise_on_exception: false
   use_tracing_metrics: false
-name: rank1--alex--crag_hf-music
+name: test-initialization
 optimization:
   baselines:
   - additional_context_enabled: false
