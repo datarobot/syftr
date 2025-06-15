@@ -10,6 +10,9 @@ if cfg.logging.use_colors:
 else:
     logger = logging.getLogger(cfg.logging.name)
 
+# Disable propagation so logs don't get double printed by Ray
+logger.propagate = False
+
 
 def _create_default_handler(handler_name: str) -> logging.Handler:
     """Gives the project default logging handler"""

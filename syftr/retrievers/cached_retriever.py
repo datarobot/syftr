@@ -11,6 +11,7 @@ from lz4.frame import compress, decompress
 from syftr.amazon import get_file_from_s3
 from syftr.configuration import cfg
 from syftr.logger import logger
+from syftr.ray.utils import ray_cache_get, ray_cache_put
 from syftr.studies import ParamDict, StudyConfig
 from syftr.utils.locks import distributed_lock
 
@@ -87,6 +88,13 @@ def put_retrieval_cache(cache_key: str, obj: Any, local_only: bool = False):
         logger.info(f"Storing object to {cache.directory} under key {cache_key}")
         cache.set(cache_key, serialized)
 
+    # Try ray cache
+    try:
+        logger.info(f"Storing {cache_key} to Ray cache")
+        ray_cache_put(cache_key, serialized)
+    except Exception as e:
+        logger.warning(f"Skipping Ray cache put due to error: {e}")
+
     # S3 mirror
     if not local_only and cfg.storage.s3_cache_enabled:
         s3_key = f"{RETRIEVAL_CACHE_PREFIX}/{cache_key}.pkl"
@@ -115,6 +123,16 @@ def get_retrieval_cache(cache_key: str) -> Optional[Any]:
         if (data := cache.get(cache_key)) is not None:
             logger.info(f"Loading cached object from {cache.directory}")
             return cloudpickle.loads(decompress(data))
+
+    # Try Ray cache
+    try:
+        data = ray_cache_get(cache_key)
+        if data is not None:
+            logger.info(f"Loading {cache_key} from Ray cache")
+            return cloudpickle.loads(decompress(data))
+    except Exception as e:
+        logger.warning(f"Skipping Ray cache get due to error: {e}")
+
     # Try S3
     if cfg.storage.s3_cache_enabled:
         if (data := get_file_from_s3(s3_key)) is not None:
