@@ -307,7 +307,7 @@ class StudyRunner:
                             block.name,
                             defaults,
                         )
-                        study_config.search_space.update_defaults(defaults)
+                        study_config.search_space.custom_defaults.update(defaults)
 
                 future.result()  # Wait for seeding to finish
 
