@@ -1,5 +1,5 @@
+import getpass
 import os
-import tempfile
 
 import pytest
 
@@ -16,6 +16,6 @@ def pytest_addoption(parser):
 
 @pytest.fixture(scope="session", autouse=True)
 def set_ray_tmpdir():
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        os.environ["RAY_TMPDIR"] = tmpdirname
-        yield
+    username = getpass.getuser()
+    os.environ["RAY_TMPDIR"] = f"/tmp/ray_test_{username}"
+    yield
