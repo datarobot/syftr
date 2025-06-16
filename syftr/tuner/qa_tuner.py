@@ -128,6 +128,11 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
     enforce_full_evaluation = params.get("enforce_full_evaluation", False)
 
     if study_config.is_retriever_study:
+        retriever_cache_fingerprint = (
+            get_retriever_fingerprint(study_config, params)
+            if study_config.cache_query_responses
+            else None
+        )
         hyde_llm = (
             get_llm(params["hyde_llm_name"]) if params.get("hyde_enabled") else None
         )
@@ -140,7 +145,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
             additional_context_num_nodes=params.get("additional_context_num_nodes", 0),
             params=params,
             enforce_full_evaluation=enforce_full_evaluation,
-            retriever_cache_fingerprint=get_retriever_fingerprint(study_config, params),
+            retriever_cache_fingerprint=retriever_cache_fingerprint,
         )
 
     get_qa_examples = None
@@ -174,7 +179,11 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
             enforce_full_evaluation=enforce_full_evaluation,
         )
     else:
-        retriever_cache_fingerprint = get_retriever_fingerprint(study_config, params)
+        retriever_cache_fingerprint = (
+            get_retriever_fingerprint(study_config, params)
+            if study_config.cache_query_responses
+            else None
+        )
         hyde_llm = reranker_llm = reranker_top_k = None
         if params.get("hyde_enabled"):
             hyde_llm = get_llm(params["hyde_llm_name"])
