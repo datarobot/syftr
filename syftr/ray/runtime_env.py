@@ -73,7 +73,6 @@ def _prepare_working_dir(study_config_path: Path) -> str:
         # these will be auto-discovered on the cluster.
         cfg.model_dump_json(
             exclude_unset=True,
-            # exclude_defaults=True,
         )
     )
     with open(dest / "config.yaml", "w") as cfg_file:
