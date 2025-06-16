@@ -71,7 +71,10 @@ def _prepare_working_dir(study_config_path: Path) -> str:
     cfg_data = json.loads(
         # Don't send un-set configurations like default paths, as
         # these will be auto-discovered on the cluster.
-        cfg.model_dump_json(exclude_unset=True, exclude_defaults=True)
+        cfg.model_dump_json(
+            exclude_unset=True,
+            # exclude_defaults=True,
+        )
     )
     with open(dest / "config.yaml", "w") as cfg_file:
         yaml.safe_dump(cfg_data, cfg_file)
