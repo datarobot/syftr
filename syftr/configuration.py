@@ -126,7 +126,7 @@ class Paths(BaseModel):
     test_data_dir: Path = REPO_ROOT / "tests/data"
     tmp_dir: Path = (
         Path("/tmp/syftr")  # syftr tmp dir for worker jobs
-        if bool(os.getenv("SYFTR_WORKER_JOB", "false"))
+        if os.getenv("SYFTR_WORKER_JOB", "false").lower() == "true"
         else Path(f"/tmp/syftr/{getpass.getuser()}")  # syftr tmp dir for local jobs
     )
     huggingface_cache: Annotated[Path, Field(validate_default=True)] = (
