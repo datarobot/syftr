@@ -22,8 +22,8 @@ search_space:
 
 optimization:
   cpus_per_trial: 2
-  trial_timeout_seconds: 60
   max_concurrent_trials: 5
   num_retries_unique_params: 10
   num_trials: 15
+
 reuse_study: false
