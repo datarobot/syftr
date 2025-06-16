@@ -37,7 +37,7 @@ search_space:
     rag_query_decomposition_enabled: true
     rag_top_k: 19
     rag_embedding_model: Labib11/MUG-B-1.6
-    rag_hybrid_bm25_weight: 0.1s
+    rag_hybrid_bm25_weight: 0.1
     rag_query_decomposition_llm_name: gpt-4o-mini
     rag_query_decomposition_num_queries: 6
     rag_fusion_mode: reciprocal_rerank
