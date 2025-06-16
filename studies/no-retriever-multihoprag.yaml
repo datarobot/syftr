@@ -1,0 +1,73 @@
+name: "no-retriever-multihoprag"
+dataset:
+  dataset_dir: partitioned
+  description: multihoprag dataset
+  examples_data_path: examples
+  grounding_data_path: grounding_data
+  load_examples_timeout_s: 3600
+  load_grounding_data_timeout_s: 3600
+  partition_map:
+    holdout: holdout
+    sample: sample
+    test: test
+    train: train
+  path_root: octo-syftr-benchmarking-data
+  storage_options:
+    cache_check: 60
+    cache_storage: benchmarking/data/cache
+    check_files: true
+    expiry_time: 2592000
+    protocol: filecache
+    same_names: true
+    target_protocol: s3
+  storage_partitions:
+  - sample
+  - train
+  - test
+  - holdout
+  xname: multihoprag_hf
+reuse_study: true
+toy_mode: false
+search_space:
+  custom_defaults:
+    rag_mode: rag
+    hyde_enabled: false
+    additional_context_enabled: false
+    rag_method: hybrid
+    rag_query_decomposition_enabled: true
+    rag_top_k: 19
+    rag_embedding_model: Labib11/MUG-B-1.6
+    rag_hybrid_bm25_weight: 0.1s
+    rag_query_decomposition_llm_name: gpt-4o-mini
+    rag_query_decomposition_num_queries: 6
+    rag_fusion_mode: reciprocal_rerank
+    splitter_method: sentence
+    splitter_chunk_exp: 12
+    splitter_chunk_overlap_frac: 0
+optimization:
+  baselines: []
+  use_individual_baselines: false
+  use_agent_baselines: false
+  use_variations_of_baselines: false
+  shuffle_baselines: false
+  blocks:
+  - components:
+    - few_shot_retriever
+    - reranker
+    - sub_question_rag
+    - critique_rag_agent
+    - lats_rag_agent
+    - react_rag_agent
+    - response_synthesizer_llm
+    - template_name 
+    name: no-retriever
+    num_trials: 500  
+  cpus_per_trial: 5
+  embedding_device: cuda
+  # use_hf_embedding_models: true
+  gpus_per_trial: 0.2
+  max_concurrent_trials: 50
+  num_eval_samples: 200
+  num_eval_batch: 20
+  num_retries_unique_params: 10
+  num_trials: 500
