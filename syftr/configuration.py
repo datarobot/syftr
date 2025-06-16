@@ -58,6 +58,7 @@ How to override default configuration values (in resolution priority order):
           name: mylogs
 """
 
+import getpass
 import logging
 import os
 import socket
@@ -123,7 +124,11 @@ class Paths(BaseModel):
     studies_dir: Annotated[Path, Field(validate_default=True)] = REPO_ROOT / "studies"
     test_studies_dir: Path = REPO_ROOT / "tests/studies"
     test_data_dir: Path = REPO_ROOT / "tests/data"
-    tmp_dir: Path = Path("/tmp/syftr")
+    tmp_dir: Path = (
+        Path("/tmp/syftr")  # syftr tmp dir for worker jobs
+        if os.getenv("SYFTR_WORKER_JOB", "false").lower() == "true"
+        else Path(f"/tmp/syftr_{getpass.getuser()}")  # syftr tmp dir for local jobs
+    )
     huggingface_cache: Annotated[Path, Field(validate_default=True)] = (
         tmp_dir / "huggingface"
     )
