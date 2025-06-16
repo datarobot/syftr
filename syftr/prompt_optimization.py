@@ -114,23 +114,23 @@ def optimize_prompt(
     os.environ["TRACE_LITELLM_MODEL"] = litellm_model
 
     @bundle()
-    def merge_nodes(template, description):
-        _ = template
-        _ = description
+    def merge_nodes(*args):
+        for arg in args:
+            _ = arg
         nonlocal curr_accuracy
         return curr_accuracy
 
     tflow = TracedFlow(flow)
-    optimizer = OptoPrime([tflow.template, tflow.dataset_description])
+    existing_flow_attrs = [arg for arg in OPTIMIZER_LLM if hasattr(flow, arg)]
+    opt_args = [getattr(tflow, arg) for arg in existing_flow_attrs]
+    optimizer = OptoPrime(opt_args)
     param_results = []
     for n_epoch in range(1, num_epochs + 1):
         logger.info("Starting optimization epoch %d", n_epoch)
-
         curr_accuracy, evals = asyncio.run(
             quick_eval(flow, evaluator_llm, test, rate_limiter)
         )
-        output = merge_nodes(tflow.template, tflow.dataset_description)
-
+        output = merge_nodes(*existing_flow_attrs)
         logger.info("Accuracy on epoch %d: %f", n_epoch, curr_accuracy)
         raw_summary = litellm.completion(
             model=litellm_model,
@@ -157,9 +157,9 @@ def optimize_prompt(
             logger.exception("Prompt optimizer hit content policy violation error")
             continue
 
-        # TODO: Generalize this code so it won't crash if flow has no dataset description.
-        flow.template = tflow.template.data
-        flow.dataset_description = tflow.dataset_description.data  # type: ignore
+        for attr in existing_attrs:
+            setattr(flow, attr, getattr(tflow, attr))
+
         param_results.append((curr_accuracy, flow))
 
     _, argmax_flow = max(param_results, key=lambda x: x[0])
