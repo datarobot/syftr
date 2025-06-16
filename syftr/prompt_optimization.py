@@ -157,7 +157,7 @@ def optimize_prompt(
             logger.exception("Prompt optimizer hit content policy violation error")
             continue
 
-        for attr in existing_attrs:
+        for attr in existing_flow_attrs:
             setattr(flow, attr, getattr(tflow, attr))
 
         param_results.append((curr_accuracy, flow))
