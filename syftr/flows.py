@@ -246,9 +246,9 @@ class RetrieverFlow(Flow):
         start_time = time.perf_counter()
         with get_retrieval_cache_key(query, self.retriever_cache_fingerprint) as key:
             if (retrieval_result := get_retrieval_cache(key)) is not None:
-                logger.info(f"Retriever cache hit: {query}")
+                logger.debug(f"Retriever cache hit: {query}")
             else:
-                logger.info(f"Retriever cache miss: {query}")
+                logger.debug(f"Retriever cache miss: {query}")
                 qb = QueryBundle(query)
                 retrieval_result = self.query_engine.retrieve(qb)
                 put_retrieval_cache(key, retrieval_result)
