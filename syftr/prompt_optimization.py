@@ -31,6 +31,10 @@ CorrectnessEvaluator.aevaluate = dispatcher.span(CorrectnessEvaluator.aevaluate)
 
 EVAL_LLM = "gpt-4o-mini"
 OPTIMIZER_LLM = "gpt-4o-std"
+PARAMS_TO_OPTMIZE = [
+    "template",
+    "dataset_description",
+]
 
 
 async def quick_eval(
@@ -228,6 +232,8 @@ def opt_flow(
         state=optuna.trial.TrialState.COMPLETE,
     )
     new_trial.set_user_attr("parent_number", parent_number)
+    for param in PARAMS_TO_OPTMIZE:
+        new_trial.set_user_attr(f"optimized_{param}", getattr(flow, param))
     new_study.add_trial(new_trial)
     logger.info("Done optimizing prompt for %s", flow_params)
 
