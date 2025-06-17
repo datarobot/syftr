@@ -2,7 +2,6 @@ import time
 import typing as T
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from functools import cached_property
 from uuid import uuid4
 
 import llama_index.core.instrumentation as instrument
@@ -179,7 +178,7 @@ class RetrieverFlow(Flow):
     def __repr__(self):
         return f"{self.name}: {self.params}"
 
-    @cached_property
+    @property
     def query_engine(self) -> BaseQueryEngine:
         node_postprocessors: T.List[BaseNodePostprocessor] = []
         if self.additional_context_num_nodes > 0:
@@ -205,7 +204,7 @@ class RetrieverFlow(Flow):
             return TransformQueryEngine(base_engine, query_transform=hyde)
         return base_engine
 
-    @cached_property
+    @property
     def tokenizer(self) -> T.Callable:
         return get_tokenizer(get_llm_name(self.response_synthesizer_llm))
 
@@ -262,7 +261,7 @@ class RAGFlow(Flow):
     def __repr__(self):
         return f"{self.name}: {self.params}"
 
-    @cached_property
+    @property
     def query_engine(self) -> BaseQueryEngine:
         node_postprocessors: T.List[BaseNodePostprocessor] = []
         if self.reranker_llm is not None:
@@ -373,7 +372,7 @@ class SubQuestionRAGFlow(RAGFlow):
     def __repr__(self):
         return f"{self.name}: {self.params}"
 
-    @cached_property
+    @property
     def tools(self) -> T.List[QueryEngineTool]:
         # Build query engine like RAGFlow, since this class overrides query_engine
         node_postprocessors: T.List[BaseNodePostprocessor] = []
@@ -416,7 +415,7 @@ class SubQuestionRAGFlow(RAGFlow):
             )
         ]
 
-    @cached_property
+    @property
     def query_engine(self) -> BaseQueryEngine:
         synth = get_response_synthesizer(
             llm=self.response_synthesizer_llm,
@@ -444,7 +443,7 @@ class AgenticRAGFlow(RAGFlow):
     def __repr__(self):
         return f"{self.name}: {self.params}"
 
-    @cached_property
+    @property
     def tools(self) -> T.List[BaseTool]:
         return [
             QueryEngineTool(
@@ -456,7 +455,7 @@ class AgenticRAGFlow(RAGFlow):
             )
         ]
 
-    @cached_property
+    @property
     def agent(self) -> AgentRunner:
         raise NotImplementedError()
 
@@ -509,7 +508,7 @@ class ReActAgentFlow(AgenticRAGFlow):
     def __repr__(self):
         return f"{self.name}: {self.params}"
 
-    @cached_property
+    @property
     def agent(self) -> AgentRunner:
         synth = get_response_synthesizer(
             llm=self.subquestion_response_synthesizer_llm,
@@ -560,7 +559,7 @@ class CritiqueAgentFlow(AgenticRAGFlow):
     def __repr__(self):
         return f"{self.name}: {self.params}"
 
-    @cached_property
+    @property
     def agent(self) -> AgentRunner:
         assert isinstance(self.response_synthesizer_llm, FunctionCallingLLM), (
             f"CritiqueAgentFlow requires FunctionCallingLLM. Got {type(self.response_synthesizer_llm)=}"
@@ -638,7 +637,7 @@ class LATSAgentFlow(AgenticRAGFlow):
     def __repr__(self):
         return f"{self.name}: {self.params}"
 
-    @cached_property
+    @property
     def tools(self) -> T.List[BaseTool]:
         return [
             QueryEngineTool(
@@ -650,7 +649,7 @@ class LATSAgentFlow(AgenticRAGFlow):
             )
         ]
 
-    @cached_property
+    @property
     def agent(self) -> AgentRunner:
         agent_worker = LATSAgentWorker.from_tools(
             self.tools,
