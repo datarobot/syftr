@@ -67,7 +67,7 @@ remote-new-onnx: aws-login ray-stop ray-clean remote-pyenv remote-project
 
 # Use like `make submit-hotpot-toy`, which submits the study defined in studies/hotpot-toy.yaml
 submit-%: studies/%.yaml
-	@python -m syftr.ray.submit --study-config $<
+	@python -m syftr.ray.submit --study-config $< 2>&1 | tee $(OUTFILE)
 
 agent-submit-%: studies/%.yaml
 	@python -m syftr.ray.submit --agent --study-config  $<
