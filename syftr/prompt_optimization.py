@@ -115,6 +115,11 @@ def optimize_prompt(
 
     @bundle()
     def merge_nodes(*args):
+        """This function connects Trace nodes that are specified in args.
+        For some reason Trace does not catch the usage of annotated templates inside
+        our evaluation function and this function takes precomputed accuracy and connects
+        specified nodes for optmization.
+        """
         for arg in args:
             _ = arg
         nonlocal curr_accuracy
