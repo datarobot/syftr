@@ -1,4 +1,4 @@
-.PHONY: install upgrade nltk install-kernel-syftr remove-kernel-syftr mypy pre-commit-run unit-tests functional-tests e2e-tests tests aws-login submit- run- ray-submit- ray-run- ray-stop ray-cancel-jobs check
+.PHONY: install upgrade nltk install-kernel-syftr remove-kernel-syftr mypy pre-commit-run unit-tests functional-tests e2e-tests tests aws-login submit- run- ray-submit- ray-run- ray-stop ray-cancel-jobs check tunnel 
 
 export AWS_PROFILE=rd
 OUTFILE := syftr.txt
@@ -63,7 +63,6 @@ ray-benchmarks:
 ray-cancel-jobs:
 	@PYTHONUNBUFFERED=1 python -m syftr.scripts.cancel_jobs --substring="$(substring)"
 
-.PHONY: tunnel
 tunnel:
 	ssh -NT \
 		-o ServerAliveInterval=60 \
