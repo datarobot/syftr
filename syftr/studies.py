@@ -302,6 +302,7 @@ RAG_MODES: T.List[str] = [
     "critique_rag_agent",
     "sub_question_rag",
     "lats_rag_agent",
+    "coa_rag_agent",
     "no_rag",
 ]
 
