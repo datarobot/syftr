@@ -128,7 +128,7 @@ def get_unique_floats(df: pd.DataFrame, col: str, ndigits: int) -> T.List[float]
     param = "params_" + col
     if param not in df.columns:
         return []
-    values = [
+    values = [  # pylint: disable=PLW0177
         round(float(value), ndigits)
         for value in df[param].unique()
         if is_numeric(value) and value != np.nan
