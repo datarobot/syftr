@@ -24,4 +24,4 @@ repos:
   rev: 0.8.1  # Use the latest version
   hooks:
     - id: nbstripout
-      exclude: ^examples/
+      exclude: ^examples/|^notebooks/irt_analysis\.ipynb$
