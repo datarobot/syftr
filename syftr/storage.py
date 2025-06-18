@@ -1117,3 +1117,132 @@ class BrightHF(SyftrQADataset):
         for i in partition_range:
             row = qa_examples[i]
             yield self._row_to_qapair(row)
+
+
+class PhantomWikiV001HF(SyftrQADataset):
+    xname: T.Literal["phantomwikiv001_hf"] = "phantomwikiv001_hf"  # type: ignore
+
+    # TODO: update the subsets
+    # subset choices are:
+    # 'depth_20_size_25_seed_1',
+    # 'depth_20_size_25_seed_2',
+    # 'depth_20_size_25_seed_3',
+    # 'depth_20_size_50_seed_1',
+    # 'depth_20_size_50_seed_2',
+    # 'depth_20_size_50_seed_3',
+    # 'depth_20_size_100_seed_1',
+    # 'depth_20_size_100_seed_2',
+    # 'depth_20_size_100_seed_3',
+    # 'depth_20_size_200_seed_1',
+    # 'depth_20_size_200_seed_2',
+    # 'depth_20_size_200_seed_3',
+    # 'depth_20_size_300_seed_1',
+    # 'depth_20_size_300_seed_2',
+    # 'depth_20_size_300_seed_3',
+    # 'depth_20_size_400_seed_1',
+    # 'depth_20_size_400_seed_2',
+    # 'depth_20_size_400_seed_3',
+    # 'depth_20_size_500_seed_1',
+    # 'depth_20_size_500_seed_2',
+    # 'depth_20_size_500_seed_3',
+    # 'depth_20_size_1000_seed_1',
+    # 'depth_20_size_1000_seed_2',
+    # 'depth_20_size_1000_seed_3',
+    # 'depth_20_size_2500_seed_1',
+    # 'depth_20_size_2500_seed_2',
+    # 'depth_20_size_2500_seed_3',
+    # 'depth_20_size_5000_seed_1',
+    # 'depth_20_size_5000_seed_2',
+    # 'depth_20_size_5000_seed_3',
+    # 'depth_20_size_10000_seed_1',
+    # 'depth_20_size_10000_seed_2',
+    # 'depth_20_size_10000_seed_3'
+
+    subset: str = "depth_20_size_10000_seed_3"
+
+    description: str = (
+        "This dataset contains data from PhantomWiki, which "
+        "is a framework for generating unique, factually"
+        "and consistent document corpora with diverse question-answer pairs."
+        "Unlike prior work, PhantomWiki is neither a fixed dataset, nor is it"
+        "based on any existing data. Instead, a new PhantomWiki instance is "
+        "generated on demand for each evaluation. PhantomWiki generates a "
+        "fictional universe of characters along with a set of facts. "
+        "We reflect these facts in a large-scale corpus, mimicking the "
+        "style of fan-wiki websites. Then we generate question-answer pairs "
+        "with tunable difficulties, encapsulating the types of multi-hop "
+        "questions commonly considered in the question-answering (QA) literature."
+    )
+
+    def _get_partition_range(self, partition: str):
+        partition_ranges = {
+            "sample": range(0, 10),
+            "train": range(0, 100),
+            "test": range(100, 400),
+            "holdout": range(400, 500),
+        }
+        if partition in partition_ranges:
+            return partition_ranges[partition]
+
+    def _load_grounding_dataset(self) -> datasets.Dataset:
+        with distributed_lock(
+            self.name, timeout_s=self.load_examples_timeout_s, host_only=True
+        ):
+            dataset = datasets.load_dataset(
+                "DataRobot-Research/phantomwiki-001",
+                self.subset + "_groundingdata",
+                cache_dir=cfg.paths.huggingface_cache,
+            )
+
+        return dataset[self.subset]
+
+    def _load_qa_dataset(self) -> datasets.Dataset:
+        with distributed_lock(
+            self.name, timeout_s=self.load_examples_timeout_s, host_only=True
+        ):
+            dataset = datasets.load_dataset(
+                "DataRobot-Research/phantomwiki-001",
+                self.subset + "_qapairs",
+                cache_dir=cfg.paths.huggingface_cache,
+            )
+
+        return dataset[self.subset]
+
+    @overrides
+    def iter_grounding_data(self, partition="notused") -> T.Iterator[Document]:
+        # There is no partition. The grounding dataset is the same
+        # across all partitions of the qa pairs.
+        grounding_dataset = self._load_grounding_dataset()
+        for row in grounding_dataset:
+            yield Document(
+                text=row["article"],
+                metadata={"title": row["title"]},
+            )
+
+    def _row_to_qapair(self, row):
+        """Dataset-specific conversion of row to QAPair struct.
+
+        Invoked by iter_examples.
+
+        Default implementation assumes row is already in QAPair format.
+        """
+        return QAPair(
+            question=row["question"],
+            answer=" ".join(row["answer"]),
+            id=str(row["id"]),
+            context={},
+            supporting_facts=[],
+            difficulty=str(row["difficulty"]),
+            qtype=str(row["type"]),
+        )
+
+    @overrides
+    def iter_examples(self, partition="test") -> T.Iterator[QAPair]:
+        assert partition in self.storage_partitions
+        partition = self._get_storage_partition(partition)
+        qa_examples = self._load_qa_dataset()
+        partition_range = self._get_partition_range(partition)
+
+        for i in partition_range:
+            row = qa_examples[i]
+            yield self._row_to_qapair(row)
