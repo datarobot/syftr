@@ -81,3 +81,14 @@ def test_react_agent_flow_hybrid_hyde_reranker_few_shot(
     for question, _ in QA_PAIRS[study_config.dataset.name]:
         flow.generate(question)
     assert llama_debug.get_event_pairs(CBEventType.AGENT_STEP)
+
+
+def test_coa_agent_flow(coa_agent_flow, llama_debug):
+    flow, study_config = coa_agent_flow
+    for question, _ in QA_PAIRS[study_config.dataset.name]:
+        _, _, call_data = flow.generate(question)
+        assert call_data
+        assert llama_debug.get_event_pairs(CBEventType.LLM)
+        assert llama_debug.get_event_pairs(CBEventType.QUERY)
+        assert llama_debug.get_event_pairs(CBEventType.AGENT_STEP)
+        assert llama_debug.get_event_pairs(CBEventType.SYNTHESIZE)

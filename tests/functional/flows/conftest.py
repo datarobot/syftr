@@ -9,6 +9,7 @@ from llama_index.core.storage.docstore.types import BaseDocumentStore
 
 from syftr.agent_flows import LlamaIndexReactRAGAgentFlow
 from syftr.flows import (
+    CoAAgentFlow,
     CritiqueAgentFlow,
     Flow,
     RAGFlow,
@@ -270,6 +271,22 @@ def react_agent_flow_hybrid_hyde_reranker_few_shot(
         hyde_llm=llm,
         reranker_llm=llm,
         reranker_top_k=5,
+    ), study_config
+
+
+@pytest.fixture
+def coa_agent_flow(
+    real_sparse_retriever, gpt_4o_mini, rag_template
+) -> T.Tuple[CoAAgentFlow, StudyConfig]:
+    llm, _ = gpt_4o_mini
+    retriever, docstore, study_config = real_sparse_retriever
+    return CoAAgentFlow(
+        retriever=retriever,
+        docstore=docstore,
+        response_synthesizer_llm=llm,
+        template=rag_template,
+        dataset_name=study_config.dataset.name,
+        dataset_description=study_config.dataset.description,
     ), study_config
 
 

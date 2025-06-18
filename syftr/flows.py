@@ -47,6 +47,7 @@ from llama_index.core.retrievers import BaseRetriever
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.storage.docstore.types import BaseDocumentStore
 from llama_index.core.tools import BaseTool, QueryEngineTool, ToolMetadata
+from llama_index.packs.agents_coa import CoAAgentPack
 from numpy import ceil
 
 from syftr.configuration import cfg
@@ -662,6 +663,19 @@ class LATSAgentFlow(AgenticRAGFlow):
         return agent_worker.as_agent(
             default_tool_choice="any",
         )
+
+
+@dataclass(kw_only=True)
+class CoAAgentFlow(AgenticRAGFlow):
+    name: str = "CoA Agent Flow"
+
+    @property
+    def agent(self) -> AgentRunner:
+        pack = CoAAgentPack(
+            tools=self.tools,
+            llm=self.response_synthesizer_llm,
+        )
+        return pack.agent
 
 
 class Flows(Enum):
