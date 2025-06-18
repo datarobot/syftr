@@ -21,6 +21,7 @@ from ray.util import state
 from syftr.baselines import set_baselines
 from syftr.evaluation import eval_dataset
 from syftr.flows import (
+    CoAAgentFlow,
     CritiqueAgentFlow,
     Flow,
     LATSAgentFlow,
@@ -289,6 +290,22 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     dataset_description=study_config.dataset.description,
                     num_expansions=params["lats_num_expansions"],
                     max_rollouts=params["lats_max_rollouts"],
+                    enforce_full_evaluation=enforce_full_evaluation,
+                    params=params,
+                )
+            case "coa_rag_agent":
+                flow = CoAAgentFlow(
+                    retriever=rag_retriever,
+                    response_synthesizer_llm=response_synthesizer_llm,
+                    docstore=rag_docstore,
+                    template=template,
+                    get_examples=get_qa_examples,
+                    hyde_llm=hyde_llm,
+                    reranker_llm=reranker_llm,
+                    reranker_top_k=reranker_top_k,
+                    additional_context_num_nodes=additional_context_num_nodes,
+                    dataset_name=study_config.dataset.name,
+                    dataset_description=study_config.dataset.description,
                     enforce_full_evaluation=enforce_full_evaluation,
                     params=params,
                 )
