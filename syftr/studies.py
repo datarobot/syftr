@@ -67,8 +67,8 @@ Follow these guidelines for scoring:
 
 Example Response:
 {
-  "score": 4.0,
   "reasoning": "The generated answer has the exact same metrics as the reference answer, but it is not as concise."
+  "score": 4.0,
 }
 """
 
