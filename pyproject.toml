@@ -54,6 +54,7 @@ dependencies = [
     "llama-index-llms-vertex==0.4.3",
     "llama-index-llms-vllm",
     "llama-index-multi-modal-llms-openai",
+    "llama-index-packs-agents-coa",
     "llama-index-program-openai",
     "llama-index-question-gen-openai",
     "llama-index-readers-file",
