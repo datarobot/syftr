@@ -1,4 +1,5 @@
 # flake8: noqa: E402
+from syftr.evaluation.factory import EvaluatorFactory
 from syftr.event_loop import fix_asyncio
 
 fix_asyncio()
@@ -41,7 +42,6 @@ from syftr.configuration import EVAL__RAISE_ON_EXCEPTION
 from syftr.flows import Flow, RetrieverFlow
 from syftr.helpers import get_exception_report
 from syftr.instrumentation.tokens import LLMCallData
-from syftr.llm import get_llm
 from syftr.pruning import CostPruner, ParetoPruner, RuntimePruner
 from syftr.studies import AgentStudyConfig, SearchSpace, StudyConfig
 
@@ -753,8 +753,8 @@ def eval_dataset(
         "consensus",
         "retriever",
     }, "Evaluation mode should be 'single', 'random', 'consensus', or 'retriever'."
-    eval_llms = [get_llm(name) for name in study_config.evaluation.llms]
-    evaluators = [CorrectnessEvaluator(llm=llm) for llm in eval_llms]
+
+    evaluators = EvaluatorFactory(study_config.evaluation).get_evaluators()
     rate_limiter = AsyncLimiter(
         study_config.optimization.rate_limiter_max_coros,
         study_config.optimization.rate_limiter_period,

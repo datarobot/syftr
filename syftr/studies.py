@@ -6,6 +6,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import pandas as pd
+from llama_index.core.evaluation.correctness import DEFAULT_USER_TEMPLATE
 from optuna import Trial
 from optuna.distributions import (
     BaseDistribution,
@@ -44,6 +45,34 @@ from syftr.storage import (
 )
 
 ParamDict = T.Dict[str, str | int | float | bool]
+
+# This is a variation of the LlamaIndex default correctness evaluation template.
+EVALUATION__CORRECTNESS__DEFAULT_SYSTEM_TEMPLATE = """
+You are an expert evaluation system for a question answering chatbot.
+
+You are given the following information:
+- a user query, and
+- a reference answer
+- a generated answer
+
+Your job is to judge the relevance and correctness of the generated answer.
+
+Output a syntactically correct JSON string that contains a 'score' field that represents a holistic evaluation and a 'reasoning' field that explains the score.
+
+Follow these guidelines for scoring:
+- Your score has to be between 1 and 5, where 1 is the worst and 5 is the best.
+- If the generated answer is not relevant to the user query, you should give a score of 1.
+- If the generated answer is relevant but contains mistakes, you should give a score between 2 and 3.
+- If the generated answer is relevant and fully correct, you should give a score between 4 and 5.
+
+Example Response:
+{
+  "score": 4.0,
+  "reasoning": "The generated answer has the exact same metrics as the reference answer, but it is not as concise."
+}
+"""
+
+EVALUATION__CORRECTNESS__DEFAULT_USER_TEMPLATE = DEFAULT_USER_TEMPLATE
 
 
 class SearchSpaceMixin(ABC):
@@ -1515,6 +1544,22 @@ class Evaluation(BaseModel):
     min_reporting_success_rate: float = Field(
         default=0.5,
         description="Minimum success rate for reporting evaluation results.",
+    )
+    eval_type: T.Literal["correctness"] = Field(
+        default="correctness",
+        description="Type of evaluation to perform.",
+    )
+    eval_system_template: str = Field(
+        default=EVALUATION__CORRECTNESS__DEFAULT_SYSTEM_TEMPLATE,
+        description="System template for the evaluation prompt.",
+    )
+    eval_user_template: str = Field(
+        default=EVALUATION__CORRECTNESS__DEFAULT_USER_TEMPLATE,
+        description="User template for the evaluation prompt.",
+    )
+    score_threshold: float = Field(
+        default=4.0,
+        description="Score threshold for passing the evaluation. A score above or equal to this threshold is considered a pass.",
     )
 
 

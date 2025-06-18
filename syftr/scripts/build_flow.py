@@ -9,7 +9,7 @@ from aiolimiter import AsyncLimiter
 from llama_index.core.evaluation import CorrectnessEvaluator
 
 from syftr.core import RandomTrial
-from syftr.evaluation import SyftrEvaluationResult, _aeval_pair
+from syftr.evaluation.evaluation import SyftrEvaluationResult, _aeval_pair
 from syftr.instrumentation.arize import instrument_arize
 from syftr.llm import get_llm
 from syftr.studies import StudyConfig
