@@ -1,7 +1,7 @@
 import pytest
 from optuna import TrialPruned
 
-from syftr.evaluation import eval_dataset
+from syftr.evaluation.evaluation import eval_dataset
 from syftr.pruning import CostPruner, ParetoPruner
 
 

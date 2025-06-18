@@ -19,7 +19,7 @@ from llama_index.core.schema import NodeWithScore, TextNode
 from ray.util import state
 
 from syftr.baselines import set_baselines
-from syftr.evaluation import eval_dataset
+from syftr.evaluation.evaluation import eval_dataset
 from syftr.flows import (
     CritiqueAgentFlow,
     Flow,

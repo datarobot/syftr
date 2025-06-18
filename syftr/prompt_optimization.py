@@ -14,9 +14,9 @@ from llama_index.core.llms.function_calling import FunctionCallingLLM
 from opto import trace
 from opto.optimizers import OptoPrime
 
-from syftr import evaluation
 from syftr.configuration import cfg
 from syftr.core import QAPair
+from syftr.evaluation import evaluation
 from syftr.flows import Flow
 from syftr.llm import get_llm
 from syftr.logger import logger

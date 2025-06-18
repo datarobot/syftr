@@ -18,7 +18,7 @@ from llama_index.core.schema import NodeWithScore, TextNode
 
 from syftr.agent_flows import FlowJSONHandler, LlamaIndexReactRAGAgentFlow
 from syftr.baselines import set_baselines
-from syftr.evaluation import eval_dataset
+from syftr.evaluation.evaluation import eval_dataset
 from syftr.flows import Flow
 from syftr.huggingface_helper import get_embedding_model
 from syftr.logger import logger
