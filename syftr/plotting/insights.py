@@ -21,6 +21,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from slugify import slugify
 
 from syftr.configuration import cfg
+from syftr.helpers import is_numeric
 from syftr.llm import AZURE_GPT4O_STD
 from syftr.studies import get_response_synthesizer_llm, get_template_name
 
@@ -329,7 +330,7 @@ def set_from_flow(df: pd.DataFrame):
             flow = json.loads(row["user_attrs_flow"])
             params_flow = {"params_" + param: value for param, value in flow.items()}
             for param in params_flow:
-                if params_flow[param] != np.nan:
+                if is_numeric(params_flow[param]) and not np.isnan(params_flow[param]):
                     if param not in df.columns:
                         inferred_type = type(params_flow[param])
                         if inferred_type is float:
