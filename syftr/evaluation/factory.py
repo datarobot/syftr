@@ -23,10 +23,10 @@ def json_parser_function(response: str) -> T.Tuple[T.Optional[float], T.Optional
         try:
             response_dict = json.loads(json_str)
         except json.JSONDecodeError:
-            logger.error("Invalid JSON response from evaluator: {response}")
+            logger.error("Invalid JSON response from evaluator: %s", response)
             return None, None
     else:
-        logger.error("No JSON found in evaluator response: {response}")
+        logger.error("No JSON found in evaluator response: %s", response)
         return None, None
     score = response_dict.get("score")
     reasoning = response_dict.get("reasoning")

@@ -801,7 +801,7 @@ def get_tokenizer(
         return tiktoken.encoding_for_model("gpt-35-turbo").encode
     if name in LOCAL_MODELS:
         return tiktoken.encoding_for_model("gpt-4o-mini").encode
-    raise ValueError("Invalid tokenizer specified")
+    raise ValueError("No tokenizer for model specified: %s" % name)
 
 
 if __name__ == "__main__":
