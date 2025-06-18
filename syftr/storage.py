@@ -1122,43 +1122,16 @@ class BrightHF(SyftrQADataset):
 class PhantomWikiV001HF(SyftrQADataset):
     xname: T.Literal["phantomwikiv001_hf"] = "phantomwikiv001_hf"  # type: ignore
 
-    # TODO: update the subsets
     # subset choices are:
-    # 'depth_20_size_25_seed_1',
-    # 'depth_20_size_25_seed_2',
-    # 'depth_20_size_25_seed_3',
-    # 'depth_20_size_50_seed_1',
-    # 'depth_20_size_50_seed_2',
-    # 'depth_20_size_50_seed_3',
-    # 'depth_20_size_100_seed_1',
-    # 'depth_20_size_100_seed_2',
-    # 'depth_20_size_100_seed_3',
-    # 'depth_20_size_200_seed_1',
-    # 'depth_20_size_200_seed_2',
-    # 'depth_20_size_200_seed_3',
-    # 'depth_20_size_300_seed_1',
-    # 'depth_20_size_300_seed_2',
-    # 'depth_20_size_300_seed_3',
-    # 'depth_20_size_400_seed_1',
-    # 'depth_20_size_400_seed_2',
-    # 'depth_20_size_400_seed_3',
-    # 'depth_20_size_500_seed_1',
-    # 'depth_20_size_500_seed_2',
-    # 'depth_20_size_500_seed_3',
-    # 'depth_20_size_1000_seed_1',
-    # 'depth_20_size_1000_seed_2',
-    # 'depth_20_size_1000_seed_3',
-    # 'depth_20_size_2500_seed_1',
-    # 'depth_20_size_2500_seed_2',
-    # 'depth_20_size_2500_seed_3',
-    # 'depth_20_size_5000_seed_1',
-    # 'depth_20_size_5000_seed_2',
-    # 'depth_20_size_5000_seed_3',
-    # 'depth_20_size_10000_seed_1',
-    # 'depth_20_size_10000_seed_2',
-    # 'depth_20_size_10000_seed_3'
+    # depth_20_size_100_seed_595    depth_20_size_2000_seed_595   depth_20_size_400_seed_595
+    # depth_20_size_1000_seed_595   depth_20_size_250_seed_595    depth_20_size_4000_seed_595
+    # depth_20_size_10000_seed_595  depth_20_size_2500_seed_595   depth_20_size_450_seed_595
+    # depth_20_size_100000_seed_595 depth_20_size_300_seed_595    depth_20_size_4500_seed_595
+    # depth_20_size_150_seed_595    depth_20_size_3000_seed_595   depth_20_size_50_seed_595
+    # depth_20_size_1500_seed_595   depth_20_size_350_seed_595    depth_20_size_500_seed_595
+    # depth_20_size_200_seed_595    depth_20_size_3500_seed_595   depth_20_size_5000_seed_595
 
-    subset: str = "depth_20_size_10000_seed_3"
+    subset: str = "depth_20_size_1000_seed_595"
 
     description: str = (
         "This dataset contains data from PhantomWiki, which "
@@ -1185,28 +1158,31 @@ class PhantomWikiV001HF(SyftrQADataset):
             return partition_ranges[partition]
 
     def _load_grounding_dataset(self) -> datasets.Dataset:
+        subset_name = self.subset + "_groundingdata"
         with distributed_lock(
             self.name, timeout_s=self.load_examples_timeout_s, host_only=True
         ):
             dataset = datasets.load_dataset(
                 "DataRobot-Research/phantomwiki-001",
-                self.subset + "_groundingdata",
+                subset_name,
                 cache_dir=cfg.paths.huggingface_cache,
             )
 
-        return dataset[self.subset]
+        return dataset["train"]
 
     def _load_qa_dataset(self) -> datasets.Dataset:
+        subset_name = self.subset + "_qapairs"
+        # Load the dataset with the specified subset name
         with distributed_lock(
             self.name, timeout_s=self.load_examples_timeout_s, host_only=True
         ):
             dataset = datasets.load_dataset(
                 "DataRobot-Research/phantomwiki-001",
-                self.subset + "_qapairs",
+                subset_name,
                 cache_dir=cfg.paths.huggingface_cache,
             )
 
-        return dataset[self.subset]
+        return dataset["train"]
 
     @overrides
     def iter_grounding_data(self, partition="notused") -> T.Iterator[Document]:
