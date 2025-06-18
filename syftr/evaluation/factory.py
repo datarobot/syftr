@@ -16,10 +16,13 @@ from syftr.studies import Evaluation
 
 
 def json_parser_function(response: str) -> T.Tuple[T.Optional[float], T.Optional[str]]:
-    json_pattern = r"\{.*\}"
-    match = re.search(json_pattern, response)
-    if match:
-        json_str = match.group(0)
+    if re.search(r"\{[^{}]*\{", response):
+        logger.error("Nested JSON found in evaluator response: %s", response)
+        return None, None
+    json_pattern = r"\{[^{}]*\}"
+    matches = re.findall(json_pattern, response)
+    if matches:
+        json_str = matches[-1]
         try:
             response_dict = json.loads(json_str)
         except json.JSONDecodeError:
@@ -29,6 +32,11 @@ def json_parser_function(response: str) -> T.Tuple[T.Optional[float], T.Optional
         logger.error("No JSON found in evaluator response: %s", response)
         return None, None
     score = response_dict.get("score")
+    if score is not None:
+        try:
+            score = float(score)
+        except ValueError:
+            score = None
     reasoning = response_dict.get("reasoning")
     return score, reasoning
 
