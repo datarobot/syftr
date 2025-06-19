@@ -8,6 +8,7 @@ from syftr.storage import (
     HotPotQAHF,
     MultiHopRAGHF,
     PartitionMap,
+    PhantomWikiV001HF,
     PhantomWikiv050,
     SyntheticCragTask3HF,
     SyntheticFinanceBenchHF,
@@ -870,6 +871,45 @@ def test_bright_hf():
         print(f"Testing subset: {subset}")
         for partition in ["train", "test", "sample", "holdout"]:
             bright_ds = BrightHF(
+                partition_map=PartitionMap(test=partition), subset=subset
+            )
+
+            examples = list(bright_ds.iter_examples())
+            assert len(examples) > 0
+
+            docs = list(bright_ds.iter_grounding_data())
+            assert len(docs) > 0
+
+
+def test_phantomwikiv001_hf():
+    subsets = [
+        "depth_20_size_50_seed_595",
+        "depth_20_size_100_seed_595",
+        "depth_20_size_150_seed_595",
+        "depth_20_size_200_seed_595",
+        "depth_20_size_250_seed_595",
+        "depth_20_size_300_seed_595",
+        "depth_20_size_350_seed_595",
+        "depth_20_size_400_seed_595",
+        "depth_20_size_450_seed_595",
+        "depth_20_size_500_seed_595",
+        "depth_20_size_1000_seed_595",
+        "depth_20_size_1500_seed_595",
+        "depth_20_size_2000_seed_595",
+        "depth_20_size_2500_seed_595",
+        "depth_20_size_3000_seed_595",
+        "depth_20_size_3500_seed_595",
+        "depth_20_size_4000_seed_595",
+        "depth_20_size_4500_seed_595",
+        "depth_20_size_5000_seed_595",
+        "depth_20_size_10000_seed_595",
+        "depth_20_size_100000_seed_595",
+    ]
+
+    for subset in subsets:
+        print(f"Testing subset: {subset}")
+        for partition in ["train", "test", "sample", "holdout"]:
+            bright_ds = PhantomWikiV001HF(
                 partition_map=PartitionMap(test=partition), subset=subset
             )
 
