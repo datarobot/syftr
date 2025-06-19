@@ -30,7 +30,7 @@ gcp_vertex:
   #     "universe_domain": "googleapis.com"
   #   }
 
-generative_models:
+# generative_models:
   # # azure_openai Provider Example
   # azure_gpt_35_turbo:
   #   provider: azure_openai            # Client type to use (required)
