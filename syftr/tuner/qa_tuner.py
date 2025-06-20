@@ -306,6 +306,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     additional_context_num_nodes=additional_context_num_nodes,
                     dataset_name=study_config.dataset.name,
                     dataset_description=study_config.dataset.description,
+                    enable_calculator=params["coa_enable_calculator"],
                     enforce_full_evaluation=enforce_full_evaluation,
                     params=params,
                 )

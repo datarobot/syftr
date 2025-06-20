@@ -444,15 +444,6 @@ wheels = [
 ]
 
 [[package]]
-name = "asyncio"
-version = "3.4.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/da/54/054bafaf2c0fb8473d423743e191fcdf49b2c1fd5e9af3524efbe097bafd/asyncio-3.4.3.tar.gz", hash = "sha256:83360ff8bc97980e4ff25c964c7bd3923d333d177aa4f7fb736b019f26c7cb41", size = 204411, upload-time = "2015-03-10T14:11:26.494Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/22/74/07679c5b9f98a7cb0fc147b1ef1cc1853bc07a4eb9cb5731e24732c5f773/asyncio-3.4.3-py3-none-any.whl", hash = "sha256:c4d18b22701821de07bd6aea8b53d21449ec0ec5680645e5317062ea21817d2d", size = 101767, upload-time = "2015-03-10T14:05:10.959Z" },
-]
-
-[[package]]
 name = "attrs"
 version = "25.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2686,6 +2677,18 @@ wheels = [
 ]
 
 [[package]]
+name = "llama-index-agent-coa"
+version = "0.3.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "llama-index-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b3/e5/89bd0f7710c5adbf4a2cf91b94e974b88b44e98597f6800f093ad68303f4/llama_index_agent_coa-0.3.2.tar.gz", hash = "sha256:65cdc64ee2032557dd639b34e9e9e0619bbc6122399e3bcf23a254b544fcd51a", size = 8686, upload-time = "2025-06-20T05:18:27.204Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/80/bc/62652798721648e694694be915b102fbc28769712ae7c3eb7f4707998620/llama_index_agent_coa-0.3.2-py3-none-any.whl", hash = "sha256:9cf077a629252d61cb95abfe7233d43dd9facf4d0052e58cf57f23f8f118f786", size = 9197, upload-time = "2025-06-20T05:18:26.17Z" },
+]
+
+[[package]]
 name = "llama-index-agent-introspective"
 version = "0.3.1"
 source = { registry = "https://pypi.org/simple" }
@@ -3057,14 +3060,14 @@ wheels = [
 
 [[package]]
 name = "llama-index-packs-agents-coa"
-version = "0.3.0"
+version = "0.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fc/2c/60ce86dcfd3eaa026429016e0e0f5d0f709ff4937e36adc6b68ffa575c60/llama_index_packs_agents_coa-0.3.0.tar.gz", hash = "sha256:d9b24a677fee380b2a109c456ab02b2e33dc8e460ff8f634f28f1cfdb019ded3", size = 8378, upload-time = "2024-11-17T22:43:43.427Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/29/23/66210d1b726a1e36c76c61db15c854880a16853ce6119b35ca31dde75bd0/llama_index_packs_agents_coa-0.3.2.tar.gz", hash = "sha256:b1b80b720119528efb1c195d47bfcc057eb139169a3a9db35e4f7d48235e05ae", size = 8970, upload-time = "2025-06-20T05:18:30.82Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/50/6070836c5e6026691de672bc2bbe9688d783e6845aa470d9811ced696bed/llama_index_packs_agents_coa-0.3.0-py3-none-any.whl", hash = "sha256:b4f4928293eb97d707166d5fa1e3084c452535573d60bc2186585d6631d1a50c", size = 9236, upload-time = "2024-11-17T22:43:41.822Z" },
+    { url = "https://files.pythonhosted.org/packages/0e/ba/6b88ff36acae4331f31214aa6f5c88c2adf44950f85a130b3c5d7df00acb/llama_index_packs_agents_coa-0.3.2-py3-none-any.whl", hash = "sha256:75960767cf30971016d2997e0f6642d1074b21273e9ec65f032dce0c26b3c09d", size = 10170, upload-time = "2025-06-20T05:18:29.753Z" },
 ]
 
 [[package]]
@@ -6168,7 +6171,6 @@ source = { editable = "." }
 dependencies = [
     { name = "aiolimiter" },
     { name = "arize-phoenix" },
-    { name = "asyncio" },
     { name = "boto3" },
     { name = "botocore" },
     { name = "click" },
@@ -6190,6 +6192,7 @@ dependencies = [
     { name = "langchain" },
     { name = "langchain-community" },
     { name = "llama-index" },
+    { name = "llama-index-agent-coa" },
     { name = "llama-index-agent-introspective" },
     { name = "llama-index-agent-lats" },
     { name = "llama-index-agent-openai" },
@@ -6310,7 +6313,6 @@ requires-dist = [
     { name = "altair", marker = "extra == 'dev'" },
     { name = "ansible", marker = "extra == 'dev'" },
     { name = "arize-phoenix" },
-    { name = "asyncio" },
     { name = "beautifulsoup4", marker = "extra == 'dev'" },
     { name = "boto3" },
     { name = "botocore" },
@@ -6340,6 +6342,7 @@ requires-dist = [
     { name = "langchain", specifier = ">0.3" },
     { name = "langchain-community" },
     { name = "llama-index" },
+    { name = "llama-index-agent-coa", specifier = ">=0.3.2" },
     { name = "llama-index-agent-introspective" },
     { name = "llama-index-agent-lats" },
     { name = "llama-index-agent-openai" },
@@ -6364,7 +6367,7 @@ requires-dist = [
     { name = "llama-index-llms-vertex", specifier = "==0.4.3" },
     { name = "llama-index-llms-vllm" },
     { name = "llama-index-multi-modal-llms-openai" },
-    { name = "llama-index-packs-agents-coa" },
+    { name = "llama-index-packs-agents-coa", specifier = ">=0.3.2" },
     { name = "llama-index-program-openai" },
     { name = "llama-index-question-gen-openai" },
     { name = "llama-index-readers-file" },

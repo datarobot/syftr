@@ -92,3 +92,8 @@ def test_coa_agent_flow(coa_agent_flow, llama_debug):
         assert llama_debug.get_event_pairs(CBEventType.QUERY)
         assert llama_debug.get_event_pairs(CBEventType.AGENT_STEP)
         assert llama_debug.get_event_pairs(CBEventType.SYNTHESIZE)
+
+    # test more complex CoA flow
+    _, _, call_data = flow.generate(
+        "what is 123.123*101.101 and what is its product with 12345. then what is 415.151 - 128.24 and what is its product with the previous product?"
+    )

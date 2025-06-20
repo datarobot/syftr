@@ -287,6 +287,7 @@ def coa_agent_flow(
         template=rag_template,
         dataset_name=study_config.dataset.name,
         dataset_description=study_config.dataset.description,
+        enable_calculator=True,
     ), study_config
 
 
