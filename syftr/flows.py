@@ -723,4 +723,5 @@ class Flows(Enum):
     LLAMA_INDEX_CRITIQUE_AGENT_FLOW = CritiqueAgentFlow
     LLAMA_INDEX_SUB_QUESTION_FLOW = SubQuestionRAGFlow
     LLAMA_INDEX_LATS_RAG_AGENT = LATSAgentFlow
+    LLAMA_INDEX_COA_RAG_AGENT = CoAAgentFlow
     RETRIEVER_FLOW = RetrieverFlow

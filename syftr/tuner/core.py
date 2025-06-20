@@ -32,6 +32,8 @@ def get_flow_name(rag_mode: str):
             return Flows.LLAMA_INDEX_CRITIQUE_AGENT_FLOW.value.__name__
         case "lats_rag_agent":
             return Flows.LLAMA_INDEX_LATS_RAG_AGENT.value.__name__
+        case "coa_rag_agent":
+            return Flows.LLAMA_INDEX_COA_RAG_AGENT.value.__name__
         case _:
             raise RuntimeError("Cannot identify flow")
 
