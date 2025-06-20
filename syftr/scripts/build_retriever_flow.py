@@ -55,6 +55,7 @@ def main(
         retriever, docstore = build_dummy_retriever(study_config)
         flow = RetrieverFlow(
             response_synthesizer_llm=get_llm("gpt-4o-mini"),
+            template="default",
             retriever=retriever,
             docstore=docstore,
             hyde_llm=None,

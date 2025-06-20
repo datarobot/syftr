@@ -1,8 +1,8 @@
 import hashlib
 import io
 import json
+import typing as T
 from contextlib import contextmanager
-from typing import Any, Dict, Optional
 
 import cloudpickle
 import diskcache
@@ -21,7 +21,7 @@ RETRIEVER_CACHE_VERSION = 1
 
 
 @contextmanager
-def get_retrieval_cache_key(question: str, retriever_params_dict: Dict[str, Any]):
+def get_retrieval_cache_key(question: str, retriever_params_dict: T.Dict[str, T.Any]):
     """
     Build a cache key from question text and retriever params.
     """
@@ -35,7 +35,7 @@ def get_retrieval_cache_key(question: str, retriever_params_dict: Dict[str, Any]
 
 def get_retriever_fingerprint(
     study_config: StudyConfig, params: ParamDict
-) -> Dict[str, Any]:
+) -> T.Dict[str, T.Any]:
     param_names = [
         "hyde_enabled",
         "additional_context_enabled",
@@ -78,7 +78,7 @@ def local_retrieval_cache():
         yield cache
 
 
-def put_retrieval_cache(cache_key: str, obj: Any, local_only: bool = False):
+def put_retrieval_cache(cache_key: str, obj: T.Any, local_only: bool = False):
     """
     Mirror to both diskcache & S3 under “retrieval_cache/{cache_key}.pkl”.
     """
@@ -112,7 +112,7 @@ def put_retrieval_cache(cache_key: str, obj: Any, local_only: bool = False):
         logger.info("Done storing object to S3")
 
 
-def get_retrieval_cache(cache_key: str) -> Optional[Any]:
+def get_retrieval_cache(cache_key: str) -> T.Optional[T.Any]:
     """
     First check diskcache, then fall back to S3. Returns the retrieved list
     (NodeWithScore) or None if missing.
