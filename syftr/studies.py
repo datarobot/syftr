@@ -1622,8 +1622,8 @@ class StudyConfig(BaseSettings):
     toy_mode: bool = Field(
         default=False, description="Whether to run in toy mode (with smaller dataset)."
     )
-    cache_query_responses: bool = Field(
-        default=True, description="Whether to cache queries and retrieval responses."
+    retriever_cache_enabled: bool = Field(
+        default=False, description="Enable caching of queries and retrieval responses."
     )
 
     model_config = SettingsConfigDict(

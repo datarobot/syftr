@@ -130,14 +130,16 @@ class Flow:
     ) -> T.Tuple[CompletionResponse, float, T.List[LLMCallData]]:
         invocation_id = uuid4().hex
         self._llm_call_data[invocation_id] = []
-        response, duration = self._generate(query, invocation_id)
+        response, duration, retrieval_call_data = self._generate(query, invocation_id)
         call_data = self._llm_call_data.pop(invocation_id)
+        if retrieval_call_data:
+            call_data.extend(retrieval_call_data)
         return response, duration, call_data
 
     @dispatcher.span
     def _generate(
         self, query: str, invocation_id: str
-    ) -> T.Tuple[CompletionResponse, float]:
+    ) -> T.Tuple[CompletionResponse, float, T.List[LLMCallData]]:
         assert self.response_synthesizer_llm is not None, (
             "Response synthesizer LLM is not set. Cannot generate."
         )
@@ -145,21 +147,25 @@ class Flow:
         prompt = self.get_prompt(query)
         response: CompletionResponse = self.response_synthesizer_llm.complete(prompt)
         duration = time.perf_counter() - start_time
-        return response, duration
+        return response, duration, []
 
     async def agenerate(
         self, query: str
     ) -> T.Tuple[CompletionResponse, float, T.List[LLMCallData]]:
         invocation_id = uuid4().hex
         self._llm_call_data[invocation_id] = []
-        response, duration = await self._agenerate(query, invocation_id)
+        response, duration, retrieval_call_data = await self._agenerate(
+            query, invocation_id
+        )
         call_data = self._llm_call_data.pop(invocation_id)
+        if retrieval_call_data:
+            call_data.extend(retrieval_call_data)
         return response, duration, call_data
 
     @dispatcher.span
     async def _agenerate(
         self, query: str, invocation_id: str
-    ) -> T.Tuple[CompletionResponse, float]:
+    ) -> T.Tuple[CompletionResponse, float, T.List[LLMCallData]]:
         assert self.response_synthesizer_llm is not None, (
             "Response synthesizer LLM is not set. Cannot generate."
         )
@@ -169,7 +175,7 @@ class Flow:
             prompt
         )
         duration = time.perf_counter() - start_time
-        return response, duration
+        return response, duration, []
 
 
 @dataclass(kw_only=True)
@@ -228,75 +234,88 @@ class RetrieverFlow(Flow):
     async def _agenerate(self, query: str, *args, **kwargs):
         raise NotImplementedError("RetrieverFlow does not support generation.")
 
-    @dispatcher.span
-    def retrieve(self, query: str) -> T.Tuple[T.List[NodeWithScore], float]:
+    def _check_cache(
+        self, query: str
+    ) -> T.Optional[T.Tuple[T.List[NodeWithScore], float, T.List[LLMCallData]]]:
+        """Check the cache for the result of a query.
+
+        Returns the retrieval information if present, otherwise, None.
+        """
         if self.retriever_cache_fingerprint:
-            return self.cached_retrieve(query)
+            with get_retrieval_cache_key(
+                query, self.retriever_cache_fingerprint
+            ) as key:
+                if (retrieval_result := get_retrieval_cache(key)) is not None:
+                    logger.info(f"Retriever cache hit: {query}")
+                    nodes, duration, call_data = retrieval_result
+                    return nodes, duration, call_data
+                else:
+                    logger.info(f"Retriever cache miss: {query}")
+        return None
+
+    def _put_cache(
+        self,
+        query: str,
+        nodes: T.List[NodeWithScore],
+        duration: float,
+        call_data: T.List[LLMCallData],
+    ) -> None:
+        """Store values in the retrieval cache."""
+        if not self.retriever_cache_fingerprint:
+            return
+        with get_retrieval_cache_key(query, self.retriever_cache_fingerprint) as key:
+            put_retrieval_cache(key, (nodes, duration, call_data))
+
+    def retrieve(
+        self, query: str
+    ) -> T.Tuple[T.List[NodeWithScore], float, T.List[LLMCallData]]:
+        if (retrieval_result := self._check_cache(query)) is not None:
+            return retrieval_result
+        invocation_id = uuid4().hex
+        self._llm_call_data[invocation_id] = []
+        nodes, duration = self._retrieve(query, invocation_id)
+        call_data = self._llm_call_data.pop(invocation_id)
+        self._put_cache(query, nodes, duration, call_data)
+        return nodes, duration, call_data
+
+    @dispatcher.span
+    def _retrieve(
+        self, query: str, invocation_id: str
+    ) -> T.Tuple[T.List[NodeWithScore], float]:
         start_time = time.perf_counter()
         qb = QueryBundle(query)
-        retrieval_result = self.query_engine.retrieve(qb)
+        nodes = self.query_engine.retrieve(qb)
         duration = time.perf_counter() - start_time
-        return retrieval_result, duration
+        return nodes, duration
+
+    async def aretrieve(
+        self, query: str
+    ) -> T.Tuple[T.List[NodeWithScore], float, T.List[LLMCallData]]:
+        if (retrieval_result := self._check_cache(query)) is not None:
+            return retrieval_result
+        invocation_id = uuid4().hex
+        self._llm_call_data[invocation_id] = []
+        nodes, duration = await self._aretrieve(query, invocation_id)
+        call_data = self._llm_call_data.pop(invocation_id)
+        self._put_cache(query, nodes, duration, call_data)
+        return nodes, duration, call_data
 
     @dispatcher.span
-    def cached_retrieve(self, query: str) -> T.Tuple[T.List[NodeWithScore], float]:
-        assert self.retriever_cache_fingerprint, (
-            "Retriever fingerprint must be set to use cache."
-        )
-        start_time = time.perf_counter()
-        with get_retrieval_cache_key(query, self.retriever_cache_fingerprint) as key:
-            if (retrieval_result := get_retrieval_cache(key)) is not None:
-                logger.debug(f"Retriever cache hit: {query}")
-            else:
-                logger.debug(f"Retriever cache miss: {query}")
-                qb = QueryBundle(query)
-                retrieval_result = self.query_engine.retrieve(qb)
-                put_retrieval_cache(key, retrieval_result)
-        duration = time.perf_counter() - start_time
-        return retrieval_result, duration
-
-    @dispatcher.span
-    async def aretrieve(self, query: str) -> T.Tuple[T.List[NodeWithScore], float]:
-        if self.retriever_cache_fingerprint:
-            return await self.cached_aretrieve(query)
+    async def _aretrieve(
+        self, query: str, invocation_id: str
+    ) -> T.Tuple[T.List[NodeWithScore], float]:
         start_time = time.perf_counter()
         qb = QueryBundle(query)
         if isinstance(self.query_engine, TransformQueryEngine):
             # TransformQueryEngine does not have aretrieve method
-            retrieval_result = self.query_engine.retrieve(qb)
+            nodes = self.query_engine.retrieve(qb)
         else:
             assert hasattr(self.query_engine, "aretrieve"), (
                 f"{self.query_engine} does not have 'aretrieve' method"
             )
-            retrieval_result = await self.query_engine.aretrieve(qb)
+            nodes = await self.query_engine.aretrieve(qb)
         duration = time.perf_counter() - start_time
-        return retrieval_result, duration
-
-    @dispatcher.span
-    async def cached_aretrieve(
-        self, query: str
-    ) -> T.Tuple[T.List[NodeWithScore], float]:
-        assert self.retriever_cache_fingerprint, (
-            "Retriever fingerprint must be set to use cache."
-        )
-        start_time = time.perf_counter()
-        with get_retrieval_cache_key(query, self.retriever_cache_fingerprint) as key:
-            if (retrieval_result := get_retrieval_cache(key)) is not None:
-                logger.info(f"Retriever cache hit: {query}")
-            else:
-                logger.info(f"Retriever cache miss: {query}")
-                qb = QueryBundle(query)
-                if isinstance(self.query_engine, TransformQueryEngine):
-                    # TransformQueryEngine does not have aretrieve method
-                    retrieval_result = self.query_engine.retrieve(qb)
-                else:
-                    assert hasattr(self.query_engine, "aretrieve"), (
-                        f"{self.query_engine} does not have 'aretrieve' method"
-                    )
-                    retrieval_result = await self.query_engine.aretrieve(qb)
-                put_retrieval_cache(key, retrieval_result)
-        duration = time.perf_counter() - start_time
-        return retrieval_result, duration
+        return nodes, duration
 
 
 @dataclass(kw_only=True)
@@ -338,9 +357,9 @@ class RAGFlow(RetrieverFlow):
     @dispatcher.span
     def _generate(
         self, query: str, invocation_id: str
-    ) -> T.Tuple[CompletionResponse, float]:
+    ) -> T.Tuple[CompletionResponse, float, T.List[LLMCallData]]:
+        nodes, retrieval_duration, retrieval_call_data = self.retrieve(query)
         start_time = time.perf_counter()
-        nodes, _ = self.retrieve(query)
         response = self.query_engine.synthesize(
             query_bundle=QueryBundle(query),
             nodes=nodes,
@@ -355,15 +374,15 @@ class RAGFlow(RetrieverFlow):
                 **(response.metadata or {}),  # type: ignore
             },
         )
-        duration = time.perf_counter() - start_time
-        return completion_response, duration
+        duration = time.perf_counter() - start_time + retrieval_duration
+        return completion_response, duration, retrieval_call_data
 
     @dispatcher.span
     async def _agenerate(
         self, query: str, invocation_id: str
-    ) -> T.Tuple[CompletionResponse, float]:
+    ) -> T.Tuple[CompletionResponse, float, T.List[LLMCallData]]:
+        nodes, retrieval_duration, retrieval_call_data = await self.aretrieve(query)
         start_time = time.perf_counter()
-        nodes, _ = await self.aretrieve(query)
         response = await self.query_engine.asynthesize(
             query_bundle=QueryBundle(query),
             nodes=nodes,
@@ -381,8 +400,8 @@ class RAGFlow(RetrieverFlow):
                 **(response.metadata or {}),
             },
         )
-        duration = time.perf_counter() - start_time
-        return completion_response, duration
+        duration = time.perf_counter() - start_time + retrieval_duration
+        return completion_response, duration, retrieval_call_data
 
 
 @dataclass(kw_only=True)
@@ -488,7 +507,7 @@ class AgenticRAGFlow(RAGFlow):
         self,
         query: str,
         invocation_id: str,
-    ) -> T.Tuple[CompletionResponse, float]:
+    ) -> T.Tuple[CompletionResponse, float, T.List[LLMCallData]]:
         start_time = time.perf_counter()
         response: AgentChatResponse = self.agent.chat(query)
         try:
@@ -500,14 +519,14 @@ class AgenticRAGFlow(RAGFlow):
             logger.error("Incorrect response from an agent: %s", response)
             raise
         duration = time.perf_counter() - start_time
-        return completion_response, duration
+        return completion_response, duration, []
 
     @dispatcher.span
     async def _agenerate(
         self,
         query: str,
         invocation_id: str,
-    ) -> T.Tuple[CompletionResponse, float]:
+    ) -> T.Tuple[CompletionResponse, float, T.List[LLMCallData]]:
         start_time = time.perf_counter()
         response: AgentChatResponse = await self.agent.achat(query)
         try:
@@ -518,7 +537,7 @@ class AgenticRAGFlow(RAGFlow):
             logger.error("Incorrect response from an agent: %s", response)
             raise
         duration = time.perf_counter() - start_time
-        return completion_response, duration
+        return completion_response, duration, []
 
 
 @dataclass(kw_only=True)

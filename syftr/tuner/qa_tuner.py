@@ -126,19 +126,23 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
 
     response_synthesizer_llm = get_llm(params["response_synthesizer_llm"])
     enforce_full_evaluation = params.get("enforce_full_evaluation", False)
+    if study_config.retriever_cache_enabled:
+        retriever_cache_fingerprint = get_retriever_fingerprint(study_config, params)
+        logger.info(
+            f"Retriever caching enabled with fingerprint {retriever_cache_fingerprint}"
+        )
+    else:
+        retriever_cache_fingerprint = None
+        logger.info("Retriever caching disabled")
 
     if study_config.is_retriever_study:
-        retriever_cache_fingerprint = (
-            get_retriever_fingerprint(study_config, params)
-            if study_config.cache_query_responses
-            else None
-        )
         hyde_llm = (
             get_llm(params["hyde_llm_name"]) if params.get("hyde_enabled") else None
         )
         retriever, docstore = build_rag_retriever(study_config, params)
         return RetrieverFlow(
             response_synthesizer_llm=response_synthesizer_llm,
+            template=params.get("template_name", "default"),
             retriever=retriever,
             docstore=docstore,
             hyde_llm=hyde_llm,
@@ -179,11 +183,6 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
             enforce_full_evaluation=enforce_full_evaluation,
         )
     else:
-        retriever_cache_fingerprint = (
-            get_retriever_fingerprint(study_config, params)
-            if study_config.cache_query_responses
-            else None
-        )
         hyde_llm = reranker_llm = reranker_top_k = None
         if params.get("hyde_enabled"):
             hyde_llm = get_llm(params["hyde_llm_name"])
