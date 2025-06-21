@@ -499,7 +499,7 @@ You can run this script again to check your progress after addressing the issues
         console.print("You can edit it and then run it from your project root with:")
         console.print()
         console.print(
-            f"[yellow]python -m syftr.ray.submit --study-config {paths[0]}[/yellow]"
+            f"[yellow]syftr run {paths[0]} --follow[/yellow]"
         )
         console.print()
         console.print("The configuration as is would (re)create a study with name:")
