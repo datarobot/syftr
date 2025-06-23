@@ -9,12 +9,16 @@ def test_json_parser__valid_json():
     assert score == 0.8
     assert reasoning == "Looks good."
 
-
-def test_json_parser__incomplete_json():
-    response = 'Some text before {"score": 0.8, "reasoning": "Looks good."'
-    score, reasoning = json_parser_function(response)
-    assert score is None
-    assert reasoning is None
+@pytest.mark.parametrize("data,expected_score,expected_reasoning",
+    [
+        ('Some text before {"score": 0.8, "reasoning": "Looks good."', None, None),
+        ...
+    ]
+)
+def test_json_parser__incomplete_json(data,expected_score,expected_reasoning):
+    score, reasoning = json_parser_function(data)
+    assert score == expected_score
+    assert reasoning == expected_reasoning
 
 
 def test_json_parser__multiple_json_objects():
