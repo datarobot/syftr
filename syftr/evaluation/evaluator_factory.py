@@ -46,6 +46,10 @@ class EvaluatorFactory:
         self,
         study_config: T.Union[StudyConfig, AgentStudyConfig],
     ):
+        assert isinstance(study_config, StudyConfig), (
+            "AgentStudyConfig needs to provide dataset information."
+        )
+
         self.llm_names = study_config.evaluation.llms
         self.eval_type = study_config.evaluation.eval_type
         self.eval_system_template = study_config.evaluation.eval_system_template
