@@ -165,15 +165,16 @@ index c8cb093..53f06d9 100644
  def cot_template():
      return get_template("CoT", with_context=False)
 diff --git a/tests/functional/flows/test_agentic_rag.py b/tests/functional/flows/test_agentic_rag.py
-index 04ac3bb..37c0d39 100644
+index 04ac3bb..bbaa63f 100644
 --- a/tests/functional/flows/test_agentic_rag.py
 +++ b/tests/functional/flows/test_agentic_rag.py
-@@ -81,3 +81,19 @@ def test_react_agent_flow_hybrid_hyde_reranker_few_shot(
+@@ -81,3 +81,24 @@ def test_react_agent_flow_hybrid_hyde_reranker_few_shot(
      for question, _ in QA_PAIRS[study_config.dataset.name]:
          flow.generate(question)
      assert llama_debug.get_event_pairs(CBEventType.AGENT_STEP)
 +
 +
++@pytest.mark.flaky(reruns=4, reruns_delay=2)
 +def test_coa_agent_flow(coa_agent_flow, llama_debug):
 +    flow, study_config = coa_agent_flow
 +    for question, _ in QA_PAIRS[study_config.dataset.name]:
@@ -184,10 +185,26 @@ index 04ac3bb..37c0d39 100644
 +        assert llama_debug.get_event_pairs(CBEventType.AGENT_STEP)
 +        assert llama_debug.get_event_pairs(CBEventType.SYNTHESIZE)
 +
-+    # test more complex CoA flow
-+    _, _, call_data = flow.generate(
-+        "what is 123.123*101.101 and what is its product with 12345. then what is 415.151 - 128.24 and what is its product with the previous product?"
++
++def test_coa_agent_flow_math(coa_agent_flow, llama_debug):
++    flow, study_config = coa_agent_flow
++    response, _, _ = flow.generate(
++        "what is 123.123*101.101 and what is its product with 12345. "
++        "then what is 415.151 - 128.24 and what is its product with the previous product?"
 +    )
++    assert str((123.123 * 101.101) * 12345 * (415.151 - 128.24)) in response.text
+diff --git a/tests/unit/test_studies.py b/tests/unit/test_studies.py
+index 9ff67ee..2775faa 100644
+--- a/tests/unit/test_studies.py
++++ b/tests/unit/test_studies.py
+@@ -26,6 +26,7 @@ def test_params():
+         [
+             "additional_context_enabled",
+             "additional_context_num_nodes",
++            "coa_enable_calculator",
+             "critique_agent_llm",
+             "few_shot_embedding_model",
+             "few_shot_enabled",
 ```
 
 ## Add CoAAgentFlow to syftr `build_flow` function
