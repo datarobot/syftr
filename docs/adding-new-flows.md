@@ -65,7 +65,7 @@ index c0d22bd..4d86fb8 100644
 +
 +    @cached_property
 +    def tools(self) -> T.List[BaseTool]:
-+        tools = [
++        tools: T.List[BaseTool] = [
 +            QueryEngineTool(
 +                query_engine=self.query_engine,
 +                metadata=ToolMetadata(
@@ -189,3 +189,190 @@ index 04ac3bb..37c0d39 100644
 +        "what is 123.123*101.101 and what is its product with 12345. then what is 415.151 - 128.24 and what is its product with the previous product?"
 +    )
 ```
+
+## Add CoAAgentFlow to syftr `build_flow` function
+
+This change allows syftr to construct our new flow class when `build_flow` gets `params['rag_mode'] == 'coa_rag_agent'`.
+
+Also note that the `params["coa_enable_calculator"]` key will not be set yet.
+This value is still not added to our search space - this is what we'll tackle next.
+
+
+```diff
+diff --git a/syftr/tuner/qa_tuner.py b/syftr/tuner/qa_tuner.py
+index ee99b24..73a2e68 100644
+--- a/syftr/tuner/qa_tuner.py
++++ b/syftr/tuner/qa_tuner.py
+@@ -21,6 +21,7 @@ from ray.util import state
+ from syftr.baselines import set_baselines
+ from syftr.evaluation import eval_dataset
+ from syftr.flows import (
++    CoAAgentFlow,
+     CritiqueAgentFlow,
+     Flow,
+     LATSAgentFlow,
+@@ -292,6 +293,23 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
+                     enforce_full_evaluation=enforce_full_evaluation,
+                     params=params,
+                 )
++            case "coa_rag_agent":
++                flow = CoAAgentFlow(
++                    retriever=rag_retriever,
++                    response_synthesizer_llm=response_synthesizer_llm,
++                    docstore=rag_docstore,
++                    template=template,
++                    get_examples=get_qa_examples,
++                    hyde_llm=hyde_llm,
++                    reranker_llm=reranker_llm,
++                    reranker_top_k=reranker_top_k,
++                    additional_context_num_nodes=additional_context_num_nodes,
++                    dataset_name=study_config.dataset.name,
++                    dataset_description=study_config.dataset.description,
++                    enable_calculator=params["coa_enable_calculator"],
++                    enforce_full_evaluation=enforce_full_evaluation,
++                    params=params,
++                )
+             case _:
+                 raise ValueError(f"Invalid rag_mode: {params['rag_mode']}")
+ ```
+
+## Add `coa_rag_agent` to the search space.
+
+First we add the `coa_rag_agent` option into the list of default `RAG_MODES`.
+That's all we need to do to enable this new agent to be selected in the search space.
+
+However, since our agent also has special configuration the `enable_calculator` flag), we create a new subspace for the `CoARagAgent` and incorporate it into the main `SearchSpace` class.
+
+We follow the pattern of the `LATSRagAgent` class here, adding the new agent type to the class defaults, distributions, sampling, and cardinality methods.
+
+```diff
+diff --git a/syftr/studies.py b/syftr/studies.py
+index 9559567..c2fdd2a 100644
+--- a/syftr/studies.py
++++ b/syftr/studies.py
+@@ -302,6 +302,7 @@ RAG_MODES: T.List[str] = [
+     "critique_rag_agent",
+     "sub_question_rag",
+     "lats_rag_agent",
++    "coa_rag_agent",
+     "no_rag",
+ ]
+ 
+@@ -874,6 +875,28 @@ class LATSRagAgent(BaseModel, SearchSpaceMixin):
+         return card
+ 
+ 
++class CoARagAgent(BaseModel, SearchSpaceMixin):
++    enable_calculator: T.List[bool] = Field(
++        default_factory=lambda: [False, True],
++        description="Enable calcuator tools for CoA agent.",
++    )
++
++    def defaults(self, prefix: str = "") -> T.Dict[str, T.Any]:
++        return {
++            f"{prefix}coa_enable_calculator": False,
++        }
++
++    def build_distributions(self, prefix: str = "") -> T.Dict[str, BaseDistribution]:
++        return {
++            f"{prefix}coa_enable_calculator": CategoricalDistribution(
++                self.enable_calculator,
++            ),
++        }
++
++    def get_cardinality(self) -> int:
++        return len(self.enable_calculator)
++
++
+ class SearchSpace(BaseModel):
+     model_config = ConfigDict(extra="forbid")  # Forbids unknown fields
+     non_search_space_params: T.List[str] = Field(
+@@ -945,6 +968,10 @@ class SearchSpace(BaseModel):
+         default_factory=LATSRagAgent,
+         description="Configuration for the LATS RAG agent.",
+     )
++    coa_rag_agent: CoARagAgent = Field(
++        default_factory=CoARagAgent,
++        description="Configuration for the CoA RAG agent.",
++    )
+     _custom_defaults: ParamDict = {}
+ 
+     def _defaults(self) -> ParamDict:
+@@ -962,6 +989,7 @@ class SearchSpace(BaseModel):
+             **self.critique_rag_agent.defaults(),
+             **self.sub_question_rag.defaults(),
+             **self.lats_rag_agent.defaults(),
++            **self.coa_rag_agent.defaults(),
+         }
+ 
+     def update_defaults(self, defaults: ParamDict) -> None:
+@@ -1009,6 +1037,7 @@ class SearchSpace(BaseModel):
+         distributions.update(self.critique_rag_agent.build_distributions())
+         distributions.update(self.sub_question_rag.build_distributions())
+         distributions.update(self.lats_rag_agent.build_distributions())
++        distributions.update(self.coa_rag_agent.build_distributions())
+ 
+         if params is not None:
+             reduced_distributions = {
+@@ -1105,7 +1134,11 @@ class SearchSpace(BaseModel):
+                 params.update(**self.lats_rag_agent.sample(trial))
+             else:
+                 params.update(**self.lats_rag_agent.defaults())
+-            params.update(**self.lats_rag_agent.sample(trial))
++        elif params["rag_mode"] == "coa_rag_agent":
++            if "coa_rag_agent" in parameters:
++                params.update(**self.coa_rag_agent.sample(trial))
++            else:
++                params.update(**self.coa_rag_agent.defaults())
+ 
+         if few_shot_enabled := trial.suggest_categorical(
+             "few_shot_enabled", self.few_shot_enabled
+@@ -1144,6 +1177,8 @@ class SearchSpace(BaseModel):
+                 sub_card *= self.sub_question_rag.get_cardinality()
+             elif rag_mode == "lats_rag_agent":
+                 sub_card *= self.lats_rag_agent.get_cardinality()
++            elif rag_mode == "coa_rag_agent":
++                sub_card *= self.coa_rag_agent.get_cardinality()
+ 
+             if True in self.few_shot_enabled:
+                 sub_card *= self.few_shot_retriever.get_cardinality()
+```
+
+## Final details
+
+Finally, the flow must be added to the `get_flow_name` function.
+
+And nice-to-have, but not strictly required, we add the flow into the baselines, ensuring that it will run during seeding if the agent is part of the search space.
+This is not strictly necessary, but helps ensure Optuna sees an instance of the agent before beginning the optimization phase.
+
+## Testing
+
+Finally, we run a study with the new flow enabled to validate that the flow is functional and gets a reasonable level of performance.
+
+To most efficiently test this, we only enable the `coa_rag_agent` RAG mode.
+
+```yaml
+---
+name: "coa-rag-agent-test-a100"
+dataset:
+  xname: "financebench_hf"
+
+reuse_study: true
+
+optimization:
+  cpus_per_trial: 1
+  gpus_per_trial: 0.2
+  max_concurrent_trials: 25
+  num_eval_samples: 100
+  num_retries_unique_params: 10
+  num_trials: 100
+
+search_space:
+  rag_modes:
+  - "coa_rag_agent"
+```
+
+After 100 trials with small LLMs, we achieve a top accuracy of 47% on FinanceBench at a few cents per call.
+While this isn't a great score, it's to be expected with such a small study and lower-capability LLMs like Claude Haiku and gpt-4o-mini.
+
+At lower accuracies, this flow is Pareto-competitive with other agents.
