@@ -238,9 +238,16 @@ def get_name(study_name: str, titles=None) -> str:
         name += "InfiniteBench"
     elif "drdocs" in study_name:
         name += "DRDocs"
-    elif "crag-" in study_name:
+    elif "bright-" in study_name:
+        name += "Bright "
+        name += study_name.split("-")[-1].capitalize()
+    elif "crag-" in study_name or "crag_" in study_name:
         name += "CRAG3 "
         name += study_name.split("-")[-1].capitalize()
+    elif "phantomwiki" in study_name:
+        name += "PhantomWiki"
+    elif "multihoprag" in study_name:
+        name += "MultihopRAQ"
     else:
         print(f"WARNING: please add '{study_name}' to the benchmark_name() function.")
         if "--" in study_name:

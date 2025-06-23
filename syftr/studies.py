@@ -302,6 +302,7 @@ RAG_MODES: T.List[str] = [
     "critique_rag_agent",
     "sub_question_rag",
     "lats_rag_agent",
+    "coa_rag_agent",
     "no_rag",
 ]
 
@@ -874,6 +875,28 @@ class LATSRagAgent(BaseModel, SearchSpaceMixin):
         return card
 
 
+class CoARagAgent(BaseModel, SearchSpaceMixin):
+    enable_calculator: T.List[bool] = Field(
+        default_factory=lambda: [False, True],
+        description="Enable calcuator tools for CoA agent.",
+    )
+
+    def defaults(self, prefix: str = "") -> T.Dict[str, T.Any]:
+        return {
+            f"{prefix}coa_enable_calculator": False,
+        }
+
+    def build_distributions(self, prefix: str = "") -> T.Dict[str, BaseDistribution]:
+        return {
+            f"{prefix}coa_enable_calculator": CategoricalDistribution(
+                self.enable_calculator,
+            ),
+        }
+
+    def get_cardinality(self) -> int:
+        return len(self.enable_calculator)
+
+
 class SearchSpace(BaseModel):
     model_config = ConfigDict(extra="forbid")  # Forbids unknown fields
     non_search_space_params: T.List[str] = Field(
@@ -945,6 +968,10 @@ class SearchSpace(BaseModel):
         default_factory=LATSRagAgent,
         description="Configuration for the LATS RAG agent.",
     )
+    coa_rag_agent: CoARagAgent = Field(
+        default_factory=CoARagAgent,
+        description="Configuration for the CoA RAG agent.",
+    )
     _custom_defaults: ParamDict = {}
 
     def _defaults(self) -> ParamDict:
@@ -962,6 +989,7 @@ class SearchSpace(BaseModel):
             **self.critique_rag_agent.defaults(),
             **self.sub_question_rag.defaults(),
             **self.lats_rag_agent.defaults(),
+            **self.coa_rag_agent.defaults(),
         }
 
     def update_defaults(self, defaults: ParamDict) -> None:
@@ -1009,6 +1037,7 @@ class SearchSpace(BaseModel):
         distributions.update(self.critique_rag_agent.build_distributions())
         distributions.update(self.sub_question_rag.build_distributions())
         distributions.update(self.lats_rag_agent.build_distributions())
+        distributions.update(self.coa_rag_agent.build_distributions())
 
         if params is not None:
             reduced_distributions = {
@@ -1105,7 +1134,11 @@ class SearchSpace(BaseModel):
                 params.update(**self.lats_rag_agent.sample(trial))
             else:
                 params.update(**self.lats_rag_agent.defaults())
-            params.update(**self.lats_rag_agent.sample(trial))
+        elif params["rag_mode"] == "coa_rag_agent":
+            if "coa_rag_agent" in parameters:
+                params.update(**self.coa_rag_agent.sample(trial))
+            else:
+                params.update(**self.coa_rag_agent.defaults())
 
         if few_shot_enabled := trial.suggest_categorical(
             "few_shot_enabled", self.few_shot_enabled
@@ -1144,6 +1177,8 @@ class SearchSpace(BaseModel):
                 sub_card *= self.sub_question_rag.get_cardinality()
             elif rag_mode == "lats_rag_agent":
                 sub_card *= self.lats_rag_agent.get_cardinality()
+            elif rag_mode == "coa_rag_agent":
+                sub_card *= self.coa_rag_agent.get_cardinality()
 
             if True in self.few_shot_enabled:
                 sub_card *= self.few_shot_retriever.get_cardinality()
