@@ -1,7 +1,8 @@
+import functools
 import getpass
 import os
-import functools
 from typing import Any, Final
+
 import ray
 
 from syftr.configuration import cfg
