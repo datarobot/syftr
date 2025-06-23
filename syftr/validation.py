@@ -108,6 +108,7 @@ def has_valid_base_rag_params(
                 [
                     "additional_context_enabled",
                     "additional_context_num_nodes",
+                    "coa_enable_calculator",
                     "critique_agent_llm",
                     "hyde_enabled",
                     "hyde_llm_name",
@@ -591,6 +592,8 @@ def has_valid_unique_params(
             distributions = search_space.sub_question_rag.build_distributions()
         case "lats_rag_agent":
             distributions = search_space.lats_rag_agent.build_distributions()
+        case "coa_rag_agent":
+            distributions = search_space.coa_rag_agent.build_distributions()
         case _:
             pass
 

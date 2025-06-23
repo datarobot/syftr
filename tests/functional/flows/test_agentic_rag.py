@@ -81,3 +81,24 @@ def test_react_agent_flow_hybrid_hyde_reranker_few_shot(
     for question, _ in QA_PAIRS[study_config.dataset.name]:
         flow.generate(question)
     assert llama_debug.get_event_pairs(CBEventType.AGENT_STEP)
+
+
+@pytest.mark.flaky(reruns=4, reruns_delay=2)
+def test_coa_agent_flow(coa_agent_flow, llama_debug):
+    flow, study_config = coa_agent_flow
+    for question, _ in QA_PAIRS[study_config.dataset.name]:
+        _, _, call_data = flow.generate(question)
+        assert call_data
+        assert llama_debug.get_event_pairs(CBEventType.LLM)
+        assert llama_debug.get_event_pairs(CBEventType.QUERY)
+        assert llama_debug.get_event_pairs(CBEventType.AGENT_STEP)
+        assert llama_debug.get_event_pairs(CBEventType.SYNTHESIZE)
+
+
+def test_coa_agent_flow_math(coa_agent_flow, llama_debug):
+    flow, study_config = coa_agent_flow
+    response, _, _ = flow.generate(
+        "what is 123.123*101.101 and what is its product with 12345. "
+        "then what is 415.151 - 128.24 and what is its product with the previous product?"
+    )
+    assert str((123.123 * 101.101) * 12345 * (415.151 - 128.24)) in response.text
