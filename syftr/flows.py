@@ -672,7 +672,7 @@ class CoAAgentFlow(AgenticRAGFlow):
 
     @cached_property
     def tools(self) -> T.List[BaseTool]:
-        tools = [
+        tools: T.List[BaseTool] = [
             QueryEngineTool(
                 query_engine=self.query_engine,
                 metadata=ToolMetadata(
