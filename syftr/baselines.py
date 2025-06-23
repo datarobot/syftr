@@ -294,6 +294,22 @@ AGENT_BASELINES: T.List[T.Dict[str, T.Any]] = [
         "hyde_llm_name": BASELINE_LLM,
         "additional_context_enabled": False,
     },
+    {
+        "rag_mode": "coa_rag_agent",
+        "template_name": "concise",
+        "response_synthesizer_llm": BASELINE_LLM,
+        "coa_enable_calculator": True,
+        "rag_method": "dense",
+        "rag_embedding_model": "BAAI/bge-base-en-v1.5",
+        "rag_query_decomposition_enabled": False,
+        "rag_top_k": 10,
+        "splitter_method": "sentence",
+        "splitter_chunk_exp": 11,
+        "splitter_chunk_overlap_frac": 0.5,
+        "reranker_enabled": False,
+        "hyde_enabled": False,
+        "additional_context_enabled": False,
+    },
 ]
 
 

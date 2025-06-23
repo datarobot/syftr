@@ -2677,6 +2677,18 @@ wheels = [
 ]
 
 [[package]]
+name = "llama-index-agent-coa"
+version = "0.3.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "llama-index-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b3/e5/89bd0f7710c5adbf4a2cf91b94e974b88b44e98597f6800f093ad68303f4/llama_index_agent_coa-0.3.2.tar.gz", hash = "sha256:65cdc64ee2032557dd639b34e9e9e0619bbc6122399e3bcf23a254b544fcd51a", size = 8686, upload-time = "2025-06-20T05:18:27.204Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/80/bc/62652798721648e694694be915b102fbc28769712ae7c3eb7f4707998620/llama_index_agent_coa-0.3.2-py3-none-any.whl", hash = "sha256:9cf077a629252d61cb95abfe7233d43dd9facf4d0052e58cf57f23f8f118f786", size = 9197, upload-time = "2025-06-20T05:18:26.17Z" },
+]
+
+[[package]]
 name = "llama-index-agent-introspective"
 version = "0.3.1"
 source = { registry = "https://pypi.org/simple" }
@@ -3044,6 +3056,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/7b/77/0ece3c7887e9c7242fc7cc2a184374bbeb08a35783d71a8466e1dd18ccfc/llama_index_multi_modal_llms_openai-0.5.1.tar.gz", hash = "sha256:df3aff00c36023c5f8c49f972a325f71823ed0f4dd9cd479955d76afc146575f", size = 3708, upload-time = "2025-05-30T23:08:09.915Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/17/a5/6181a385af1caef88e1d0d3919c399ba7e031190fc0be4fd5242875c5b0e/llama_index_multi_modal_llms_openai-0.5.1-py3-none-any.whl", hash = "sha256:69bb9c310c323ce51038f0d40719f546d0d4e0853835a4f5cfa21f07dbb0b91e", size = 3362, upload-time = "2025-05-30T23:08:08.977Z" },
+]
+
+[[package]]
+name = "llama-index-packs-agents-coa"
+version = "0.3.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "llama-index-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/29/23/66210d1b726a1e36c76c61db15c854880a16853ce6119b35ca31dde75bd0/llama_index_packs_agents_coa-0.3.2.tar.gz", hash = "sha256:b1b80b720119528efb1c195d47bfcc057eb139169a3a9db35e4f7d48235e05ae", size = 8970, upload-time = "2025-06-20T05:18:30.82Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0e/ba/6b88ff36acae4331f31214aa6f5c88c2adf44950f85a130b3c5d7df00acb/llama_index_packs_agents_coa-0.3.2-py3-none-any.whl", hash = "sha256:75960767cf30971016d2997e0f6642d1074b21273e9ec65f032dce0c26b3c09d", size = 10170, upload-time = "2025-06-20T05:18:29.753Z" },
 ]
 
 [[package]]
@@ -6168,6 +6192,7 @@ dependencies = [
     { name = "langchain" },
     { name = "langchain-community" },
     { name = "llama-index" },
+    { name = "llama-index-agent-coa" },
     { name = "llama-index-agent-introspective" },
     { name = "llama-index-agent-lats" },
     { name = "llama-index-agent-openai" },
@@ -6192,6 +6217,7 @@ dependencies = [
     { name = "llama-index-llms-vertex" },
     { name = "llama-index-llms-vllm" },
     { name = "llama-index-multi-modal-llms-openai" },
+    { name = "llama-index-packs-agents-coa" },
     { name = "llama-index-program-openai" },
     { name = "llama-index-question-gen-openai" },
     { name = "llama-index-readers-file" },
@@ -6316,6 +6342,7 @@ requires-dist = [
     { name = "langchain", specifier = ">0.3" },
     { name = "langchain-community" },
     { name = "llama-index" },
+    { name = "llama-index-agent-coa", specifier = ">=0.3.2" },
     { name = "llama-index-agent-introspective" },
     { name = "llama-index-agent-lats" },
     { name = "llama-index-agent-openai" },
@@ -6340,6 +6367,7 @@ requires-dist = [
     { name = "llama-index-llms-vertex", specifier = "==0.4.3" },
     { name = "llama-index-llms-vllm" },
     { name = "llama-index-multi-modal-llms-openai" },
+    { name = "llama-index-packs-agents-coa", specifier = ">=0.3.2" },
     { name = "llama-index-program-openai" },
     { name = "llama-index-question-gen-openai" },
     { name = "llama-index-readers-file" },
