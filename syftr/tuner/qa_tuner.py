@@ -41,6 +41,7 @@ from syftr.optuna_helper import (
 )
 from syftr.ray.utils import ray_init
 from syftr.retrievers.build import build_rag_retriever
+from syftr.retrievers.cached_retriever import get_retriever_fingerprint
 from syftr.startup import prepare_worker
 from syftr.studies import (
     RetrieverStudyConfig,
@@ -125,6 +126,14 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
 
     response_synthesizer_llm = get_llm(params["response_synthesizer_llm"])
     enforce_full_evaluation = params.get("enforce_full_evaluation", False)
+    if study_config.retriever_cache_enabled:
+        retriever_cache_fingerprint = get_retriever_fingerprint(study_config, params)
+        logger.info(
+            f"Retriever caching enabled with fingerprint {retriever_cache_fingerprint}"
+        )
+    else:
+        retriever_cache_fingerprint = None
+        logger.info("Retriever caching disabled")
 
     if study_config.is_retriever_study:
         hyde_llm = (
@@ -133,12 +142,14 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
         retriever, docstore = build_rag_retriever(study_config, params)
         return RetrieverFlow(
             response_synthesizer_llm=response_synthesizer_llm,
+            template=params.get("template_name", "default"),
             retriever=retriever,
             docstore=docstore,
             hyde_llm=hyde_llm,
             additional_context_num_nodes=params.get("additional_context_num_nodes", 0),
             params=params,
             enforce_full_evaluation=enforce_full_evaluation,
+            retriever_cache_fingerprint=retriever_cache_fingerprint,
         )
 
     get_qa_examples = None
@@ -199,6 +210,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     additional_context_num_nodes=additional_context_num_nodes,
                     enforce_full_evaluation=enforce_full_evaluation,
                     params=params,
+                    retriever_cache_fingerprint=retriever_cache_fingerprint,
                 )
             case "react_rag_agent":
                 subquestion_engine_llm = get_llm(params["subquestion_engine_llm"])
@@ -223,6 +235,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     dataset_description=study_config.dataset.description,
                     enforce_full_evaluation=enforce_full_evaluation,
                     params=params,
+                    retriever_cache_fingerprint=retriever_cache_fingerprint,
                 )
             case "critique_rag_agent":
                 subquestion_engine_llm = get_llm(params["subquestion_engine_llm"])
@@ -251,6 +264,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     dataset_description=study_config.dataset.description,
                     enforce_full_evaluation=enforce_full_evaluation,
                     params=params,
+                    retriever_cache_fingerprint=retriever_cache_fingerprint,
                 )
             case "sub_question_rag":
                 subquestion_engine_llm = get_llm(params["subquestion_engine_llm"])
@@ -273,6 +287,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     dataset_description=study_config.dataset.description,
                     enforce_full_evaluation=enforce_full_evaluation,
                     params=params,
+                    retriever_cache_fingerprint=retriever_cache_fingerprint,
                 )
             case "lats_rag_agent":
                 flow = LATSAgentFlow(
@@ -291,6 +306,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     max_rollouts=params["lats_max_rollouts"],
                     enforce_full_evaluation=enforce_full_evaluation,
                     params=params,
+                    retriever_cache_fingerprint=retriever_cache_fingerprint,
                 )
             case _:
                 raise ValueError(f"Invalid rag_mode: {params['rag_mode']}")

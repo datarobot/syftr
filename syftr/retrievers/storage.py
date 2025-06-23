@@ -14,6 +14,7 @@ from lz4.frame import compress, decompress
 from syftr.amazon import delete_file_from_s3, get_file_from_s3
 from syftr.configuration import cfg
 from syftr.logger import logger
+from syftr.ray.utils import ray_cache_get, ray_cache_put
 from syftr.studies import StudyConfig
 from syftr.utils.locks import distributed_lock
 
@@ -85,8 +86,14 @@ def put_cache(cache_key, index, local_only: bool = False) -> None:
 
     with local_cache() as cache:
         logger.info(f"Storing index to {cache.directory}")
-        cache.add(cache_key, serialized_obj)
+        cache.set(cache_key, serialized_obj)
         logger.info(f"Done storing index to {cache.directory}")
+
+    try:
+        logger.info(f"Storing {cache_key} to Ray cache")
+        ray_cache_put(cache_key, serialized_obj)
+    except Exception as e:
+        logger.warning(f"Skipping Ray cache put due to error: {e}")
 
     if not local_only and cfg.storage.s3_cache_enabled:
         try:
@@ -116,6 +123,11 @@ def get_cached(cache_key: str) -> Optional[Any]:
                 index = cloudpickle.loads(decompress(data))
                 logger.info(f"Loaded pre-built index from {cache.directory}")
                 return index
+
+        data = ray_cache_get(cache_key)
+        if data is not None:
+            logger.info(f"Loading {cache_key} from Ray cache")
+            return cloudpickle.loads(decompress(data))
 
         if cfg.storage.s3_cache_enabled:
             if (data := get_file_from_s3(s3_cache_key)) is not None:

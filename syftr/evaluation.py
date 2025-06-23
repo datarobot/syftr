@@ -371,15 +371,17 @@ async def aretrieve_pair(
     flow: RetrieverFlow,
     rate_limiter: AsyncLimiter,
     raise_on_exception: bool | None = EVAL__RAISE_ON_EXCEPTION,
-) -> T.Tuple[T.List[NodeWithScore] | None, float, Exception | None]:
+) -> T.Tuple[
+    T.List[NodeWithScore] | None, float, T.List[LLMCallData], Exception | None
+]:
     """Get flow's retrieved documents from an Q&A pair asynchronously."""
-    result, run_time, exception = await exception_catcher(
+    nodes, duration, call_data, exception = await exception_catcher(
         func=flow.aretrieve,
         return_values_on_exception=(None, np.nan),
         raise_on_exception=raise_on_exception,
         query=qa_pair.question,
     )
-    return result, run_time, exception
+    return nodes, duration, call_data, exception
 
 
 async def _aeval_retriever_pair(
@@ -392,8 +394,8 @@ async def _aeval_retriever_pair(
     """Evaluate retrieval performance on a single Q&A item."""
     if not qa_pair.gold_evidence:
         raise ValueError("QAPair gold_evidence is empty: %s", qa_pair)
-    retrieval_results, run_time, retrieval_exception = await aretrieve_pair(
-        qa_pair, flow, rate_limiter
+    retrieval_results, run_time, call_data, retrieval_exception = await aretrieve_pair(
+        qa_pair, flow, rate_limiter, raise_on_exception
     )
     if retrieval_results:
         retrieved_contexts: T.List[str] = [
@@ -412,7 +414,7 @@ async def _aeval_retriever_pair(
         run_time=run_time,
         generation_exception=retrieval_exception,
         evaluation_exception=None,
-        llm_call_data=[],
+        llm_call_data=call_data,
         retriever_recall=result.score,
         retriever_context_length=retrieved_contexts_length,
         passing=result.passing,

@@ -133,6 +133,9 @@ class Paths(BaseModel):
         tmp_dir / "huggingface"
     )
     index_cache: Annotated[Path, Field(validate_default=True)] = tmp_dir / "indexcache"
+    retrieval_cache: Annotated[Path, Field(validate_default=True)] = (
+        tmp_dir / "retrieval_cache"
+    )
     onnx_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "onnx"
     sota_dir: Annotated[Path, Field(validate_default=True)] = data_dir / "sota"
     lock_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "syftr-locks"
