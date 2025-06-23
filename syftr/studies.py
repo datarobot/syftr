@@ -945,9 +945,9 @@ class SearchSpace(BaseModel):
         default_factory=LATSRagAgent,
         description="Configuration for the LATS RAG agent.",
     )
-    custom_defaults: ParamDict = Field(
+    param_override: ParamDict = Field(
         default_factory=dict,
-        description="Override default parameters for the search space.",
+        description="Override parameters for the search space.",
     )
 
     def defaults(self) -> ParamDict:
@@ -1118,8 +1118,7 @@ class SearchSpace(BaseModel):
             if params["few_shot_enabled"]:
                 params.update(**self.few_shot_retriever.defaults())
 
-        # Use custom defaults to override parameters
-        params.update(self.custom_defaults)
+        params.update(self.param_override)
 
         return params
 
