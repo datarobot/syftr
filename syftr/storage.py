@@ -6,6 +6,7 @@ import datasets
 import pandas as pd
 from datasets import Features, Sequence, Value
 from llama_index.core import Document
+from llama_index.core.evaluation.correctness import DEFAULT_USER_TEMPLATE
 from overrides import overrides
 from pydantic import BaseModel
 
@@ -42,6 +43,12 @@ class SyftrQADataset(BaseModel, ABC):
     # timeouts
     load_examples_timeout_s: int = 3600
     load_grounding_data_timeout_s: int = 3600
+
+    # the evaluation user template specifies content and format of the information that is passed to the evaluator,
+    # for instance, the default templates is intended to be used with correctness evaluators and requires the input
+    # to contain a user query, a reference answer, and a generated answer using the fields:
+    # 'query', 'reference_answer', and 'generated_answer'.
+    eval_user_template: str = DEFAULT_USER_TEMPLATE
 
     @property
     def name(self) -> str:

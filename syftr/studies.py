@@ -6,7 +6,6 @@ from copy import deepcopy
 from pathlib import Path
 
 import pandas as pd
-from llama_index.core.evaluation.correctness import DEFAULT_USER_TEMPLATE
 from optuna import Trial
 from optuna.distributions import (
     BaseDistribution,
@@ -71,8 +70,6 @@ Example Response:
   "score": 4.0,
 }
 """
-
-EVALUATION__CORRECTNESS__DEFAULT_USER_TEMPLATE = DEFAULT_USER_TEMPLATE
 
 
 class SearchSpaceMixin(ABC):
@@ -1552,10 +1549,6 @@ class Evaluation(BaseModel):
     eval_system_template: str = Field(
         default=EVALUATION__CORRECTNESS__DEFAULT_SYSTEM_TEMPLATE,
         description="System template for the evaluation prompt.",
-    )
-    eval_user_template: str = Field(
-        default=EVALUATION__CORRECTNESS__DEFAULT_USER_TEMPLATE,
-        description="User template for the evaluation prompt.",
     )
     score_threshold: float = Field(
         default=4.0,

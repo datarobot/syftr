@@ -1,4 +1,4 @@
-from syftr.evaluation.factory import json_parser_function
+from syftr.evaluation.evaluator_factory import json_parser_function
 
 
 def test_json_parser__valid_json():

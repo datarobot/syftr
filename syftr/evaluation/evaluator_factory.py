@@ -12,7 +12,7 @@ from llama_index.core.prompts import (
 
 from syftr.llm import get_llm
 from syftr.logger import logger
-from syftr.studies import Evaluation
+from syftr.studies import AgentStudyConfig, StudyConfig
 
 
 def json_parser_function(response: str) -> T.Tuple[T.Optional[float], T.Optional[str]]:
@@ -42,13 +42,15 @@ def json_parser_function(response: str) -> T.Tuple[T.Optional[float], T.Optional
 
 
 class EvaluatorFactory:
-    def __init__(self, eval_config: Evaluation):
-        self._eval_config = eval_config
-        self.llm_names = eval_config.llms
-        self.eval_type = eval_config.eval_type
-        self.eval_system_template = eval_config.eval_system_template
-        self.eval_user_template = eval_config.eval_user_template
-        self.score_threshold = eval_config.score_threshold
+    def __init__(
+        self,
+        study_config: T.Union[StudyConfig, AgentStudyConfig],
+    ):
+        self.llm_names = study_config.evaluation.llms
+        self.eval_type = study_config.evaluation.eval_type
+        self.eval_system_template = study_config.evaluation.eval_system_template
+        self.eval_user_template = study_config.dataset.eval_user_template
+        self.score_threshold = study_config.evaluation.score_threshold
 
         assert self.eval_type == "correctness", (
             f"Unsupported evaluation type: {self.eval_type}. "

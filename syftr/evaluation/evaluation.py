@@ -1,5 +1,5 @@
 # flake8: noqa: E402
-from syftr.evaluation.factory import EvaluatorFactory
+from syftr.evaluation.evaluator_factory import EvaluatorFactory
 from syftr.event_loop import fix_asyncio
 
 fix_asyncio()
@@ -754,7 +754,7 @@ def eval_dataset(
         "retriever",
     }, "Evaluation mode should be 'single', 'random', 'consensus', or 'retriever'."
 
-    evaluators = EvaluatorFactory(study_config.evaluation).get_evaluators()
+    evaluators = EvaluatorFactory(study_config).get_evaluators()
     rate_limiter = AsyncLimiter(
         study_config.optimization.rate_limiter_max_coros,
         study_config.optimization.rate_limiter_period,
