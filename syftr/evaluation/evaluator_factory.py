@@ -16,32 +16,55 @@ from syftr.studies import AgentStudyConfig, StudyConfig
 
 
 def json_parser_function(response: str) -> T.Tuple[T.Optional[float], T.Optional[str]]:
-    if re.search(r"\{[^{}]*\{", response):
-        logger.error("Nested JSON found in evaluator response: %s", response)
+    """
+    Parse the response from the evaluator to extract score and reasoning.
+    In case the response is not valid, it returns None for both score and reasoning.
+    The last JSON-like substring of the response is expected to be non-nested and
+    should contain a "score" and "reasoning" key.
+    The score can be a float or a string that can be converted to a float.
+    The reasoning is expected to be a string.
+    """
+
+    # Check if the response ends with a nested JSON
+    if re.search(r"\{[^{}]*\{[^{}]*\}[^{}]*\}[^{}]*$", response):
+        logger.error("Nested JSON found at the end of evaluator response: %s", response)
         return None, None
+
+    # Find all JSON-like objects in the response
     json_pattern = r"\{[^{}]*\}"
     matches = re.findall(json_pattern, response)
+
     if matches:
-        json_str = matches[-1]
+        last_json_str = matches[-1]
         try:
-            response_dict = json.loads(json_str)
+            response_dict = json.loads(last_json_str)
         except json.JSONDecodeError:
             logger.error("Invalid JSON response from evaluator: %s", response)
             return None, None
     else:
         logger.error("No JSON found in evaluator response: %s", response)
         return None, None
+
     score = response_dict.get("score")
     if score is not None:
         try:
             score = float(score)
         except ValueError:
-            score = None
+            logger.error("Invalid score in evaluator response: %s", response)
+            return None, None
+    else:
+        logger.error("Score missing in evaluator response: %s", response)
+        return None, None
     reasoning = response_dict.get("reasoning")
+    if not reasoning or not isinstance(reasoning, str):
+        logger.error("Invalid reasoning in evaluator response: %s", response)
+        return None, None
     return score, reasoning
 
 
 class EvaluatorFactory:
+    """Factory class to create LLM judges based on the study configuration."""
+
     def __init__(
         self,
         study_config: T.Union[StudyConfig, AgentStudyConfig],
