@@ -58,6 +58,7 @@ def build_configs(
     embedding_max_time: int,
     transfer_learning: TransferLearningConfig | None = None,
     add_username: bool | None = False,
+    is_private: bool | None = False,
 ) -> T.Tuple[T.List[StudyConfig], T.List[Path]]:
     configs = []
     for dataset in datasets:
@@ -65,7 +66,11 @@ def build_configs(
         configs.append(
             StudyConfig(
                 name=_build_study_name(
-                    dataset, bench_num, prefix, run_name, add_username
+                    dataset,
+                    bench_num,
+                    prefix,
+                    run_name,
+                    add_username,
                 ),
                 dataset=dataset,
                 search_space=_search_space,
@@ -80,8 +85,12 @@ def build_configs(
                 ),
             )
         )
-
-    paths = [cfg.paths.studies_dir / f"{config.name}.yaml" for config in configs]
+    paths = []
+    for config in configs:
+        file_name = f"{config.name}.yaml"
+        if is_private:
+            file_name = f"private--{file_name}"
+        paths.append(cfg.paths.studies_dir / file_name)
     for config, path in zip(configs, paths):
         with open(path, "w") as handle:
             yaml.dump(config.dict(), handle)
