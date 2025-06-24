@@ -44,10 +44,6 @@ class SyftrQADataset(BaseModel, ABC):
     load_examples_timeout_s: int = 3600
     load_grounding_data_timeout_s: int = 3600
 
-    # the evaluation user template specifies content and format of the information that is passed to the evaluator,
-    # for instance, the default templates is intended to be used with correctness evaluators and requires the input
-    # to contain a user query, a reference answer, and a generated answer using the fields:
-    # 'query', 'reference_answer', and 'generated_answer'.
     # The evaluation user template specifies content and format of the information that is passed to the evaluator.
     # The template must include Python string templates for the following fields:
     #     'query', 'reference_answer', and 'generated_answer'.
