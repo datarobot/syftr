@@ -8,7 +8,7 @@ import pandas as pd
 from aiolimiter import AsyncLimiter
 
 from syftr.core import RandomTrial
-from syftr.evaluation import (
+from syftr.evaluation.evaluation import (
     ExactMatchEvaluator,
     SyftrEvaluationResult,
     _aeval_retriever_pair,
