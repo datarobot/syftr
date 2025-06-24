@@ -213,5 +213,6 @@ studies/test*
 notebooks/.nfs*
 
 /private
+*private*
 /flowgen/data/nltk-data
 .nfs*
