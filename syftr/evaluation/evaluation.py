@@ -881,6 +881,12 @@ def calculate_metrics(
         or int(res.evaluation_exception is not None)
         for res in results
     )
+    num_generation_errors = sum(
+        int(res.generation_exception is not None) for res in results
+    )
+    num_evaluation_errors = sum(
+        int(res.evaluation_exception is not None) for res in results
+    )
     acc = sum(passing) / num_total
     passing_std = np.std(passing)
 
@@ -964,6 +970,8 @@ def calculate_metrics(
         "f1_score": f1_score,
         "num_total": num_total,
         "num_errors": num_errors,
+        "num_generation_errors": num_generation_errors,
+        "num_evaluation_errors": num_evaluation_errors,
         "num_success": num_total - num_errors,
         "p80_time": p80_time,
         "run_times_std": run_times_std,
