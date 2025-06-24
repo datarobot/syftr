@@ -62,7 +62,7 @@ def json_parser_function(response: str) -> T.Tuple[T.Optional[float], T.Optional
     return score, reasoning
 
 
-class EvaluatorFactory:
+class CorrectnessEvaluatorFactory:
     """Factory class to create LLM judges based on the study configuration."""
 
     def __init__(
