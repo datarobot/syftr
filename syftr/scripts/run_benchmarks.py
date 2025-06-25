@@ -268,8 +268,9 @@ DATASETS = [
     # MultiHopRAGHF(),
     # -----------------------------------------------
     # FinanceBenchHF(),
-    HotPotQAHF(subset="train_hard"),
+    # HotPotQAHF(subset="train_hard"),
     # PhantomWikiv050(),
+    InfiniteBenchHF(),
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
     # -----------------------
