@@ -63,12 +63,12 @@ RECREATE_STUDY = True  # if set to True, recreating an existing study without fa
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-MINUTES_BEFORE_NEXT_SUBMISSION = 1
+MINUTES_BEFORE_NEXT_SUBMISSION = 2
 CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
 # CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
-BASELINES_START = 0  # you can restrict the number of baselines ...
-BASELINES_END = 900  # ... to start with here to avoid OOM issues
+BASELINES_START = 100  # you can restrict the number of baselines ...
+BASELINES_END = 300  # ... to start with here to avoid OOM issues
 STOP_AFTER_ONE_BATCH_OF_BASELINES = (
     False  # useful when recreating studies and using a lot of baselines
 )

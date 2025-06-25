@@ -373,10 +373,6 @@ def load_study(study_name: str) -> pd.DataFrame:
     df.sort_values(by="datetime_complete", inplace=True)
     df["number"] = range(1, len(df) + 1)
 
-    # clean up 0% accuracy bug on dense retriever for a few runs
-    if study_name in ["run9", "run10"]:
-        df = df[df["values_0"] > 0]
-
     # remember which study this is
     df["study_name"] = study_name
 
