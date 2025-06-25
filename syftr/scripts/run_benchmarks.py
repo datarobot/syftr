@@ -53,12 +53,10 @@ from syftr.studyconfig_helper import build_configs
 # -------------------------------------------------------
 PREFIX = "cerebras"  # this three parameters
 BENCH_NUM = 1  # are used to name
-# RUN_NAME = "in-sample"  # your config files and studies
 RUN_NAME = "mix-with-local"
 # -------------------------------------------------------
 OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
-# NUM_TRIALS = 0  # total number of optimization trials per submission
 NUM_TRIALS = 10000  # total number of optimization trials per submission
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = True  # if set to True, recreating an existing study without failed or running trials
@@ -66,7 +64,6 @@ EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 MINUTES_BEFORE_NEXT_SUBMISSION = 1
-# CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
 CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
 BASELINES_START = 600  # you can restrict the number of baselines ...
@@ -267,9 +264,9 @@ DATASETS = [
     # InfiniteBenchHF(),
     # MultiHopRAGHF(),
     # -----------------------------------------------
-    # FinanceBenchHF(),
-    # HotPotQAHF(subset="train_hard"),
-    # PhantomWikiv050(),
+    FinanceBenchHF(),
+    HotPotQAHF(subset="train_hard"),
+    PhantomWikiv050(),
     InfiniteBenchHF(),
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
