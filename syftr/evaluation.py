@@ -22,10 +22,8 @@ from llama_index.core.bridge.pydantic import Field
 from llama_index.core.evaluation import BaseEvaluator, CorrectnessEvaluator
 from llama_index.core.evaluation.base import EvaluationResult
 from llama_index.core.llms import CompletionResponse
-from llama_index.core.prompts.mixin import PromptDictType
 from llama_index.core.schema import MetadataMode, NodeWithScore
 from optuna import TrialPruned
-from rapidfuzz.fuzz import partial_ratio
 from tenacity import (
     before_sleep_log,
     retry,
@@ -38,6 +36,7 @@ from tenacity import (
 
 from syftr import core, custom_metrics
 from syftr.configuration import EVAL__RAISE_ON_EXCEPTION
+from syftr.custom_metrics import ExactMatchEvaluator
 from syftr.flows import Flow, RetrieverFlow
 from syftr.helpers import get_exception_report
 from syftr.instrumentation.tokens import LLMCallData
@@ -72,131 +71,6 @@ RETRIABLE_EXCEPTIONS = (
     azure.core.exceptions.ServiceRequestError,
     azure.core.exceptions.ServiceResponseError,
 )
-
-
-class ExactMatchEvaluator(BaseEvaluator):
-    """
-    Evaluator that calculates exact match by comparing reference contexts
-    with retrieved contexts.
-    """
-
-    async def aevaluate(
-        self,
-        query: T.Optional[str] = None,
-        response: T.Optional[str] = None,
-        contexts: T.Optional[T.Sequence[str]] = None,
-        **kwargs: T.Any,
-    ) -> EvaluationResult:
-        """
-        Evaluate exact match by computing the proportion of reference contexts
-        that are present in the retrieved contexts.
-        """
-        reference = kwargs.get("reference")
-
-        if not reference:
-            raise ValueError("Reference contexts are empty.")
-        if not contexts:
-            raise ValueError("Retrieved contexts are empty.")
-
-        matched = sum(any(ref in context for context in contexts) for ref in reference)
-        recall = matched / len(reference) if reference else 0.0
-        return EvaluationResult(
-            passing=recall > 0,
-            score=recall,
-        )
-
-    def evaluate(
-        self,
-        query: T.Optional[str] = None,
-        response: T.Optional[str] = None,
-        contexts: T.Optional[T.Sequence[str]] = None,
-        **kwargs: T.Any,
-    ) -> EvaluationResult:
-        """
-        Synchronous version of the evaluation method for compatibility with base class.
-        """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
-            self.aevaluate(query, response, contexts, **kwargs)
-        )
-
-    def _get_prompts(self) -> PromptDictType:
-        """Get prompts."""
-        return {}
-
-    def _update_prompts(self, prompts_dict: PromptDictType) -> None:
-        """Update prompts."""
-        pass
-
-
-class FuzzyRecallEvaluator(BaseEvaluator):
-    """
-    Evaluator that calculates fuzzy recall by comparing reference contexts
-    with retrieved contexts using partial_ratio from rapidfuzz.
-    """
-
-    def __init__(self, threshold: float = 90.0):
-        self.threshold = threshold
-
-    async def fuzzy_match_async(self, ref: str, doc: str) -> bool:
-        return await asyncio.to_thread(partial_ratio, ref, doc) >= self.threshold
-
-    async def fuzzy_contains_async(self, ref: str, docs: T.Sequence[str]) -> bool:
-        tasks = [self.fuzzy_match_async(ref, doc) for doc in docs]
-        for coro in asyncio.as_completed(tasks):
-            if await coro:
-                return True
-        return False
-
-    async def aevaluate(
-        self,
-        query: T.Optional[str] = None,
-        response: T.Optional[str] = None,
-        contexts: T.Optional[T.Sequence[str]] = None,
-        **kwargs: T.Any,
-    ) -> EvaluationResult:
-        """
-        Evaluate fuzzy recall by computing the proportion of reference contexts
-        that have a fuzzy match in the retrieved contexts.
-        """
-        reference = kwargs.get("reference")
-
-        if not reference:
-            raise ValueError("Reference contexts are empty.")
-        if not contexts:
-            raise ValueError("Retrieved contexts are empty.")
-
-        tasks = [self.fuzzy_contains_async(ref, contexts) for ref in reference]
-        results = await asyncio.gather(*tasks)
-        matched = sum(results)
-        recall = matched / len(reference) if reference else 0.0
-        return EvaluationResult(
-            passing=recall > 0,
-            score=recall,
-        )
-
-    def evaluate(
-        self,
-        query: T.Optional[str] = None,
-        response: T.Optional[str] = None,
-        contexts: T.Optional[T.Sequence[str]] = None,
-        **kwargs: T.Any,
-    ) -> EvaluationResult:
-        """
-        Synchronous version of the evaluation method for compatibility with base class.
-        """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
-            self.aevaluate(query, response, contexts, **kwargs)
-        )
-
-    def _get_prompts(self) -> PromptDictType:
-        """Get prompts."""
-        return {}
-
-    def _update_prompts(self, prompts_dict: PromptDictType) -> None:
-        """Update prompts."""
-        pass
 
 
 class SyftrEvaluationResult(EvaluationResult):
@@ -830,7 +704,7 @@ def eval_dataset(
                 items=filtered_dataset,
                 flow=flow,
                 study_config=study_config,
-                evaluators=[FuzzyRecallEvaluator()],
+                evaluators=[ExactMatchEvaluator()],
                 raise_on_exception=study_config.evaluation.raise_on_exception,
                 pruner=pruner,
                 timeout_pruner=timeout,

@@ -46,6 +46,7 @@ def get_retriever_fingerprint(
         "rag_query_decomposition_llm_name",
         "rag_query_decomposition_num_queries",
         "rag_fusion_mode",
+        "rag_hybrid_bm25_weight",
         "splitter_method",
         "splitter_chunk_exp",
         "splitter_chunk_overlap_frac",
@@ -92,8 +93,8 @@ def put_retrieval_cache(cache_key: str, obj: T.Any, local_only: bool = False):
     try:
         logger.info(f"Storing {cache_key} to Ray cache")
         ray_cache_put(cache_key, serialized)
-    except Exception as e:
-        logger.warning(f"Skipping Ray cache put due to error: {e}")
+    except Exception:
+        pass
 
     # S3 mirror
     if not local_only and cfg.storage.s3_cache_enabled:

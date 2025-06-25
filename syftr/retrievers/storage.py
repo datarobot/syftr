@@ -115,6 +115,10 @@ def put_cache(cache_key, index, local_only: bool = False) -> None:
 
 def get_cached(cache_key: str) -> Optional[Any]:
     s3_cache_key = f"index_cache/{cache_key}.pkl"
+    try:
+        ray_data = ray_cache_get(cache_key)
+    except Exception:
+        ray_data = None
 
     try:
         with local_cache() as cache:
@@ -124,8 +128,7 @@ def get_cached(cache_key: str) -> Optional[Any]:
                 logger.info(f"Loaded pre-built index from {cache.directory}")
                 return index
 
-        data = ray_cache_get(cache_key)
-        if data is not None:
+        if ray_data is not None:
             logger.info(f"Loading {cache_key} from Ray cache")
             return cloudpickle.loads(decompress(data))
 
