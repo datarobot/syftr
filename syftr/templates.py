@@ -1,3 +1,4 @@
+import typing as T
 
 from llama_index.core.prompts import RichPromptTemplate
 
@@ -372,3 +373,7 @@ def get_template(
 
 def get_prompt_instructions_by_name(template_name: str) -> str:
     return INSTRUCTIONS_BY_NAME[template_name]
+
+
+def get_template_names() -> T.List[str]:
+    return list(TEMPLATES_WITHOUT_CONTEXT.keys())
