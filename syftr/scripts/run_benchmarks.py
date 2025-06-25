@@ -51,15 +51,17 @@ from syftr.studies import (  # noqa
 from syftr.studyconfig_helper import build_configs
 
 # -------------------------------------------------------
-PREFIX = "silver"  # this three parameters
+PREFIX = "cerebras"  # this three parameters
 BENCH_NUM = 1  # are used to name
 # RUN_NAME = "in-sample"  # your config files and studies
-RUN_NAME = "out-of-sample"
+RUN_NAME = "mix-with-local"
+# -------------------------------------------------------
+OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
 # NUM_TRIALS = 0  # total number of optimization trials per submission
-NUM_TRIALS = 700  # total number of optimization trials per submission
+NUM_TRIALS = 10000  # total number of optimization trials per submission
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
-RECREATE_STUDY = False  # if set to True, recreating an existing study without failed or running trials
+RECREATE_STUDY = True  # if set to True, recreating an existing study without failed or running trials
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
@@ -93,7 +95,7 @@ BLOCKS = [
             "few_shot_retriever",
             "hyde",
             "critique_rag_agent",
-            # "lats_rag_agent",
+            "lats_rag_agent",
             "react_rag_agent",
             "rag_mode",
             "reranker",
@@ -158,7 +160,14 @@ else:
 #     embedding_model="BAAI/bge-large-en-v1.5",
 # )
 
-LLMS: T.List[str] = LOCAL_LLMS
+
+LLMS: T.List[str] = [
+    "cerebras-llama33-70B",
+    "cerebras-qwen-3",
+    "cerebras-scout",
+    "cerebras-llama31-8B",
+    "cerebras-deepseek",
+] + LOCAL_LLMS
 
 EMBEDDING_MODELS = [
     "BAAI/bge-small-en-v1.5",
@@ -194,7 +203,7 @@ SEARCH_SPACE = SearchSpace(
     rag_modes=[
         # "no_rag",
         "rag",
-        # "lats_rag_agent",
+        "lats_rag_agent",
         "react_rag_agent",
         "critique_rag_agent",
         "sub_question_rag",
@@ -231,7 +240,7 @@ SEARCH_SPACE = SearchSpace(
         critique_agent_llms=LLMS,
         reflection_agent_llms=LLMS,
     ),
-    # lats_rag_agent=LATSRagAgent(),
+    lats_rag_agent=LATSRagAgent(),
     reranker=Reranker(llms=LLMS),
     hyde=Hyde(llms=LLMS),
     few_shot_retriever=FewShotRetriever(
@@ -254,12 +263,13 @@ DATASETS = [
     # BrightHF(subset="biology"),
     # CragTask3HF(subset="music"),
     # CragTask3HF(subset="sports"),
-    DRDocsHF(),
-    FinanceBenchHF(),
+    # DRDocsHF(),
+    # InfiniteBenchHF(),
+    # MultiHopRAGHF(),
+    # -----------------------------------------------
+    # FinanceBenchHF(),
     HotPotQAHF(subset="train_hard"),
-    InfiniteBenchHF(),
-    MultiHopRAGHF(),
-    PhantomWikiv050(),
+    # PhantomWikiv050(),
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
     # -----------------------
@@ -283,7 +293,7 @@ def get_optimization_parameters():
         baselines_cycle_llms=True,
         shuffle_baselines=True,
         max_concurrent_trials=50,
-        num_eval_samples=50,
+        num_eval_samples=100,
         num_eval_batch=5,
         rate_limiter_max_coros=30,  # control the number of concurrent evals ...
         rate_limiter_period=60,  # ... per given time unit
@@ -307,6 +317,7 @@ def get_optimization_parameters():
         use_toy_baselines=False,
         # -----------------------------------------------
         sampler="tpe",
+        objective_2_name=OBJ2_NAME,
     )
     if BASELINES:
         start = BASELINES_START or 0
