@@ -53,21 +53,21 @@ from syftr.studyconfig_helper import build_configs
 # -------------------------------------------------------
 PREFIX = "silver"  # this three parameters
 BENCH_NUM = 1  # are used to name
-# RUN_NAME = "in-sample"  # your config files and studies
-RUN_NAME = "out-of-sample"
+RUN_NAME = "in-sample"  # your config files and studies
+# RUN_NAME = "out-of-sample"
 # -------------------------------------------------------
-# NUM_TRIALS = 0  # total number of optimization trials per submission
-NUM_TRIALS = 700  # total number of optimization trials per submission
+NUM_TRIALS = 0  # total number of optimization trials per submission
+# NUM_TRIALS = 700  # total number of optimization trials per submission
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
-RECREATE_STUDY = False  # if set to True, recreating an existing study without failed or running trials
+RECREATE_STUDY = True  # if set to True, recreating an existing study without failed or running trials
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 MINUTES_BEFORE_NEXT_SUBMISSION = 1
-# CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
-CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
+CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
+# CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
-BASELINES_START = 600  # you can restrict the number of baselines ...
+BASELINES_START = 0  # you can restrict the number of baselines ...
 BASELINES_END = 900  # ... to start with here to avoid OOM issues
 STOP_AFTER_ONE_BATCH_OF_BASELINES = (
     False  # useful when recreating studies and using a lot of baselines
@@ -254,21 +254,22 @@ DATASETS = [
     # BrightHF(subset="biology"),
     # CragTask3HF(subset="music"),
     # CragTask3HF(subset="sports"),
-    DRDocsHF(),
-    FinanceBenchHF(),
-    HotPotQAHF(subset="train_hard"),
-    InfiniteBenchHF(),
-    MultiHopRAGHF(),
-    PhantomWikiv050(),
+    # -----------------------------------------------
+    # DRDocsHF(),
+    # FinanceBenchHF(),
+    # HotPotQAHF(subset="train_hard"),
+    # InfiniteBenchHF(),
+    # MultiHopRAGHF(),
+    # PhantomWikiv050(),
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
     # -----------------------
-    # BrightHF(subset="psychology"),
-    # BrightHF(subset="earth_science"),
-    # BrightHF(subset="economics"),
-    # BrightHF(subset="robotics"),
-    # BrightHF(subset="sustainable_living"),
-    # BrightHF(subset="pony"),
+    BrightHF(subset="psychology"),
+    BrightHF(subset="earth_science"),
+    BrightHF(subset="economics"),
+    BrightHF(subset="robotics"),
+    BrightHF(subset="sustainable_living"),
+    BrightHF(subset="pony"),
 ]
 assert DATASETS, "No datasets found. Please check the dataset list."
 
