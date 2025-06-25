@@ -94,24 +94,24 @@ MODEL_PRICING_INFO: Dict[str, Dict[str, Dict[str, float]]] = {
             "output": 0.2 / 1e6,
         },
         "cerebras-llama33-70B": {
-            "input": 1.00 / 1e6,
-            "output": 2.00 / 1e6,
+            "input": 0.85 / 1e6,
+            "output": 1.2 / 1e6,
         },
         "cerebras-qwen-3": {
-            "input": 1.00 / 1e6,
-            "output": 2.00 / 1e6,
+            "input": 0.4 / 1e6,
+            "output": 0.8 / 1e6,
         },
         "cerebras-scout": {
-            "input": 1.00 / 1e6,
-            "output": 2.00 / 1e6,
+            "input": 0.65 / 1e6,
+            "output": 0.85 / 1e6,
         },
         "cerebras-llama31-8B": {
-            "input": 1.00 / 1e6,
-            "output": 2.00 / 1e6,
+            "input": 0.1 / 1e6,
+            "output": 0.1 / 1e6,
         },
         "cerebras-deepseek": {
-            "input": 1.00 / 1e6,
-            "output": 2.00 / 1e6,
+            "input": 2.2 / 1e6,
+            "output": 2.5 / 1e6,
         },
     },
     "characters": {

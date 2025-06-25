@@ -52,7 +52,7 @@ from syftr.studyconfig_helper import build_configs
 
 # -------------------------------------------------------
 PREFIX = "cerebras"  # this three parameters
-BENCH_NUM = 1  # are used to name
+BENCH_NUM = 2  # are used to name
 RUN_NAME = "mix-with-local"
 # -------------------------------------------------------
 OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
@@ -247,12 +247,7 @@ SEARCH_SPACE = SearchSpace(
 
 EVALUATION = Evaluation(
     mode=EVAL_MODE,
-    llms=[
-        "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
-        "Qwen/Qwen2.5",
-        "google/gemma-3-27b-it",
-        "nvidia/Llama-3_3-Nemotron-Super-49B",
-    ],
+    llms=["gpt-4o-mini"],
     raise_on_exception=False,
 )
 
