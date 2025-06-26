@@ -87,7 +87,7 @@ optimization:
   cpus_per_trial: 1
   embedding_device: null
   gpus_per_trial: 0.0
-  max_concurrent_trials: 50
+  max_concurrent_trials: 100
   max_eval_failure_rate: 0.5
   max_trial_cost: 40.0
   method: expanding
