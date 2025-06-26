@@ -67,8 +67,8 @@ MINUTES_BEFORE_NEXT_SUBMISSION = 3
 CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
 # CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
-BASELINES_START = 300  # you can restrict the number of baselines ...
-BASELINES_END = 500  # ... to start with here to avoid OOM issues
+BASELINES_START = 500  # you can restrict the number of baselines ...
+BASELINES_END = 600  # ... to start with here to avoid OOM issues
 STOP_AFTER_ONE_BATCH_OF_BASELINES = (
     False  # useful when recreating studies and using a lot of baselines
 )
