@@ -285,7 +285,7 @@ def get_optimization_parameters():
         baselines=BASELINES,
         baselines_cycle_llms=True,
         shuffle_baselines=True,
-        max_concurrent_trials=100,
+        max_concurrent_trials=50,
         num_eval_samples=100,
         num_eval_batch=5,
         rate_limiter_max_coros=30,  # control the number of concurrent evals ...
@@ -294,8 +294,8 @@ def get_optimization_parameters():
         cpus_per_trial=1,
         seeder_timeout=None,  # None: wait until finished, 0: don't wait
         # -----------------------------------------------
-        # num_random_trials=0,
-        num_random_trials=100,
+        num_random_trials=0,
+        # num_random_trials=100,
         # -----------------------------------------------
         use_individual_baselines=False,
         use_agent_baselines=False,
