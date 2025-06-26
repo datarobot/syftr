@@ -57,8 +57,8 @@ ray-submit-%: studies/%.yaml
 ray-stop-job:
 	@python -m syftr.ray.stop --remote --id="$(id)"
 
-ray-benchmarks:
-	@PYTHONUNBUFFERED=1 python -m syftr.scripts.run_benchmarks --remote 2>&1 | tee $(OUTFILE)
+ray-experiment:
+	@PYTHONUNBUFFERED=1 python -m $(module) --remote 2>&1 | tee $(OUTFILE)
 
 ray-cancel-jobs:
 	@PYTHONUNBUFFERED=1 python -m syftr.scripts.cancel_jobs --substring="$(substring)"
