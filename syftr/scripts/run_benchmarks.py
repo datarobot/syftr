@@ -67,7 +67,7 @@ MINUTES_BEFORE_NEXT_SUBMISSION = 3
 CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
 # CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
-BASELINES_START = 500  # you can restrict the number of baselines ...
+BASELINES_START = 0  # you can restrict the number of baselines ...
 BASELINES_END = 600  # ... to start with here to avoid OOM issues
 STOP_AFTER_ONE_BATCH_OF_BASELINES = (
     False  # useful when recreating studies and using a lot of baselines
@@ -264,11 +264,11 @@ DATASETS = [
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
     # -----------------------
-    BrightHF(subset="psychology"),
-    BrightHF(subset="earth_science"),
-    BrightHF(subset="economics"),
-    BrightHF(subset="robotics"),
-    BrightHF(subset="sustainable_living"),
+    # BrightHF(subset="psychology"),
+    # BrightHF(subset="earth_science"),
+    # BrightHF(subset="economics"),
+    # BrightHF(subset="robotics"),
+    # BrightHF(subset="sustainable_living"),
     BrightHF(subset="pony"),
 ]
 assert DATASETS, "No datasets found. Please check the dataset list."
@@ -390,10 +390,10 @@ def main():
             )
             job_ids.append(job_id)
             logger.info("Started job %s", job_id)
-            if i + 1 < len(configs):
-                # I think this might help the checkpointing bug
-                logger.info("Sleeping for 60 seconds before the next submission")
-                time.sleep(int(60 * MINUTES_BEFORE_NEXT_SUBMISSION))
+            # This might help the checkpointing bug
+            sleep_time = 60 * MINUTES_BEFORE_NEXT_SUBMISSION
+            logger.info(f"Sleeping for {sleep_time} seconds before the next submission")
+            time.sleep(int(sleep_time))
 
     # monitor benchmarks
     log_tailers = [client.tail_job_logs(job) for job in job_ids]
