@@ -1,4 +1,4 @@
-name: "retriever-only-financebench"
+name: "retriever-only-financebench-v2"
 dataset:
   dataset_dir: partitioned
   description: Financial dataset that contains everything about finance, including
@@ -104,11 +104,16 @@ search_space:
       num_queries_max: 20
       num_queries_min: 2
       num_queries_step: 2
+    top_k:
+      kmax: 128
+      kmin: 2
+      log: true
+      step: 1      
   splitter:
     chunk_overlap_frac_max: 0.75
     chunk_overlap_frac_min: 0.0
     chunk_overlap_frac_step: 0.25
-    chunk_max_exp: 12
+    chunk_max_exp: 13
     chunk_min_exp: 9
     methods:
     - html
@@ -121,7 +126,7 @@ optimization:
   embedding_device: cuda
   # use_hf_embedding_models: true
   gpus_per_trial: 0.2
-  max_concurrent_trials: 50
+  max_concurrent_trials: 40
   num_eval_samples: 100
   num_eval_batch: 10
   num_retries_unique_params: 10

@@ -130,7 +130,7 @@ def get_cached(cache_key: str) -> Optional[Any]:
 
         if ray_data is not None:
             logger.info(f"Loading {cache_key} from Ray cache")
-            return cloudpickle.loads(decompress(data))
+            return cloudpickle.loads(decompress(ray_data))
 
         if cfg.storage.s3_cache_enabled:
             if (data := get_file_from_s3(s3_cache_key)) is not None:
