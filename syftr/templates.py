@@ -300,80 +300,57 @@ _FINANCE_EXPERT_INSTRUCTIONS = """
     then there are no debt securities registered to trade on a national securities exchange under a company's name.
 """
 
-# Layouts.
-_DEFAULT_LAYOUT = RichPromptTemplate("""
-    {{instructions}}
-    {{context}}
-    {{query_str}}
-""")
-
-_NO_CONTEXT_LAYOUT = RichPromptTemplate("""
-    {{instructions}}
-    {{query_str}}
-""")
-
-INSTRUCTIONS_BY_NAME = {
-    "default": _DEFAULT_INSTRUCTIONS,
-    "concise": _CONCISE_INSTRUCTIONS,
-    "CoT": _COT_INSTRUCTIONS,
-    "finance-expert": _FINANCE_EXPERT_INSTRUCTIONS,
-}
-
-TEMPLATES_WITH_CONTEXT = {
-    "default": _DEFAULT_LAYOUT.format(
-        instructions=_DEFAULT_INSTRUCTIONS, context=_CONTEXT, query_str=_QUERY_STR
-    ),
-    "concise": _DEFAULT_LAYOUT.format(
-        instructions=_CONCISE_INSTRUCTIONS, context=_CONTEXT, query_str=_QUERY_STR
-    ),
-    "CoT": _DEFAULT_LAYOUT.format(
-        instructions=_COT_INSTRUCTIONS, context=_CONTEXT, query_str=_QUERY_STR
-    ),
-    "finance-expert": _DEFAULT_LAYOUT.format(
-        instructions=_FINANCE_EXPERT_INSTRUCTIONS,
-        context=_CONTEXT,
-        query_str=_QUERY_STR,
-    ),
-}
-
-TEMPLATES_WITHOUT_CONTEXT = {
-    "default": _NO_CONTEXT_LAYOUT.format(
-        instructions=_DEFAULT_INSTRUCTIONS, query_str=_QUERY_STR
-    ),
-    "concise": _NO_CONTEXT_LAYOUT.format(
-        instructions=_CONCISE_INSTRUCTIONS, query_str=_QUERY_STR
-    ),
-    "CoT": _NO_CONTEXT_LAYOUT.format(
-        instructions=_COT_INSTRUCTIONS, query_str=_QUERY_STR
-    ),
-    "finance-expert": _NO_CONTEXT_LAYOUT.format(
-        instructions=_FINANCE_EXPERT_INSTRUCTIONS, query_str=_QUERY_STR
-    ),
-}
-
-_FEW_SHOT_PROMPT_TEMPLATE = """
+_FEW_SHOT_INSTRUCTIONS = """
     Consider the examples below.
-    {{few_shot_examples}}
+    {few_shot_examples}
 """
+
+
+PROMPT_TEMPLATES = {
+    "default": {
+        "instructions": _DEFAULT_INSTRUCTIONS,
+        "context": _CONTEXT,
+        "query_str": _QUERY_STR,
+        "few_shot_examples": _FEW_SHOT_INSTRUCTIONS,
+    },
+    "concise": {
+        "instructions": _CONCISE_INSTRUCTIONS,
+        "context": _CONTEXT,
+        "query_str": _QUERY_STR,
+        "few_shot_examples": _FEW_SHOT_INSTRUCTIONS,
+    },
+    "CoT": {
+        "instructions": _COT_INSTRUCTIONS,
+        "context": _CONTEXT,
+        "query_str": _QUERY_STR,
+        "few_shot_examples": _FEW_SHOT_INSTRUCTIONS,
+    },
+    "finance-expert": {
+        "instructions": _FINANCE_EXPERT_INSTRUCTIONS,
+        "context": _CONTEXT,
+        "query_str": _QUERY_STR,
+        "few_shot_examples": _FEW_SHOT_INSTRUCTIONS,
+    },
+}
+
+MAIN_LAYOUT = RichPromptTemplate("""
+    {{instructions}}
+    {% if with_context %} {{context}} {% endif}
+    {% if with_few_shot_prompt} {{few_show_examples}} {% endif}
+    {{query_str}}
+""")
 
 
 def get_template(
     template_name: str, with_context: bool = False, with_few_shot_prompt: bool = False
 ) -> str:
-    if with_context:
-        template = (
-            TEMPLATES_WITH_CONTEXT[template_name]
-            if with_context
-            else TEMPLATES_WITHOUT_CONTEXT[template_name]
-        )
-    if with_few_shot_prompt:
-        template = f"{_FEW_SHOT_PROMPT_TEMPLATE}{template}"
-    return template
-
-
-def get_prompt_instructions_by_name(template_name: str) -> str:
-    return INSTRUCTIONS_BY_NAME[template_name]
+    """Returns a formatted prompt specified by a template name."""
+    components = PROMPT_TEMPLATES[template_name]
+    components["with_context"] = with_context
+    components["with_few_shot_prompt"] = with_few_shot_prompt
+    return MAIN_LAYOUT.format(**components)
 
 
 def get_template_names() -> T.List[str]:
-    return list(TEMPLATES_WITHOUT_CONTEXT.keys())
+    """Returns all template names."""
+    return list(PROMPT_TEMPLATES.keys())
