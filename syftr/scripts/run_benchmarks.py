@@ -63,7 +63,7 @@ RECREATE_STUDY = True  # if set to True, recreating an existing study without fa
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-MINUTES_BEFORE_NEXT_SUBMISSION = 1
+MINUTES_BEFORE_NEXT_SUBMISSION = 2
 CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
 BASELINES_START = 600  # you can restrict the number of baselines ...
@@ -162,7 +162,7 @@ LLMS: T.List[str] = [
     "cerebras-llama33-70B",
     "cerebras-qwen-3",
     "cerebras-scout",
-    "cerebras-llama31-8B",
+    # "cerebras-llama31-8B",
     "cerebras-deepseek",
 ] + LOCAL_LLMS
 
@@ -260,9 +260,9 @@ DATASETS = [
     # MultiHopRAGHF(),
     # -----------------------------------------------
     FinanceBenchHF(),
-    HotPotQAHF(subset="train_hard"),
+    # HotPotQAHF(subset="train_hard"),
     PhantomWikiv050(),
-    InfiniteBenchHF(),
+    # InfiniteBenchHF(),
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
     # -----------------------

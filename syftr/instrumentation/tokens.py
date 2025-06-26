@@ -81,6 +81,7 @@ MODEL_PRICING_INFO: Dict[str, Dict[str, Dict[str, float]]] = {
         },
         # Local models use together.ai pricing structure
         "Qwen/Qwen2.5": {"input": 0.80 / 1e6, "output": 0.80 / 1e6},
+        "Qwen/Qwen3.3": {"input": 0.80 / 1e6, "output": 0.80 / 1e6},
         "deepseek-ai/DeepSeek-R1-Distill-Llama-70B": {
             "input": 0.88 / 1e6,
             "output": 0.88 / 1e6,
