@@ -457,7 +457,7 @@ class FusionMode(BaseModel, SearchSpaceMixin):
 
 class Retriever(BaseModel, SearchSpaceMixin):
     top_k: TopK = Field(
-        default_factory=TopK,
+        default_factory=lambda: TopK(kmax=64, log=True),
         description="Configuration for the number of items to retrieve.",
     )
     methods: T.List[str] = Field(
@@ -606,7 +606,7 @@ class Reranker(BaseModel, SearchSpaceMixin):
     """
 
     top_k: TopK = Field(
-        default_factory=lambda: TopK(kmax=128, log=True),
+        default_factory=lambda: TopK(kmax=32, log=True),
         description="Configuration for the number of items to rerank.",
     )
     llms: T.List[str] = Field(
@@ -904,7 +904,7 @@ class SearchSpace(BaseModel):
         description="Configuration for the few-shot retriever.",
     )
     rag_retriever: Retriever = Field(
-        default_factory=lambda: Retriever(top_k=TopK(kmax=128, log=True)),
+        default_factory=Retriever,
         description="Configuration for the RAG retriever.",
     )
     splitter: Splitter = Field(
@@ -1179,7 +1179,7 @@ class RetrieverSearchSpace(BaseModel):
         description="LLMs used for response synthesis.",
     )
     rag_retriever: Retriever = Field(
-        default_factory=lambda: Retriever(top_k=TopK(kmax=128, log=True)),
+        default_factory=Retriever,
         description="Configuration for the RAG retriever.",
     )
     splitter: Splitter = Field(
