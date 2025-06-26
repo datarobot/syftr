@@ -335,8 +335,8 @@ PROMPT_TEMPLATES = {
 
 MAIN_LAYOUT = RichPromptTemplate("""
     {{instructions}}
-    {% if with_context %} {{context}} {% endif}
-    {% if with_few_shot_prompt %} {{few_show_examples}} {% endif}
+    {% if with_context == "True" %} {{context}} {% endif}
+    {% if with_few_shot_prompt == "True" %} {{few_show_examples}} {% endif}
     {{query_str}}
 """)
 
@@ -346,8 +346,8 @@ def get_template(
 ) -> str:
     """Returns a formatted prompt specified by a template name."""
     components = PROMPT_TEMPLATES[template_name]
-    components["with_context"] = with_context
-    components["with_few_shot_prompt"] = with_few_shot_prompt
+    components["with_context"] = str(with_context)
+    components["with_few_shot_prompt"] = str(with_few_shot_prompt)
     return MAIN_LAYOUT.format(**components)
 
 
