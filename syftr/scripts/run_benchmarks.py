@@ -7,9 +7,13 @@ import typing as T
 from ray.job_submission import JobStatus
 
 from syftr.configuration import cfg
+from syftr.helpers import get_flows_from_trials
 from syftr.logger import logger
 from syftr.optimization import user_confirm_delete
-from syftr.optuna_helper import get_completed_flows, get_pareto_flows
+from syftr.optuna_helper import (
+    get_completed_trials,
+    get_pareto_flows,
+)
 from syftr.ray.submit import get_client, start_study
 from syftr.storage import (  # noqa
     BrightHF,
@@ -53,22 +57,22 @@ from syftr.studyconfig_helper import build_configs
 # -------------------------------------------------------
 PREFIX = "silver"  # this three parameters
 BENCH_NUM = 1  # are used to name
-RUN_NAME = "in-sample"  # your config files and studies
-# RUN_NAME = "out-of-sample"
+# RUN_NAME = "in-sample"  # your config files and studies
+RUN_NAME = "out-of-sample"
 # -------------------------------------------------------
-NUM_TRIALS = 0  # total number of optimization trials per submission
-# NUM_TRIALS = 700  # total number of optimization trials per submission
+# NUM_TRIALS = 0  # total number of optimization trials per submission
+NUM_TRIALS = 400  # total number of optimization trials per submission
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = True  # if set to True, recreating an existing study without failed or running trials
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 MINUTES_BEFORE_NEXT_SUBMISSION = 3
-CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
-# CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
+# CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
+CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
 BASELINES_START = 0  # you can restrict the number of baselines ...
-BASELINES_END = 600  # ... to start with here to avoid OOM issues
+BASELINES_END = 200  # ... to start with here to avoid OOM issues
 STOP_AFTER_ONE_BATCH_OF_BASELINES = (
     False  # useful when recreating studies and using a lot of baselines
 )
@@ -76,8 +80,8 @@ STOP_AFTER_ONE_BATCH_OF_BASELINES = (
 BASELINE_STUDIES: T.List[str] = [
     "silver1--in-sample--bright_hf--earth_science",
     "silver1--in-sample--bright_hf--economics",
-    "silver1--in-sample--bright_hf--pony",
-    "silver1--in-sample--bright_hf--psychology",
+    # "silver1--in-sample--bright_hf--pony",
+    # "silver1--in-sample--bright_hf--psychology",
     "silver1--in-sample--bright_hf--robotics",
     "silver1--in-sample--bright_hf--sustainable_living",
 ]
@@ -135,10 +139,10 @@ if CUSTOM_BASELINES == "pareto":
                 BASELINES.append(flow)
     logger.info(f"We have {len(BASELINES)} Pareto-baselines for seeding")
 elif CUSTOM_BASELINES == "all":
-    for study in BASELINE_STUDIES:
-        for flow in get_completed_flows(study):
-            if flow not in BASELINES:
-                BASELINES.append(flow)
+    df_trials = get_completed_trials(study=BASELINE_STUDIES)
+    df_trials = df_trials.sort_values(by="number")
+    flows = get_flows_from_trials(df_trials)
+    BASELINES.extend(flows)
     logger.info(f"We have {len(BASELINES)} baselines for seeding")
 elif CUSTOM_BASELINES == "silver":
     BASELINES = json.load(open(cfg.paths.results_dir / "silver-bullets.json", "r"))
@@ -256,20 +260,20 @@ DATASETS = [
     # CragTask3HF(subset="sports"),
     # -----------------------------------------------
     # DRDocsHF(),
-    # FinanceBenchHF(),
-    # HotPotQAHF(subset="train_hard"),
-    # InfiniteBenchHF(),
-    # MultiHopRAGHF(),
-    # PhantomWikiv050(),
+    FinanceBenchHF(),
+    HotPotQAHF(subset="train_hard"),
+    InfiniteBenchHF(),
+    MultiHopRAGHF(),
+    PhantomWikiv050(),
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
-    # -----------------------
+    # BrightHF(subset="pony"),
     # BrightHF(subset="psychology"),
+    # -----------------------
     # BrightHF(subset="earth_science"),
     # BrightHF(subset="economics"),
     # BrightHF(subset="robotics"),
     # BrightHF(subset="sustainable_living"),
-    BrightHF(subset="pony"),
 ]
 assert DATASETS, "No datasets found. Please check the dataset list."
 
