@@ -336,7 +336,7 @@ PROMPT_TEMPLATES = {
 MAIN_LAYOUT = RichPromptTemplate("""
     {{instructions}}
     {% if with_context == "True" %} {{context}} {% endif}
-    {% if with_few_shot_prompt == "True" %} {{few_show_examples}} {% endif}
+    {% if with_few_shot_prompt == "True" %} {{few_show_examples}} {% endif %}
     {{query_str}}
 """)
 
