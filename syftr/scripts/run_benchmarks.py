@@ -52,15 +52,15 @@ from syftr.studyconfig_helper import build_configs
 
 # -------------------------------------------------------
 PREFIX = "cerebras"  # this three parameters
-BENCH_NUM = 2  # are used to name
-RUN_NAME = "mix-with-local"
+BENCH_NUM = 3  # are used to name
+RUN_NAME = "agents-only"
 # -------------------------------------------------------
 OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
 NUM_TRIALS = 10000  # total number of optimization trials per submission
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = True  # if set to True, recreating an existing study without failed or running trials
-EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
+EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 MINUTES_BEFORE_NEXT_SUBMISSION = 2
@@ -199,7 +199,7 @@ SEARCH_SPACE = SearchSpace(
     ),
     rag_modes=[
         # "no_rag",
-        "rag",
+        # "rag",
         "lats_rag_agent",
         "react_rag_agent",
         "critique_rag_agent",
@@ -294,8 +294,8 @@ def get_optimization_parameters():
         cpus_per_trial=1,
         seeder_timeout=None,  # None: wait until finished, 0: don't wait
         # -----------------------------------------------
-        num_random_trials=0,
-        # num_random_trials=100,
+        # num_random_trials=0,
+        num_random_trials=100,
         # -----------------------------------------------
         use_individual_baselines=False,
         use_agent_baselines=False,
