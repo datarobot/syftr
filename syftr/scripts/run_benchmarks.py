@@ -62,6 +62,8 @@ RUN_NAME = "in-sample"  # your config files and studies
 # -------------------------------------------------------
 NUM_TRIALS = 0  # total number of optimization trials per submission
 # NUM_TRIALS = 50  # total number of optimization trials per submission
+MAX_CONCURRENT_TRIALS = 10
+NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
     False  # WARNING: do not use with simultaneous runs using the same study!
@@ -69,12 +71,12 @@ RECREATE_STUDY = (
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-MINUTES_BEFORE_NEXT_SUBMISSION = 1
+MINUTES_BEFORE_NEXT_SUBMISSION = 10
 CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
 # CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
 BASELINES_START = 0  # you can restrict the number of baselines ...
-BASELINES_END = 100  # ... to start with here to avoid OOM issues
+BASELINES_END = 200  # ... to start with here to avoid OOM issues
 # -------------------------------------------------------
 BASELINE_STUDIES: T.List[str] = [
     "silver1--in-sample--bright_hf--earth_science",
@@ -286,8 +288,8 @@ def get_optimization_parameters():
         baselines=BASELINES,
         baselines_cycle_llms=True,
         shuffle_baselines=True,
-        max_concurrent_trials=50,
-        num_eval_samples=50,
+        max_concurrent_trials=MAX_CONCURRENT_TRIALS,
+        num_eval_samples=NUM_EVAL_SAMPLES,
         num_eval_batch=5,
         rate_limiter_max_coros=30,  # control the number of concurrent evals ...
         rate_limiter_period=60,  # ... per given time unit
