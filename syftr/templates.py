@@ -350,8 +350,8 @@ def get_template(
 ) -> str:
     """Returns a formatted prompt specified by a template name."""
     components = PROMPT_TEMPLATES[template_name]
-    components["with_context"] = with_context
-    components["with_few_shot_prompt"] = with_few_shot_prompt
+    components["with_context"] = with_context  # type: ignore
+    components["with_few_shot_prompt"] = with_few_shot_prompt  # type: ignore
     return MAIN_LAYOUT.format(**components)
 
 
