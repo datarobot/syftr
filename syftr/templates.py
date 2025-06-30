@@ -3,6 +3,9 @@ import typing as T
 
 from llama_index.core.prompts import RichPromptTemplate
 
+from syftr.configuration import cfg
+from syftr.logger import logger
+
 # Default prompt components
 _DEFAULT_INSTRUCTIONS = """
     You are a helpful assistant.
