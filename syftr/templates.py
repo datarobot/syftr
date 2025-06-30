@@ -1,3 +1,4 @@
+import json
 import typing as T
 
 from llama_index.core.prompts import RichPromptTemplate
@@ -335,8 +336,8 @@ PROMPT_TEMPLATES = {
 
 MAIN_LAYOUT = RichPromptTemplate("""
     {{instructions}}
-    {% if with_context == "True" %} {{context}} {% endif %}
-    {% if with_few_shot_prompt == "True" %} {{few_show_examples}} {% endif %}
+    {% if with_context %} {{context}} {% endif %}
+    {% if with_few_shot_prompt %} {{few_shot_examples}} {% endif %}
     {{query_str}}
 """)
 
@@ -346,11 +347,23 @@ def get_template(
 ) -> str:
     """Returns a formatted prompt specified by a template name."""
     components = PROMPT_TEMPLATES[template_name]
-    components["with_context"] = str(with_context)
-    components["with_few_shot_prompt"] = str(with_few_shot_prompt)
+    components["with_context"] = with_context
+    components["with_few_shot_prompt"] = with_few_shot_prompt
     return MAIN_LAYOUT.format(**components)
 
 
 def get_template_names() -> T.List[str]:
     """Returns all template names."""
     return list(PROMPT_TEMPLATES.keys())
+
+
+def _load_json_file(file_path):
+    logger.debug(f"Loading: {file_path}")
+    with open(file_path, "r") as file:
+        data = json.load(file)
+    return data
+
+
+def get_agent_template(prompt_name: str):
+    agentic_templates = _load_json_file(cfg.paths.agentic_templates)
+    return agentic_templates[prompt_name]
