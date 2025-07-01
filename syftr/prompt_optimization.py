@@ -127,7 +127,7 @@ def optimize_prompt(
         return curr_accuracy
 
     tflow = TracedFlow(flow)
-    existing_flow_attrs = [arg for arg in OPTIMIZER_LLM if hasattr(flow, arg)]
+    existing_flow_attrs = [arg for arg in PARAMS_TO_OPTMIZE if hasattr(flow, arg)]
     opt_args = [getattr(tflow, arg) for arg in existing_flow_attrs]
     optimizer = OptoPrime(opt_args)
     param_results = []
@@ -136,7 +136,7 @@ def optimize_prompt(
         curr_accuracy, evals = asyncio.run(
             quick_eval(flow, evaluator_llm, test, rate_limiter)
         )
-        output = merge_nodes(*existing_flow_attrs)
+        output = merge_nodes(*opt_args)
         logger.info("Accuracy on epoch %d: %f", n_epoch, curr_accuracy)
         raw_summary = litellm.completion(
             model=litellm_model,
@@ -164,7 +164,7 @@ def optimize_prompt(
             continue
 
         for attr in existing_flow_attrs:
-            setattr(flow, attr, getattr(tflow, attr))
+            setattr(flow, attr, getattr(tflow, attr).data)
 
         param_results.append((curr_accuracy, flow))
 
