@@ -669,7 +669,7 @@ class CoAAgentFlow(AgenticRAGFlow):
     name: str = "CoA Agent Flow"
     enable_calculator: bool = False
 
-    @cached_property
+    @property
     def tools(self) -> T.List[BaseTool]:
         tools: T.List[BaseTool] = [
             QueryEngineTool(
