@@ -15,12 +15,13 @@ from opto.optimizers import OptoPrime
 from opto.trace.bundle import bundle
 from opto.trace.nodes import ParameterNode
 
-from syftr import evaluation, flows
+from syftr import flows
 from syftr.configuration import cfg
 from syftr.core import QAPair
+from syftr.evaluation import evaluation
 from syftr.llm import get_llm
 from syftr.logger import logger
-from syftr.optuna_helper import get_pareto_df
+from syftr.optuna_helper import get_pareto_mask
 from syftr.ray.utils import ray_init
 from syftr.studies import StudyConfig, get_default_study_name
 from syftr.tuner.qa_tuner import build_flow, eval_dataset
@@ -268,7 +269,12 @@ def run_pareto_flows_prompt_optimization(study_path: str, remote: bool = False):
         study_name=study_config.name,
         storage=storage,
     )
-    df_pareto = get_pareto_df(study_config, success_rate=0.5)
+    df = study.trials_dataframe()
+    df_agents = df[df["params_rag_mode"] != "rag"]
+    pareto_mask = get_pareto_mask(df_agents)
+    df_pareto = df_agents[pareto_mask]
+    df_pareto = df_pareto[df_pareto["values_0"] >= 0.3]
+
     new_study_name = f"{study_config.name}_prompt_optimization"
     logger.info("Creating new study %s for optimized prompts...", new_study_name)
     po_study = optuna.create_study(
