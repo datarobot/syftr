@@ -52,12 +52,13 @@ from syftr.studyconfig_helper import build_configs
 
 # -------------------------------------------------------
 PREFIX = "cerebras"  # this three parameters
-BENCH_NUM = 3  # are used to name
-RUN_NAME = "agents-only"
+BENCH_NUM = 4  # are used to name
+RUN_NAME = "rag-and-agents-local-only"
+# RUN_NAME = "rag-and-agents-cerebras-only"
 # -------------------------------------------------------
 OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
-NUM_TRIALS = 10000  # total number of optimization trials per submission
+NUM_TRIALS = 600  # total number of optimization trials per submission
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = True  # if set to True, recreating an existing study without failed or running trials
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
@@ -157,14 +158,14 @@ else:
 #     embedding_model="BAAI/bge-large-en-v1.5",
 # )
 
-
-LLMS: T.List[str] = [
-    "cerebras-llama33-70B",
-    "cerebras-qwen-3",
-    "cerebras-scout",
-    # "cerebras-llama31-8B",
-    "cerebras-deepseek",
-] + LOCAL_LLMS
+LLMS: T.List[str] = LOCAL_LLMS
+# LLMS: T.List[str] = [
+#     "cerebras-llama33-70B",
+#     "cerebras-qwen-3",
+#     "cerebras-scout",
+#     # "cerebras-llama31-8B",
+#     "cerebras-deepseek",
+# ]
 
 EMBEDDING_MODELS = [
     "BAAI/bge-small-en-v1.5",
@@ -199,7 +200,7 @@ SEARCH_SPACE = SearchSpace(
     ),
     rag_modes=[
         # "no_rag",
-        # "rag",
+        "rag",
         "lats_rag_agent",
         "react_rag_agent",
         "critique_rag_agent",
@@ -261,7 +262,7 @@ DATASETS = [
     # -----------------------------------------------
     FinanceBenchHF(),
     # HotPotQAHF(subset="train_hard"),
-    PhantomWikiv050(),
+    # PhantomWikiv050(),
     # InfiniteBenchHF(),
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
@@ -285,8 +286,8 @@ def get_optimization_parameters():
         baselines=BASELINES,
         baselines_cycle_llms=True,
         shuffle_baselines=True,
-        max_concurrent_trials=50,
-        num_eval_samples=100,
+        max_concurrent_trials=100,
+        num_eval_samples=50,
         num_eval_batch=5,
         rate_limiter_max_coros=30,  # control the number of concurrent evals ...
         rate_limiter_period=60,  # ... per given time unit
