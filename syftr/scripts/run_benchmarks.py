@@ -57,27 +57,27 @@ from syftr.studyconfig_helper import build_configs
 # -------------------------------------------------------
 PREFIX = "silver"  # this three parameters
 BENCH_NUM = 1  # are used to name
-# RUN_NAME = "in-sample"  # your config files and studies
-RUN_NAME = "out-of-sample"
+RUN_NAME = "in-sample"  # your config files and studies
+# RUN_NAME = "out-of-sample"
 # -------------------------------------------------------
-# NUM_TRIALS = 0  # total number of optimization trials per submission
-NUM_TRIALS = 100  # total number of optimization trials per submission
+NUM_TRIALS = 0  # total number of optimization trials per submission
+# NUM_TRIALS = 100  # total number of optimization trials per submission
 MAX_CONCURRENT_TRIALS = 50
 NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
-    False  # WARNING: do not use with simultaneous runs using the same study!
+    True  # WARNING: do not use with simultaneous runs using the same study!
 )
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 MINUTES_BEFORE_NEXT_SUBMISSION = 2
 
-CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
-# CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
+# CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
+CUSTOM_BASELINES = "pareto"  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
-BASELINES_START = 500  # you can restrict the number of baselines ...
-BASELINES_END = 1000  # ... to start with here to avoid OOM issues
+BASELINES_START = 0  # you can restrict the number of baselines ...
+BASELINES_END = 100  # ... to start with here to avoid OOM issues
 # -------------------------------------------------------
 BASELINE_STUDIES: T.List[str] = [
     "silver1--in-sample--bright_hf--earth_science",
@@ -261,21 +261,21 @@ DATASETS = [
     # CragTask3HF(subset="music"),
     # CragTask3HF(subset="sports"),
     # -----------------------------------------------
-    DRDocsHF(),
+    # DRDocsHF(),
     # FinanceBenchHF(),
     # HotPotQAHF(subset="train_hard"),
     # InfiniteBenchHF(),
-    MultiHopRAGHF(),
+    # MultiHopRAGHF(),
     # PhantomWikiv050(),
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
     # BrightHF(subset="pony"),
     # BrightHF(subset="psychology"),
     # -----------------------
-    # BrightHF(subset="earth_science"),
-    # BrightHF(subset="economics"),
-    # BrightHF(subset="robotics"),
-    # BrightHF(subset="sustainable_living"),
+    BrightHF(subset="earth_science"),
+    BrightHF(subset="economics"),
+    BrightHF(subset="robotics"),
+    BrightHF(subset="sustainable_living"),
 ]
 assert DATASETS, "No datasets found. Please check the dataset list."
 
