@@ -21,6 +21,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from slugify import slugify
 
 from syftr.configuration import cfg
+from syftr.helpers import is_numeric
 from syftr.llm import AZURE_GPT4O_STD
 from syftr.studies import get_response_synthesizer_llm, get_template_name
 
@@ -238,9 +239,16 @@ def get_name(study_name: str, titles=None) -> str:
         name += "InfiniteBench"
     elif "drdocs" in study_name:
         name += "DRDocs"
-    elif "crag-" in study_name:
+    elif "bright-" in study_name:
+        name += "Bright "
+        name += study_name.split("-")[-1].capitalize()
+    elif "crag-" in study_name or "crag_" in study_name:
         name += "CRAG3 "
         name += study_name.split("-")[-1].capitalize()
+    elif "phantomwiki" in study_name:
+        name += "PhantomWiki"
+    elif "multihoprag" in study_name:
+        name += "MultihopRAQ"
     else:
         print(f"WARNING: please add '{study_name}' to the benchmark_name() function.")
         if "--" in study_name:
@@ -329,7 +337,8 @@ def set_from_flow(df: pd.DataFrame):
             flow = json.loads(row["user_attrs_flow"])
             params_flow = {"params_" + param: value for param, value in flow.items()}
             for param in params_flow:
-                if params_flow[param] != np.nan:
+                # if params_flow[param] is for some reason None, np.isnan will fail
+                if is_numeric(params_flow[param]) and not np.isnan(params_flow[param]):
                     if param not in df.columns:
                         inferred_type = type(params_flow[param])
                         if inferred_type is float:
@@ -3233,9 +3242,11 @@ def all_parameters_all_studies_plot(
         df[group_col] = 0
     elif group_quantiles is not None or group_labels is not None:
         df[group_col] = df.groupby("study_name")[group_col].transform(
-            lambda x: np.nan
-            if group_labels is not None and x.nunique() <= len(group_labels)
-            else pd.qcut(x, group_quantiles, labels=group_labels, duplicates="drop")
+            lambda x: (
+                np.nan
+                if group_labels is not None and x.nunique() <= len(group_labels)
+                else pd.qcut(x, group_quantiles, labels=group_labels, duplicates="drop")
+            )
         )
     n_groups = df[group_col].nunique(dropna=False)
 

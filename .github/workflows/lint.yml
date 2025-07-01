@@ -6,13 +6,7 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
 jobs:
-  ruff:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/ruff-action@v3  # Runs ruff check
-      - run: ruff format --check
-  mypy:
+  pre-commit:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,38 +24,8 @@ jobs:
         env:
           UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
 
-      # Restore from cache based on pyproject.toml
-      # Could use another cache key but this should keep us updating the cache
-      # regularly enough to be useful
-      - name: Restore mypy cache
-        uses: actions/cache/restore@v4
-        id: cache
+      # Run pre-commit check here
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.0
         with:
-          path: |
-            .mypy_cache
-          key: mypy-${{ hashFiles('**/pyproject.toml') }}
-
-      # Run the linter here!
-      - name: Run mypy
-        run: uv run --frozen mypy . --exclude scratch --incremental
-        env:
-          UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
-
-      - name: Cache mypy cache
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            .mypy_cache
-          key: mypy-${{ hashFiles('**/pyproject.toml') }}
-  nbstripout:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install nbstripout
-        run: pip install nbstripout
-
-      - name: Auto-strip all notebooks (excluding examples/)
-        run: |
-          find . -name "*.ipynb" -not -path "./examples/*" -exec nbstripout {} +
+          extra_args: --all-files        

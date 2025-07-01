@@ -45,7 +45,8 @@ from llama_index.core.response_synthesizers.type import ResponseMode
 from llama_index.core.retrievers import BaseRetriever
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.storage.docstore.types import BaseDocumentStore
-from llama_index.core.tools import BaseTool, QueryEngineTool, ToolMetadata
+from llama_index.core.tools import BaseTool, FunctionTool, QueryEngineTool, ToolMetadata
+from llama_index.packs.agents_coa import CoAAgentPack
 from numpy import ceil
 
 from syftr.configuration import cfg
@@ -663,6 +664,57 @@ class LATSAgentFlow(AgenticRAGFlow):
         )
 
 
+@dataclass(kw_only=True)
+class CoAAgentFlow(AgenticRAGFlow):
+    name: str = "CoA Agent Flow"
+    enable_calculator: bool = False
+
+    @cached_property
+    def tools(self) -> T.List[BaseTool]:
+        tools: T.List[BaseTool] = [
+            QueryEngineTool(
+                query_engine=self.query_engine,
+                metadata=ToolMetadata(
+                    name=self.dataset_name.replace("/", "_"),
+                    description=self.dataset_description,
+                ),
+            ),
+        ]
+
+        if self.enable_calculator:
+
+            def add(a: int, b: int):
+                """Add two numbers together"""
+                return a + b
+
+            def subtract(a: int, b: int):
+                """Subtract b from a"""
+                return a - b
+
+            def multiply(a: int, b: int):
+                """Multiply two numbers together"""
+                return a * b
+
+            def divide(a: int, b: int):
+                """Divide a by b"""
+                return a / b
+
+            code_tools = [
+                FunctionTool.from_defaults(fn=fn)
+                for fn in [add, subtract, multiply, divide]
+            ]
+            tools += code_tools
+        return tools
+
+    @property
+    def agent(self) -> AgentRunner:
+        pack = CoAAgentPack(
+            tools=self.tools,
+            llm=self.response_synthesizer_llm,
+        )
+        return pack.agent
+
+
 class Flows(Enum):
     GENERATOR_FLOW = Flow
     RAG_FLOW = RAGFlow
@@ -670,4 +722,5 @@ class Flows(Enum):
     LLAMA_INDEX_CRITIQUE_AGENT_FLOW = CritiqueAgentFlow
     LLAMA_INDEX_SUB_QUESTION_FLOW = SubQuestionRAGFlow
     LLAMA_INDEX_LATS_RAG_AGENT = LATSAgentFlow
+    LLAMA_INDEX_COA_RAG_AGENT = CoAAgentFlow
     RETRIEVER_FLOW = RetrieverFlow

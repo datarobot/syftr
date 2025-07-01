@@ -51,7 +51,7 @@ def check():
 )
 @click.option(
     "--follow/--no-follow",
-    default=False,
+    default=True,
     help="Stream logs until the study completes.",
 )
 def run(config_path: str, follow: bool):

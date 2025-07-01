@@ -36,6 +36,7 @@ def _build_env(delete_confirmed: bool) -> Dict[str, str]:
         "TOKENIZERS_PARALLELISM": "true",
         "NLTK_DATA": cfg.paths.nltk_dir.as_posix(),
         "SYFTR_VERSION": __version__,
+        "SYFTR_WORKER_JOB": "true",
     }
     if delete_confirmed:
         env["SYFTR_OPTUNA__NOCONFIRM"] = "true"
@@ -71,7 +72,9 @@ def _prepare_working_dir(study_config_path: Path) -> str:
     cfg_data = json.loads(
         # Don't send un-set configurations like default paths, as
         # these will be auto-discovered on the cluster.
-        cfg.model_dump_json(exclude_unset=True, exclude_defaults=True)
+        cfg.model_dump_json(
+            exclude_unset=True,
+        )
     )
     with open(dest / "config.yaml", "w") as cfg_file:
         yaml.safe_dump(cfg_data, cfg_file)

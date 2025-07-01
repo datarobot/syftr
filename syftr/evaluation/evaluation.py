@@ -1,4 +1,5 @@
 # flake8: noqa: E402
+from syftr.evaluation.evaluator_factory import CorrectnessEvaluatorFactory
 from syftr.event_loop import fix_asyncio
 
 fix_asyncio()
@@ -41,7 +42,6 @@ from syftr.configuration import EVAL__RAISE_ON_EXCEPTION
 from syftr.flows import Flow, RetrieverFlow
 from syftr.helpers import get_exception_report
 from syftr.instrumentation.tokens import LLMCallData
-from syftr.llm import get_llm
 from syftr.pruning import CostPruner, ParetoPruner, RuntimePruner
 from syftr.studies import AgentStudyConfig, SearchSpace, StudyConfig
 
@@ -753,8 +753,8 @@ def eval_dataset(
         "consensus",
         "retriever",
     }, "Evaluation mode should be 'single', 'random', 'consensus', or 'retriever'."
-    eval_llms = [get_llm(name) for name in study_config.evaluation.llms]
-    evaluators = [CorrectnessEvaluator(llm=llm) for llm in eval_llms]
+
+    evaluators = CorrectnessEvaluatorFactory(study_config).get_evaluators()
     rate_limiter = AsyncLimiter(
         study_config.optimization.rate_limiter_max_coros,
         study_config.optimization.rate_limiter_period,
@@ -881,6 +881,12 @@ def calculate_metrics(
         or int(res.evaluation_exception is not None)
         for res in results
     )
+    num_generation_errors = sum(
+        int(res.generation_exception is not None) for res in results
+    )
+    num_evaluation_errors = sum(
+        int(res.evaluation_exception is not None) for res in results
+    )
     acc = sum(passing) / num_total
     passing_std = np.std(passing)
 
@@ -964,6 +970,8 @@ def calculate_metrics(
         "f1_score": f1_score,
         "num_total": num_total,
         "num_errors": num_errors,
+        "num_generation_errors": num_generation_errors,
+        "num_evaluation_errors": num_evaluation_errors,
         "num_success": num_total - num_errors,
         "p80_time": p80_time,
         "run_times_std": run_times_std,

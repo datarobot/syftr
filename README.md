@@ -180,9 +180,13 @@ local_models:
 
 Models added in the ``config.yaml`` will be automatically added to the default search space, or you can enable them manually for specific flow components.
 
-## Custom Datasets
+## Adding Custom Datasets
 
 See detailed instructions [here](https://github.com/datarobot/syftr/blob/main/docs/datasets.md).
+
+## Adding Custom Flows
+
+To add your own flow class, follow the guide [here](https://github.com/datarobot/syftr/blob/main/docs/adding-new-flows.md).
 
 ## Citation
 
