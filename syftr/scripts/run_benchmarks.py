@@ -66,18 +66,18 @@ MAX_CONCURRENT_TRIALS = 50
 NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
-    True  # WARNING: do not use with simultaneous runs using the same study!
+    False  # WARNING: do not use with simultaneous runs using the same study!
 )
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-MINUTES_BEFORE_NEXT_SUBMISSION = 2
+MINUTES_BEFORE_NEXT_SUBMISSION = 1
 
 # CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
-CUSTOM_BASELINES = "pareto"  # "pareto", "all", "silver", None
+CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
-BASELINES_START = 0  # you can restrict the number of baselines ...
-BASELINES_END = 100  # ... to start with here to avoid OOM issues
+BASELINES_START = 500  # you can restrict the number of baselines ...
+BASELINES_END = 1000  # ... to start with here to avoid OOM issues
 # -------------------------------------------------------
 BASELINE_STUDIES: T.List[str] = [
     "silver1--in-sample--bright_hf--earth_science",
