@@ -53,12 +53,12 @@ from syftr.studyconfig_helper import build_configs
 # -------------------------------------------------------
 PREFIX = "cerebras"  # this three parameters
 BENCH_NUM = 4  # are used to name
-RUN_NAME = "rag-and-agents-local-only"
-# RUN_NAME = "rag-and-agents-cerebras-only"
+# RUN_NAME = "rag-and-agents-local-only"
+RUN_NAME = "rag-and-agents-cerebras-only"
 # -------------------------------------------------------
 OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
-NUM_TRIALS = 600  # total number of optimization trials per submission
+NUM_TRIALS = 1400  # total number of optimization trials per submission
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = True  # if set to True, recreating an existing study without failed or running trials
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
@@ -158,14 +158,14 @@ else:
 #     embedding_model="BAAI/bge-large-en-v1.5",
 # )
 
-LLMS: T.List[str] = LOCAL_LLMS
-# LLMS: T.List[str] = [
-#     "cerebras-llama33-70B",
-#     "cerebras-qwen-3",
-#     "cerebras-scout",
-#     # "cerebras-llama31-8B",
-#     "cerebras-deepseek",
-# ]
+# LLMS: T.List[str] = LOCAL_LLMS
+LLMS: T.List[str] = [
+    "cerebras-llama33-70B",
+    "cerebras-qwen-3",
+    "cerebras-scout",
+    # "cerebras-llama31-8B",
+    "cerebras-deepseek",
+]
 
 EMBEDDING_MODELS = [
     "BAAI/bge-small-en-v1.5",
@@ -289,14 +289,14 @@ def get_optimization_parameters():
         max_concurrent_trials=100,
         num_eval_samples=50,
         num_eval_batch=5,
-        rate_limiter_max_coros=30,  # control the number of concurrent evals ...
+        rate_limiter_max_coros=60,  # control the number of concurrent evals ...
         rate_limiter_period=60,  # ... per given time unit
         max_trial_cost=40.0,
         cpus_per_trial=1,
         seeder_timeout=None,  # None: wait until finished, 0: don't wait
         # -----------------------------------------------
-        # num_random_trials=0,
-        num_random_trials=100,
+        num_random_trials=0,
+        # num_random_trials=100,
         # -----------------------------------------------
         use_individual_baselines=False,
         use_agent_baselines=False,
