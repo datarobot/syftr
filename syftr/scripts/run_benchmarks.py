@@ -158,14 +158,14 @@ else:
 #     embedding_model="BAAI/bge-large-en-v1.5",
 # )
 
-LLMS: T.List[str] = LOCAL_LLMS
-# LLMS: T.List[str] = [
-#     "cerebras-llama33-70B",
-#     "cerebras-qwen-3",
-#     "cerebras-scout",
-#     # "cerebras-llama31-8B",
-#     "cerebras-deepseek",
-# ]
+# LLMS: T.List[str] = LOCAL_LLMS
+LLMS: T.List[str] = [
+    "cerebras-llama33-70B",
+    "cerebras-qwen-3",
+    "cerebras-scout",
+    # "cerebras-llama31-8B",
+    "cerebras-deepseek",
+]
 
 EMBEDDING_MODELS = [
     "BAAI/bge-small-en-v1.5",
