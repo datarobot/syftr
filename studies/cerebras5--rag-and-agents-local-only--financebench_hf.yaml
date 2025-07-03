@@ -81,7 +81,7 @@ optimization:
     - sub_question_rag
     - template_name
     name: global
-    num_trials: 2000
+    num_trials: 1500
   cpus_per_trial: 1
   embedding_device: null
   gpus_per_trial: 0.0
@@ -94,7 +94,7 @@ optimization:
   num_prompt_optimization_batch: 50
   num_random_trials: 0
   num_retries_unique_params: 100
-  num_trials: 2000
+  num_trials: 1500
   num_warmup_steps_costout: 2
   num_warmup_steps_pareto: 30
   num_warmup_steps_timeout: 3
@@ -106,7 +106,7 @@ optimization:
   pareto_pruner_success_rate: 0.9
   raise_on_failed_trial: false
   raise_on_invalid_baseline: false
-  rate_limiter_max_coros: 60
+  rate_limiter_max_coros: 30
   rate_limiter_period: 60
   sampler: tpe
   seeder_timeout: null
@@ -124,7 +124,7 @@ optimization:
   use_variations_of_baselines: false
 pareto: null
 recreate_study: true
-reuse_study: true
+reuse_study: false
 search_space:
   additional_context:
     num_nodes_max: 20
@@ -138,27 +138,35 @@ search_space:
     - true
   critique_rag_agent:
     critique_agent_llms:
-    - cerebras-llama33-70B
-    - cerebras-qwen-3
-    - cerebras-scout
-    - cerebras-deepseek
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
     max_iterations_max: 11
     max_iterations_min: 10
     reflection_agent_llms:
-    - cerebras-llama33-70B
-    - cerebras-qwen-3
-    - cerebras-scout
-    - cerebras-deepseek
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
     subquestion_engine_llms:
-    - cerebras-llama33-70B
-    - cerebras-qwen-3
-    - cerebras-scout
-    - cerebras-deepseek
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
     subquestion_response_synthesizer_llms:
-    - cerebras-llama33-70B
-    - cerebras-qwen-3
-    - cerebras-scout
-    - cerebras-deepseek
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
   few_shot_enabled:
   - false
   - true
@@ -182,10 +190,12 @@ search_space:
       step: 1
   hyde:
     llms:
-    - cerebras-llama33-70B
-    - cerebras-qwen-3
-    - cerebras-scout
-    - cerebras-deepseek
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
   hyde_enabled:
   - false
   - true
@@ -234,10 +244,12 @@ search_space:
     - hybrid
     query_decomposition:
       llm_names:
-      - cerebras-llama33-70B
-      - cerebras-qwen-3
-      - cerebras-scout
-      - cerebras-deepseek
+      - microsoft/Phi-4-multimodal-instruct
+      - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+      - Qwen/Qwen2.5
+      - Qwen/Qwen3-32B
+      - google/gemma-3-27b-it
+      - nvidia/Llama-3_3-Nemotron-Super-49B
       num_queries_max: 5
       num_queries_min: 2
       num_queries_step: 1
@@ -253,21 +265,27 @@ search_space:
     max_iterations_max: 11
     max_iterations_min: 10
     subquestion_engine_llms:
-    - cerebras-llama33-70B
-    - cerebras-qwen-3
-    - cerebras-scout
-    - cerebras-deepseek
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
     subquestion_response_synthesizer_llms:
-    - cerebras-llama33-70B
-    - cerebras-qwen-3
-    - cerebras-scout
-    - cerebras-deepseek
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
   reranker:
     llms:
-    - cerebras-llama33-70B
-    - cerebras-qwen-3
-    - cerebras-scout
-    - cerebras-deepseek
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
     top_k:
       kmax: 128
       kmin: 2
@@ -277,10 +295,12 @@ search_space:
   - false
   - true
   response_synthesizer_llms:
-  - cerebras-llama33-70B
-  - cerebras-qwen-3
-  - cerebras-scout
-  - cerebras-deepseek
+  - microsoft/Phi-4-multimodal-instruct
+  - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+  - Qwen/Qwen2.5
+  - Qwen/Qwen3-32B
+  - google/gemma-3-27b-it
+  - nvidia/Llama-3_3-Nemotron-Super-49B
   splitter:
     chunk_max_exp: 10
     chunk_min_exp: 7
@@ -293,15 +313,19 @@ search_space:
     - token
   sub_question_rag:
     subquestion_engine_llms:
-    - cerebras-llama33-70B
-    - cerebras-qwen-3
-    - cerebras-scout
-    - cerebras-deepseek
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
     subquestion_response_synthesizer_llms:
-    - cerebras-llama33-70B
-    - cerebras-qwen-3
-    - cerebras-scout
-    - cerebras-deepseek
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
   template_names:
   - default
   - concise
