@@ -60,7 +60,7 @@ OBJ2_NAME = "llm_cost_mean"  # "p80_time", "llm_cost_mean", "retriever_context_l
 # -------------------------------------------------------
 NUM_TRIALS = 2000  # total number of optimization trials per submission
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
-RECREATE_STUDY = True  # if set to True, recreating an existing study without failed or running trials
+RECREATE_STUDY = False  # if set to True, recreating an existing study without failed or running trials
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
