@@ -52,13 +52,13 @@ from syftr.studyconfig_helper import build_configs
 
 # -------------------------------------------------------
 PREFIX = "cerebras"  # this three parameters
-BENCH_NUM = 4  # are used to name
+BENCH_NUM = 5  # are used to name
 # RUN_NAME = "rag-and-agents-local-only"
 RUN_NAME = "rag-and-agents-cerebras-only"
 # -------------------------------------------------------
-OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
+OBJ2_NAME = "llm_cost_mean"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
-NUM_TRIALS = 1400  # total number of optimization trials per submission
+NUM_TRIALS = 2000  # total number of optimization trials per submission
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = True  # if set to True, recreating an existing study without failed or running trials
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
@@ -158,14 +158,14 @@ else:
 #     embedding_model="BAAI/bge-large-en-v1.5",
 # )
 
-# LLMS: T.List[str] = LOCAL_LLMS
-LLMS: T.List[str] = [
-    "cerebras-llama33-70B",
-    "cerebras-qwen-3",
-    "cerebras-scout",
-    # "cerebras-llama31-8B",
-    "cerebras-deepseek",
-]
+LLMS: T.List[str] = LOCAL_LLMS
+# LLMS: T.List[str] = [
+#     "cerebras-llama33-70B",
+#     "cerebras-qwen-3",
+#     "cerebras-scout",
+#     # "cerebras-llama31-8B",
+#     "cerebras-deepseek",
+# ]
 
 EMBEDDING_MODELS = [
     "BAAI/bge-small-en-v1.5",
@@ -262,7 +262,7 @@ DATASETS = [
     # -----------------------------------------------
     FinanceBenchHF(),
     # HotPotQAHF(subset="train_hard"),
-    # PhantomWikiv050(),
+    PhantomWikiv050(),
     # InfiniteBenchHF(),
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
