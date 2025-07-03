@@ -134,7 +134,7 @@ def optimize_prompt(
     for n_epoch in range(1, num_epochs + 1):
         logger.info("Starting optimization epoch %d", n_epoch)
         curr_accuracy, evals = asyncio.run(
-            quick_eval(flow, evaluator_llm, test, rate_limiter)
+            quick_eval(flow, evaluator_llm, train, rate_limiter)
         )
         output = merge_nodes(*opt_args)
         logger.info("Accuracy on epoch %d: %f", n_epoch, curr_accuracy)
