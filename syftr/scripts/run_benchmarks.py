@@ -71,7 +71,7 @@ RECREATE_STUDY = (
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-MINUTES_BEFORE_NEXT_SUBMISSION = 1
+MINUTES_BEFORE_NEXT_SUBMISSION = 10
 
 # CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
