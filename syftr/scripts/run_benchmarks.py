@@ -58,7 +58,7 @@ RUN_NAME = "rag-and-agents-local-only"
 # -------------------------------------------------------
 OBJ2_NAME = "llm_cost_mean"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
-NUM_TRIALS = 1500  # total number of optimization trials per submission
+NUM_TRIALS = 1000  # total number of optimization trials per submission
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = True  # if set to True, recreating an existing study without failed or running trials
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
@@ -260,7 +260,7 @@ DATASETS = [
     # InfiniteBenchHF(),
     # MultiHopRAGHF(),
     # -----------------------------------------------
-    FinanceBenchHF(),
+    # FinanceBenchHF(),
     # HotPotQAHF(subset="train_hard"),
     PhantomWikiv050(),
     # InfiniteBenchHF(),

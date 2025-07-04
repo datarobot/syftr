@@ -81,7 +81,7 @@ optimization:
     - sub_question_rag
     - template_name
     name: global
-    num_trials: 1500
+    num_trials: 400
   cpus_per_trial: 1
   embedding_device: null
   gpus_per_trial: 0.0
@@ -94,7 +94,7 @@ optimization:
   num_prompt_optimization_batch: 50
   num_random_trials: 0
   num_retries_unique_params: 100
-  num_trials: 1500
+  num_trials: 400
   num_warmup_steps_costout: 2
   num_warmup_steps_pareto: 30
   num_warmup_steps_timeout: 3
@@ -124,7 +124,7 @@ optimization:
   use_variations_of_baselines: false
 pareto: null
 recreate_study: true
-reuse_study: false
+reuse_study: true
 search_space:
   additional_context:
     num_nodes_max: 20
