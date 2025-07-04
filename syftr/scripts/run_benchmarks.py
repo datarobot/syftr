@@ -62,7 +62,7 @@ RUN_NAME = "in-sample"  # your config files and studies
 # -------------------------------------------------------
 NUM_TRIALS = 0  # total number of optimization trials per submission
 # NUM_TRIALS = 100  # total number of optimization trials per submission
-MAX_CONCURRENT_TRIALS = 50
+MAX_CONCURRENT_TRIALS = 10
 NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
