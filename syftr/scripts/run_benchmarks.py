@@ -77,7 +77,7 @@ MINUTES_BEFORE_NEXT_SUBMISSION = 10
 CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
 BASELINES_START = 500  # you can restrict the number of baselines ...
-BASELINES_END = 1000  # ... to start with here to avoid OOM issues
+BASELINES_END = 600  # ... to start with here to avoid OOM issues
 # -------------------------------------------------------
 BASELINE_STUDIES: T.List[str] = [
     "silver1--in-sample--bright_hf--earth_science",
