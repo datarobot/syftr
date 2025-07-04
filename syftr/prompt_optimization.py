@@ -269,12 +269,7 @@ def run_pareto_flows_prompt_optimization(study_path: str, remote: bool = False):
         study_name=study_config.name,
         storage=storage,
     )
-    df = study.trials_dataframe()
-    df_agents = df[df["params_rag_mode"] != "rag"]
-    pareto_mask = get_pareto_mask(df_agents)
-    df_pareto = df_agents[pareto_mask]
-    df_pareto = df_pareto[df_pareto["values_0"] >= 0.3]
-
+    df_pareto = get_pareto_df(study_config, success_rate=0.5)
     new_study_name = f"{study_config.name}_prompt_optimization"
     logger.info("Creating new study %s for optimized prompts...", new_study_name)
     po_study = optuna.create_study(
