@@ -21,7 +21,7 @@ from syftr.core import QAPair
 from syftr.evaluation import evaluation
 from syftr.llm import get_llm
 from syftr.logger import logger
-from syftr.optuna_helper import get_pareto_mask
+from syftr.optuna_helper import get_pareto_df
 from syftr.ray.utils import ray_init
 from syftr.studies import StudyConfig, get_default_study_name
 from syftr.tuner.qa_tuner import build_flow, eval_dataset
