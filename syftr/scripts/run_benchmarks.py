@@ -62,7 +62,7 @@ RUN_NAME = "in-sample"  # your config files and studies
 # -------------------------------------------------------
 NUM_TRIALS = 0  # total number of optimization trials per submission
 # NUM_TRIALS = 100  # total number of optimization trials per submission
-MAX_CONCURRENT_TRIALS = 10
+MAX_CONCURRENT_TRIALS = 50
 NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
@@ -71,13 +71,13 @@ RECREATE_STUDY = (
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-MINUTES_BEFORE_NEXT_SUBMISSION = 10
+MINUTES_BEFORE_NEXT_SUBMISSION = 1
 
 # CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
-BASELINES_START = 500  # you can restrict the number of baselines ...
-BASELINES_END = 600  # ... to start with here to avoid OOM issues
+BASELINES_START = 700  # you can restrict the number of baselines ...
+BASELINES_END = 900  # ... to start with here to avoid OOM issues
 # -------------------------------------------------------
 BASELINE_STUDIES: T.List[str] = [
     "silver1--in-sample--bright_hf--earth_science",
