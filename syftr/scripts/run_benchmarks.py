@@ -62,7 +62,7 @@ RUN_NAME = "in-sample"  # your config files and studies
 # -------------------------------------------------------
 NUM_TRIALS = 0  # total number of optimization trials per submission
 # NUM_TRIALS = 100  # total number of optimization trials per submission
-MAX_CONCURRENT_TRIALS = 50
+MAX_CONCURRENT_TRIALS = 10
 NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
@@ -71,19 +71,19 @@ RECREATE_STUDY = (
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-MINUTES_BEFORE_NEXT_SUBMISSION = 1
+MINUTES_BEFORE_NEXT_SUBMISSION = 10
 
 # CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
-BASELINES_START = 900  # you can restrict the number of baselines ...
-BASELINES_END = 1100  # ... to start with here to avoid OOM issues
+BASELINES_START = 0  # you can restrict the number of baselines ...
+BASELINES_END = 7200  # ... to start with here to avoid OOM issues
 # -------------------------------------------------------
 BASELINE_STUDIES: T.List[str] = [
     "silver1--in-sample--bright_hf--earth_science",
     "silver1--in-sample--bright_hf--economics",
-    "silver1--in-sample--bright_hf--pony",
-    "silver1--in-sample--bright_hf--psychology",
+    # "silver1--in-sample--bright_hf--pony",
+    # "silver1--in-sample--bright_hf--psychology",
     "silver1--in-sample--bright_hf--robotics",
     "silver1--in-sample--bright_hf--sustainable_living",
 ]
@@ -288,7 +288,7 @@ def get_optimization_parameters():
         num_trials=NUM_TRIALS,
         baselines=BASELINES,
         baselines_cycle_llms=True,
-        shuffle_baselines=True,
+        shuffle_baselines=False,
         max_concurrent_trials=MAX_CONCURRENT_TRIALS,
         num_eval_samples=NUM_EVAL_SAMPLES,
         num_eval_batch=5,
