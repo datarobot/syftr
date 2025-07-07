@@ -6,7 +6,9 @@ license = "MIT"
 dynamic = ["version"]
 requires-python = ">=3.11.1,<3.13"
 dependencies = [
+    "adjusttext",
     "aiolimiter",
+    "altair",
     "arize-phoenix",
     "boto3",
     "botocore",
@@ -14,6 +16,7 @@ dependencies = [
     "cloudpickle",
     "colorlog",
     "datasets>=3.3",
+    "dataframe-image",
     "diskcache",
     "faiss-cpu",
     "filelock",
@@ -89,8 +92,10 @@ dependencies = [
     "rouge_score",
     "s3fs",
     "scikit-learn",
+    "seaborn",
     "sentencepiece",
     "sqlalchemy",
+    "statsmodels",
     "tabulate",
     "trace-opt",
     "transformers==4.48.3",
@@ -119,11 +124,9 @@ source = "uv-dynamic-versioning"
 
 [project.optional-dependencies]
 dev = [
-    "adjusttext",
     "altair",
     "ansible",
     "beautifulsoup4",
-    "dataframe-image",
     "ipykernel",
     "ipython",
     "ipywidgets",
@@ -145,9 +148,7 @@ dev = [
     "rpdb",
     "ruff",
     "scipy",
-    "seaborn",
     "spacy",
-    "statsmodels",
     "types-PyYAML",
     "types-python-slugify",
     "types-requests",

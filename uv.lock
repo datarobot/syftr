@@ -6169,13 +6169,16 @@ wheels = [
 name = "syftr"
 source = { editable = "." }
 dependencies = [
+    { name = "adjusttext" },
     { name = "aiolimiter" },
+    { name = "altair" },
     { name = "arize-phoenix" },
     { name = "boto3" },
     { name = "botocore" },
     { name = "click" },
     { name = "cloudpickle" },
     { name = "colorlog" },
+    { name = "dataframe-image" },
     { name = "datasets" },
     { name = "diskcache" },
     { name = "faiss-cpu" },
@@ -6252,8 +6255,10 @@ dependencies = [
     { name = "rouge-score" },
     { name = "s3fs" },
     { name = "scikit-learn" },
+    { name = "seaborn" },
     { name = "sentencepiece" },
     { name = "sqlalchemy" },
+    { name = "statsmodels" },
     { name = "tabulate" },
     { name = "torch" },
     { name = "trace-opt" },
@@ -6269,11 +6274,9 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
-    { name = "adjusttext" },
     { name = "altair" },
     { name = "ansible" },
     { name = "beautifulsoup4" },
-    { name = "dataframe-image" },
     { name = "ipykernel" },
     { name = "ipython" },
     { name = "ipywidgets" },
@@ -6295,9 +6298,7 @@ dev = [
     { name = "rpdb" },
     { name = "ruff" },
     { name = "scipy" },
-    { name = "seaborn" },
     { name = "spacy" },
-    { name = "statsmodels" },
     { name = "types-python-slugify" },
     { name = "types-pyyaml" },
     { name = "types-requests" },
@@ -6308,8 +6309,9 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "adjusttext", marker = "extra == 'dev'" },
+    { name = "adjusttext" },
     { name = "aiolimiter" },
+    { name = "altair" },
     { name = "altair", marker = "extra == 'dev'" },
     { name = "ansible", marker = "extra == 'dev'" },
     { name = "arize-phoenix" },
@@ -6319,7 +6321,7 @@ requires-dist = [
     { name = "click" },
     { name = "cloudpickle" },
     { name = "colorlog" },
-    { name = "dataframe-image", marker = "extra == 'dev'" },
+    { name = "dataframe-image" },
     { name = "datasets", specifier = ">=3.3" },
     { name = "diskcache" },
     { name = "faiss-cpu" },
@@ -6417,11 +6419,11 @@ requires-dist = [
     { name = "s3fs" },
     { name = "scikit-learn" },
     { name = "scipy", marker = "extra == 'dev'" },
-    { name = "seaborn", marker = "extra == 'dev'" },
+    { name = "seaborn" },
     { name = "sentencepiece" },
     { name = "spacy", marker = "extra == 'dev'" },
     { name = "sqlalchemy" },
-    { name = "statsmodels", marker = "extra == 'dev'" },
+    { name = "statsmodels" },
     { name = "tabulate" },
     { name = "torch", specifier = "==2.7.0" },
     { name = "trace-opt" },
