@@ -4,9 +4,8 @@ import json
 import time
 import typing as T
 
-from ray.job_submission import JobStatus
-
 from syftr.configuration import cfg
+from syftr.experiments import iter_all_job_logs
 from syftr.logger import logger
 from syftr.optimization import user_confirm_delete
 from syftr.optuna_helper import get_completed_flows, get_pareto_flows
@@ -52,19 +51,18 @@ from syftr.studyconfig_helper import build_configs
 
 # -------------------------------------------------------
 PREFIX = "cerebras"  # this three parameters
-BENCH_NUM = 5  # are used to name
-# RUN_NAME = "rag-and-agents-local-only"
-RUN_NAME = "rag-and-agents-cerebras-only"
+BENCH_NUM = 1  # are used to name
+RUN_NAME = "mix-with-local"
 # -------------------------------------------------------
-OBJ2_NAME = "llm_cost_mean"  # "p80_time", "llm_cost_mean", "retriever_context_length"
+OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
-NUM_TRIALS = 600  # total number of optimization trials per submission
+NUM_TRIALS = 10000  # total number of optimization trials per submission
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = True  # if set to True, recreating an existing study without failed or running trials
-EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
+EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-MINUTES_BEFORE_NEXT_SUBMISSION = 2
+MINUTES_BEFORE_NEXT_SUBMISSION = 1
 CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
 BASELINES_START = 600  # you can restrict the number of baselines ...
@@ -158,14 +156,14 @@ else:
 #     embedding_model="BAAI/bge-large-en-v1.5",
 # )
 
-# LLMS: T.List[str] = LOCAL_LLMS
+
 LLMS: T.List[str] = [
     "cerebras-llama33-70B",
     "cerebras-qwen-3",
     "cerebras-scout",
-    # "cerebras-llama31-8B",
+    "cerebras-llama31-8B",
     "cerebras-deepseek",
-]
+] + LOCAL_LLMS
 
 EMBEDDING_MODELS = [
     "BAAI/bge-small-en-v1.5",
@@ -248,7 +246,12 @@ SEARCH_SPACE = SearchSpace(
 
 EVALUATION = Evaluation(
     mode=EVAL_MODE,
-    llms=["gpt-4o-mini"],
+    llms=[
+        "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
+        "Qwen/Qwen2.5",
+        "google/gemma-3-27b-it",
+        "nvidia/Llama-3_3-Nemotron-Super-49B",
+    ],
     raise_on_exception=False,
 )
 
@@ -261,9 +264,9 @@ DATASETS = [
     # MultiHopRAGHF(),
     # -----------------------------------------------
     FinanceBenchHF(),
-    # HotPotQAHF(subset="train_hard"),
-    # PhantomWikiv050(),
-    # InfiniteBenchHF(),
+    HotPotQAHF(subset="train_hard"),
+    PhantomWikiv050(),
+    InfiniteBenchHF(),
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
     # -----------------------
@@ -286,18 +289,17 @@ def get_optimization_parameters():
         baselines=BASELINES,
         baselines_cycle_llms=True,
         shuffle_baselines=True,
-        max_concurrent_trials=100,
-        num_eval_samples=50,
+        max_concurrent_trials=50,
+        num_eval_samples=100,
         num_eval_batch=5,
-        # rate_limiter_max_coros=30,  # control the number of concurrent evals ...
-        rate_limiter_max_coros=60,  # control the number of concurrent evals ...
+        rate_limiter_max_coros=30,  # control the number of concurrent evals ...
         rate_limiter_period=60,  # ... per given time unit
         max_trial_cost=40.0,
         cpus_per_trial=1,
         seeder_timeout=None,  # None: wait until finished, 0: don't wait
         # -----------------------------------------------
-        num_random_trials=0,
-        # num_random_trials=100,
+        # num_random_trials=0,
+        num_random_trials=100,
         # -----------------------------------------------
         use_individual_baselines=False,
         use_agent_baselines=False,
@@ -326,20 +328,6 @@ def get_optimization_parameters():
                 return  # single iteration through datasets with first batch of baselines
     else:
         yield DATASETS, SEARCH_SPACE, optimization_config, EVALUATION
-
-
-def derived_representer(dumper, data):
-    return dumper.represent_dict({"description": data.description})
-
-
-async def iter_job_logs(job_logs: T.AsyncIterable):
-    async for lines in job_logs:
-        print(lines, end="")
-
-
-async def iter_all_job_logs(tailers: T.List[T.AsyncIterable]):
-    log_iters = [iter_job_logs(tailer) for tailer in tailers]
-    await asyncio.gather(*log_iters)
 
 
 def main():
@@ -404,21 +392,6 @@ def main():
     # monitor benchmarks
     log_tailers = [client.tail_job_logs(job) for job in job_ids]
 
-    asyncio.run(iter_all_job_logs(log_tailers))
-
-
-def attach_logs(prefix: str = "<doesntmatch>", remote: bool = True):
-    cfg.ray.local = False if remote else cfg.ray.local
-    client = get_client()
-    job_details = client.list_jobs()
-    jobs_to_tail = [
-        job
-        for job in job_details
-        if job.submission_id is not None
-        and job.submission_id.startswith(prefix)
-        and job.status not in {JobStatus.STOPPED, JobStatus.SUCCEEDED, JobStatus.FAILED}
-    ]
-    log_tailers = [client.tail_job_logs(job.job_id) for job in jobs_to_tail]
     asyncio.run(iter_all_job_logs(log_tailers))
 
 

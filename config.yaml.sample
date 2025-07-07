@@ -32,12 +32,19 @@ gcp_vertex:
 
 generative_models:
   # # azure_openai Provider Example
-  # azure_gpt_35_turbo:
+  # # See docs/llm-providers.md for full documentation of all provider configurations
+  # azure_gpt_4o_mini:
+  #   # Common configuration options
   #   provider: azure_openai            # Client type to use (required)
+  #   model_name: "gpt-4o-mini"
+  #   temperature: 0                    # Optional
+  #   max_tokens: 2048                  # Optional - max output tokens
   #
   #   # Provider-specific configurations
-  #   deployment_name: "gpt-35-turbo"   # Required for Azure OpenAI models
-  #   api_version: "2024-06-01"         # Optional?
+  #   deployment_name: "gpt-4o-mini"    # Required for Azure OpenAI models
+  #   api_version: "2024-06-01"         # Optional
+  #   api_url: "https://my-endpoint.openai.azure.com" # Optional - defaults to azure_oai.api_url
+  #   api_key: "asdf1234"                             # Optional - defaults to azure_oai.api_key
   #   additional_kwargs:                # Add additional parameters to OpenAI request body
   #     user: syftr
   #
@@ -47,15 +54,6 @@ generative_models:
   #     input: 1.00                     # Cost in USD per million
   #     output: 2.00                    # Cost in USD per million
   #     # rate: 12.00                   # Average cost per hour of inference server, when type is hourly
-  #
-  #   # LLamaIndex LLMetadata Example - keys and defaults are the same for all models
-  #   metadata:
-  #     model_name: gpt-35-turbo          # example value (required)
-  #     context_window: 3900              # default
-  #     num_output: 256                   # default
-  #     is_chat_model: false              # default
-  #     is_function_calling_model: false  # default
-  #     system_role: SYSTEM               # default
 
 # Required for mistral-large LLM
 azure_inference_mistral:
@@ -134,15 +132,6 @@ paths:
 # study search space, unless you have customized your search space LLMs.
 # local_models:
 #   default_api_key: "commonkey"
-#   generative:
-#     - model_name: "microsoft/Phi-4-multimodal-instruct"
-#       api_base: "http://vllmhost:8000/v1"
-#       max_tokens: 2000
-#       context_window: 129072
-#       is_function_calling_model: true
-#       additional_kwargs:
-#         frequency_penalty: 1.0
-#         temperature: 0.1
 #   embedding:
 #     - model_name: "BAAI/bge-small-en-v1.5"
 #       api_base: "http://vllmhost:8001/v1"
