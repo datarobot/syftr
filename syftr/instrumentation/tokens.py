@@ -81,6 +81,7 @@ MODEL_PRICING_INFO: Dict[str, Dict[str, Dict[str, float]]] = {
         },
         # Local models use together.ai pricing structure
         "Qwen/Qwen2.5": {"input": 0.80 / 1e6, "output": 0.80 / 1e6},
+        "Qwen/Qwen3-32B": {"input": 0.80 / 1e6, "output": 0.80 / 1e6},
         "deepseek-ai/DeepSeek-R1-Distill-Llama-70B": {
             "input": 0.88 / 1e6,
             "output": 0.88 / 1e6,
@@ -92,6 +93,26 @@ MODEL_PRICING_INFO: Dict[str, Dict[str, Dict[str, float]]] = {
         "llama3.1-8b": {
             "input": 0.2 / 1e6,
             "output": 0.2 / 1e6,
+        },
+        "cerebras-llama33-70B": {
+            "input": 0.85 / 1e6,
+            "output": 1.2 / 1e6,
+        },
+        "cerebras-qwen-3": {
+            "input": 0.4 / 1e6,
+            "output": 0.8 / 1e6,
+        },
+        "cerebras-scout": {
+            "input": 0.65 / 1e6,
+            "output": 0.85 / 1e6,
+        },
+        "cerebras-llama31-8B": {
+            "input": 0.1 / 1e6,
+            "output": 0.1 / 1e6,
+        },
+        "cerebras-deepseek": {
+            "input": 2.2 / 1e6,
+            "output": 2.5 / 1e6,
         },
     },
     "characters": {

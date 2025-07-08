@@ -1,6 +1,6 @@
 import time
 import typing as T
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from enum import Enum
 from functools import cached_property
 from uuid import uuid4
@@ -470,10 +470,7 @@ class AgenticRAGFlow(RAGFlow):
         start_time = time.perf_counter()
         response: AgentChatResponse = self.agent.chat(query)
         try:
-            completion_response = CompletionResponse(
-                text=response.response,
-                additional_kwargs=asdict(response),
-            )
+            completion_response = CompletionResponse(text=response.response)
         except TypeError:
             logger.error("Incorrect response from an agent: %s", response)
             raise
@@ -489,9 +486,7 @@ class AgenticRAGFlow(RAGFlow):
         start_time = time.perf_counter()
         response: AgentChatResponse = await self.agent.achat(query)
         try:
-            completion_response = CompletionResponse(
-                text=response.response, additional_kwargs=asdict(response)
-            )
+            completion_response = CompletionResponse(text=response.response)
         except TypeError:
             logger.error("Incorrect response from an agent: %s", response)
             raise

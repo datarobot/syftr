@@ -54,27 +54,28 @@ from syftr.studies import (  # noqa
 from syftr.studyconfig_helper import build_configs
 
 # -------------------------------------------------------
-PREFIX = "silver"  # this three parameters
-BENCH_NUM = 1  # are used to name
-# RUN_NAME = "in-sample"  # your config files and studies
-RUN_NAME = "out-of-sample"
+PREFIX = "cerebras"  # this three parameters
+BENCH_NUM = 5  # are used to name
+RUN_NAME = "your run name here"
 # -------------------------------------------------------
 NUM_TRIALS = 0  # total number of optimization trials per submission
-# NUM_TRIALS = 100  # total number of optimization trials per submission
 MAX_CONCURRENT_TRIALS = 10
 NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
-    True  # WARNING: do not use with simultaneous runs using the same study!
+    False  # WARNING: do not use with simultaneous runs using the same study!
 )
-EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
+EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 MINUTES_BEFORE_NEXT_SUBMISSION = 2
 
 # To seed with silver bullets, you first create the input file with the silver_bullets.ipynb notebook
-# CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
-CUSTOM_BASELINES = "silver"  # "pareto", "all", "silver", None
+CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
+# CUSTOM_BASELINES = "silver"  # "pareto", "all", "silver", None
+OBJ2_NAME = "llm_cost_mean"  # "p80_time", "llm_cost_mean", "retriever_context_length"
+# -------------------------------------------------------
+CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
 BASELINES_START = 0  # you can restrict the number of baselines ...
 BASELINES_END = 100  # ... to start with here to avoid OOM issues
@@ -99,7 +100,7 @@ BLOCKS = [
             "few_shot_retriever",
             "hyde",
             "critique_rag_agent",
-            # "lats_rag_agent",
+            "lats_rag_agent",
             "react_rag_agent",
             "rag_mode",
             "reranker",
@@ -200,7 +201,7 @@ SEARCH_SPACE = SearchSpace(
     rag_modes=[
         # "no_rag",
         "rag",
-        # "lats_rag_agent",
+        "lats_rag_agent",
         "react_rag_agent",
         "critique_rag_agent",
         "sub_question_rag",
@@ -237,7 +238,7 @@ SEARCH_SPACE = SearchSpace(
         critique_agent_llms=LLMS,
         reflection_agent_llms=LLMS,
     ),
-    # lats_rag_agent=LATSRagAgent(),
+    lats_rag_agent=LATSRagAgent(),
     reranker=Reranker(llms=LLMS),
     hyde=Hyde(llms=LLMS),
     few_shot_retriever=FewShotRetriever(
@@ -247,26 +248,22 @@ SEARCH_SPACE = SearchSpace(
 
 EVALUATION = Evaluation(
     mode=EVAL_MODE,
-    llms=[
-        "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
-        "Qwen/Qwen2.5",
-        "google/gemma-3-27b-it",
-        "nvidia/Llama-3_3-Nemotron-Super-49B",
-    ],
+    llms=["gpt-4o-mini"],
     raise_on_exception=False,
 )
 
-DATASETS = [
+DATASETS: T.List[str] = [
     # BrightHF(subset="biology"),
     # CragTask3HF(subset="music"),
     # CragTask3HF(subset="sports"),
+    # DRDocsHF(),
+    # InfiniteBenchHF(),
+    # MultiHopRAGHF(),
     # -----------------------------------------------
-    DRDocsHF(),
-    FinanceBenchHF(),
-    HotPotQAHF(subset="train_hard"),
-    InfiniteBenchHF(),
-    MultiHopRAGHF(),
-    PhantomWikiv050(),
+    # FinanceBenchHF(),
+    # HotPotQAHF(subset="train_hard"),
+    # PhantomWikiv050(),
+    # InfiniteBenchHF(),
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
     # BrightHF(subset="pony"),
@@ -292,7 +289,8 @@ def get_optimization_parameters():
         max_concurrent_trials=MAX_CONCURRENT_TRIALS,
         num_eval_samples=NUM_EVAL_SAMPLES,
         num_eval_batch=5,
-        rate_limiter_max_coros=30,  # control the number of concurrent evals ...
+        # rate_limiter_max_coros=30,  # control the number of concurrent evals ...
+        rate_limiter_max_coros=60,  # control the number of concurrent evals ...
         rate_limiter_period=60,  # ... per given time unit
         max_trial_cost=40.0,
         cpus_per_trial=1,
@@ -313,6 +311,7 @@ def get_optimization_parameters():
         use_toy_baselines=False,
         # -----------------------------------------------
         sampler="tpe",
+        objective_2_name=OBJ2_NAME,
     )
     if BASELINES:
         start = BASELINES_START or 0

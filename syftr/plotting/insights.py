@@ -666,16 +666,35 @@ def generate_trial_description_table(df):
     is_cost = is_cost_objective(df)
     objective_2_name = get_objective_2_name(is_cost=is_cost)
     df_output = pd.DataFrame(
-        index=df.index, columns=["Accuracy", objective_2_name, "Title", "Description"]
+        index=df.index,
+        columns=[
+            "values_0",
+            "values_1",
+            "Accuracy",
+            objective_2_name,
+            "Title",
+            "Description",
+        ],
     )
     for i, trial in df.iterrows():
         title, description = generate_trial_description(trial, is_cost)
-        df_output.loc[i] = (trial.values_0, trial.values_1, title, description)
+        df_output.loc[i] = (
+            trial.values_0,
+            trial.values_1,
+            trial.values_0,
+            trial.values_1,
+            title,
+            description,
+        )
     return df_output
 
 
 @log_function_call
 def style_pareto_table(df_pareto_descriptions, is_cost):
+    df_pareto_descriptions = df_pareto_descriptions[
+        ["Accuracy", "Latency", "Title", "Description"]
+    ].copy()
+
     if is_cost:
         obj2_fmt = "{:.4f}¢"
     else:
@@ -1018,7 +1037,16 @@ def plot_pareto_plot(
     ax=None,
     titles=None,
     show_title=True,
+    show_baselines=True,
+    show_sota=False,
+    trials_label="All Trials",
+    trials_face_color=grey_face_color,
+    trials_edge_color=grey_edge_color,
+    pareto_label="Pareto-Frontier",
 ):
+    if show_baselines:
+        assert df_trials is not None, "df_trials must be provided to show baselines"
+
     objective_2_name = get_objective_2_name(is_cost=is_cost)
     df_pareto_desc = df_pareto_desc.sort_values(
         ["Accuracy", objective_2_name], ascending=[False, True]
@@ -1044,16 +1072,16 @@ def plot_pareto_plot(
             df_trials["values_1"],
             df_trials["values_0"],
             "o",
-            color=grey_face_color,
-            markeredgecolor=grey_edge_color,
+            color=trials_face_color,
+            markeredgecolor=trials_edge_color,
             markeredgewidth=0.5,
             alpha=0.25,
-            label="All Trials",
+            label=trials_label,
             markersize=markersize,
         )
 
     # plot each individual trial on the Pareto-frontier
-    ax.plot(px, py, "-", color=grey_edge_color, label="Pareto-Frontier")
+    ax.plot(px, py, "-", color=trials_edge_color, label=pareto_label)
     labels = df_pareto_desc["Title"].unique()
     for i, label in enumerate(labels):
         if color_dict is None:
@@ -1075,7 +1103,7 @@ def plot_pareto_plot(
         )
 
     # plot the baseline trials
-    if df_trials is not None:
+    if show_baselines:
         baselines = get_baselines(df_trials)
         for i, (idx, trial) in enumerate(baselines.iterrows()):
             ax.plot(
@@ -1105,7 +1133,7 @@ def plot_pareto_plot(
     )  # round xlim[1] to the next highest power of 10
     ax.set_xlim([xlim[0], new_xlim_right])
 
-    if not is_subplot:
+    if show_sota:
         # plot sota comparisons as horizontal lines
         comparisons = get_comparison_accuracies([study_name])
         linestyles = [":"]  # "--", "-.", ":", "-"
@@ -1214,6 +1242,8 @@ def pareto_plot_and_table(df, study_name, ax=None, titles=None):
             ax=ax,
             titles=titles,
             show_title=SHOW_TITLE,
+            show_baselines=True,
+            show_sota=True,
         )
     table = style_pareto_table(df_desc, is_cost=is_cost)
     return fig, table, title
