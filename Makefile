@@ -1,4 +1,4 @@
-.PHONY: install upgrade nltk install-kernel-syftr remove-kernel-syftr mypy pre-commit-run unit-tests functional-tests e2e-tests tests aws-login submit- run- ray-submit- ray-run- ray-stop ray-cancel-jobs check tunnel 
+.PHONY: install upgrade nltk install-kernel-syftr remove-kernel-syftr mypy pre-commit-run unit-tests functional-tests e2e-tests tests aws-login submit- ray-submit- ray-stop-job ray-experiment- ray-cancel-jobs check tunnel 
 
 export AWS_PROFILE=rd
 OUTFILE := syftr.txt
@@ -30,7 +30,6 @@ pre-commit-run:
 
 unit-tests:
 	@uv run pytest -svv tests/unit/
-
 functional-tests:
 	@uv run pytest -svv tests/functional/
 
@@ -43,9 +42,6 @@ tests: unit-tests functional-tests e2e-tests
 submit-%: studies/%.yaml
 	@python -m syftr.ray.submit --study-config $< 2>&1 | tee $(OUTFILE)
 
-agent-submit-%: studies/%.yaml
-	@python -m syftr.ray.submit --agent --study-config  $<
-
 aws-login:
 	@test -n "$(shell find ~/.aws/sso/cache/ -type f -mmin -480)" || yawsso login --profile rd
 	@python -m syftr.amazon
@@ -57,8 +53,8 @@ ray-submit-%: studies/%.yaml
 ray-stop-job:
 	@python -m syftr.ray.stop --remote --id="$(id)"
 
-ray-benchmarks:
-	@PYTHONUNBUFFERED=1 python -m syftr.scripts.run_benchmarks --remote
+ray-experiment-%:
+	@PYTHONUNBUFFERED=1 python -m syftr.scripts.experiments.$* --remote
 
 ray-cancel-jobs:
 	@PYTHONUNBUFFERED=1 python -m syftr.scripts.cancel_jobs --substring="$(substring)"

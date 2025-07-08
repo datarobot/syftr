@@ -54,40 +54,34 @@ from syftr.studies import (  # noqa
 from syftr.studyconfig_helper import build_configs
 
 # -------------------------------------------------------
-PREFIX = "cerebras"  # this three parameters
-BENCH_NUM = 5  # are used to name
-RUN_NAME = "your run name here"
+PREFIX = "seeding"  # this three parameters
+BENCH_NUM = 1  # are used to name
+RUN_NAME = "training"
 # -------------------------------------------------------
-NUM_TRIALS = 0  # total number of optimization trials per submission
-MAX_CONCURRENT_TRIALS = 10
+NUM_TRIALS = 1000  # total number of optimization trials per submission
+NUM_RANDOM_TRIALS = 100
+MAX_CONCURRENT_TRIALS = 50
 NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
-    False  # WARNING: do not use with simultaneous runs using the same study!
+    True  # WARNING: do not use with simultaneous runs using the same study!
 )
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 MINUTES_BEFORE_NEXT_SUBMISSION = 2
 
-# To seed with silver bullets, you first create the input file with the silver_bullets.ipynb notebook
+# To seed with silver bullets, you first create the input file using silver_bullets.ipynb notebook
 CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 # CUSTOM_BASELINES = "silver"  # "pareto", "all", "silver", None
-OBJ2_NAME = "llm_cost_mean"  # "p80_time", "llm_cost_mean", "retriever_context_length"
+OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
 CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
 BASELINES_START = 0  # you can restrict the number of baselines ...
 BASELINES_END = 100  # ... to start with here to avoid OOM issues
 # -------------------------------------------------------
-BASELINE_STUDIES: T.List[str] = [
-    "silver1--in-sample--bright_hf--earth_science",
-    "silver1--in-sample--bright_hf--economics",
-    # "silver1--in-sample--bright_hf--pony",
-    # "silver1--in-sample--bright_hf--psychology",
-    "silver1--in-sample--bright_hf--robotics",
-    "silver1--in-sample--bright_hf--sustainable_living",
-]
+BASELINE_STUDIES: T.List[str] = []
 
 BLOCKS = [
     Block(
@@ -253,26 +247,24 @@ EVALUATION = Evaluation(
 )
 
 DATASETS: T.List[str] = [
+    CragTask3HF(subset="music"),
+    FinanceBenchHF(),
+    HotPotQAHF(subset="train_hard"),
+    MultiHopRAGHF(),
+    # -----------------------------------------------
     # BrightHF(subset="biology"),
-    # CragTask3HF(subset="music"),
-    # CragTask3HF(subset="sports"),
     # DRDocsHF(),
     # InfiniteBenchHF(),
-    # MultiHopRAGHF(),
-    # -----------------------------------------------
-    # FinanceBenchHF(),
-    # HotPotQAHF(subset="train_hard"),
     # PhantomWikiv050(),
-    # InfiniteBenchHF(),
-    # -----------------------------------------------
-    # BrightHF(subset="stackoverflow"),
-    # BrightHF(subset="pony"),
-    # BrightHF(subset="psychology"),
-    # -----------------------
+    # ###############################################
     # BrightHF(subset="earth_science"),
     # BrightHF(subset="economics"),
+    # BrightHF(subset="pony"),
+    # BrightHF(subset="psychology"),
     # BrightHF(subset="robotics"),
+    # BrightHF(subset="stackoverflow"),
     # BrightHF(subset="sustainable_living"),
+    # CragTask3HF(subset="sports"),
 ]
 assert DATASETS, "No datasets found. Please check the dataset list."
 
@@ -285,18 +277,17 @@ def get_optimization_parameters():
         num_trials=NUM_TRIALS,
         baselines=BASELINES,
         baselines_cycle_llms=True,
-        shuffle_baselines=False,
+        shuffle_baselines=True,
         max_concurrent_trials=MAX_CONCURRENT_TRIALS,
         num_eval_samples=NUM_EVAL_SAMPLES,
         num_eval_batch=5,
-        # rate_limiter_max_coros=30,  # control the number of concurrent evals ...
-        rate_limiter_max_coros=60,  # control the number of concurrent evals ...
+        rate_limiter_max_coros=30,  # control the number of concurrent evals ...
         rate_limiter_period=60,  # ... per given time unit
         max_trial_cost=40.0,
         cpus_per_trial=1,
         seeder_timeout=None,  # None: wait until finished, 0: don't wait
         # -----------------------------------------------
-        num_random_trials=0,
+        num_random_trials=NUM_RANDOM_TRIALS,
         # -----------------------------------------------
         use_individual_baselines=False,
         use_agent_baselines=False,
@@ -304,7 +295,7 @@ def get_optimization_parameters():
         # -----------------------------------------------
         use_pareto_baselines=False,  # required for transfer learning
         # -----------------------------------------------
-        use_pareto_pruner=False,
+        use_pareto_pruner=True,
         use_cost_pruner=True,
         use_runtime_pruner=True,
         # -----------------------------------------------
