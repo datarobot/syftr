@@ -6,9 +6,13 @@ import typing as T
 
 from syftr.configuration import cfg
 from syftr.experiments import iter_all_job_logs
+from syftr.helpers import get_flows_from_trials
 from syftr.logger import logger
 from syftr.optimization import user_confirm_delete
-from syftr.optuna_helper import get_completed_flows, get_pareto_flows
+from syftr.optuna_helper import (
+    get_completed_trials,
+    get_pareto_flows,
+)
 from syftr.ray.submit import get_client, start_study
 from syftr.storage import (  # noqa
     BrightHF,
@@ -52,31 +56,35 @@ from syftr.studyconfig_helper import build_configs
 # -------------------------------------------------------
 PREFIX = "cerebras"  # this three parameters
 BENCH_NUM = 5  # are used to name
-# RUN_NAME = "rag-and-agents-local-only"
-RUN_NAME = "rag-and-agents-cerebras-only"
+RUN_NAME = "your run name here"
 # -------------------------------------------------------
-OBJ2_NAME = "llm_cost_mean"  # "p80_time", "llm_cost_mean", "retriever_context_length"
-# -------------------------------------------------------
-NUM_TRIALS = 600  # total number of optimization trials per submission
+NUM_TRIALS = 0  # total number of optimization trials per submission
+MAX_CONCURRENT_TRIALS = 10
+NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
-RECREATE_STUDY = True  # if set to True, recreating an existing study without failed or running trials
+RECREATE_STUDY = (
+    False  # WARNING: do not use with simultaneous runs using the same study!
+)
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 MINUTES_BEFORE_NEXT_SUBMISSION = 2
+
+# To seed with silver bullets, you first create the input file with the silver_bullets.ipynb notebook
+CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
+# CUSTOM_BASELINES = "silver"  # "pareto", "all", "silver", None
+OBJ2_NAME = "llm_cost_mean"  # "p80_time", "llm_cost_mean", "retriever_context_length"
+# -------------------------------------------------------
 CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
-BASELINES_START = 600  # you can restrict the number of baselines ...
-BASELINES_END = 900  # ... to start with here to avoid OOM issues
-STOP_AFTER_ONE_BATCH_OF_BASELINES = (
-    False  # useful when recreating studies and using a lot of baselines
-)
+BASELINES_START = 0  # you can restrict the number of baselines ...
+BASELINES_END = 100  # ... to start with here to avoid OOM issues
 # -------------------------------------------------------
 BASELINE_STUDIES: T.List[str] = [
     "silver1--in-sample--bright_hf--earth_science",
     "silver1--in-sample--bright_hf--economics",
-    "silver1--in-sample--bright_hf--pony",
-    "silver1--in-sample--bright_hf--psychology",
+    # "silver1--in-sample--bright_hf--pony",
+    # "silver1--in-sample--bright_hf--psychology",
     "silver1--in-sample--bright_hf--robotics",
     "silver1--in-sample--bright_hf--sustainable_living",
 ]
@@ -134,10 +142,10 @@ if CUSTOM_BASELINES == "pareto":
                 BASELINES.append(flow)
     logger.info(f"We have {len(BASELINES)} Pareto-baselines for seeding")
 elif CUSTOM_BASELINES == "all":
-    for study in BASELINE_STUDIES:
-        for flow in get_completed_flows(study):
-            if flow not in BASELINES:
-                BASELINES.append(flow)
+    df_trials = get_completed_trials(study=BASELINE_STUDIES)
+    df_trials = df_trials.sort_values(by="number")
+    flows = get_flows_from_trials(df_trials)
+    BASELINES.extend(flows)
     logger.info(f"We have {len(BASELINES)} baselines for seeding")
 elif CUSTOM_BASELINES == "silver":
     BASELINES = json.load(open(cfg.paths.results_dir / "silver-bullets.json", "r"))
@@ -157,14 +165,7 @@ else:
 #     embedding_model="BAAI/bge-large-en-v1.5",
 # )
 
-# LLMS: T.List[str] = LOCAL_LLMS
-LLMS: T.List[str] = [
-    "cerebras-llama33-70B",
-    "cerebras-qwen-3",
-    "cerebras-scout",
-    # "cerebras-llama31-8B",
-    "cerebras-deepseek",
-]
+LLMS: T.List[str] = LOCAL_LLMS
 
 EMBEDDING_MODELS = [
     "BAAI/bge-small-en-v1.5",
@@ -251,7 +252,7 @@ EVALUATION = Evaluation(
     raise_on_exception=False,
 )
 
-DATASETS = [
+DATASETS: T.List[str] = [
     # BrightHF(subset="biology"),
     # CragTask3HF(subset="music"),
     # CragTask3HF(subset="sports"),
@@ -259,19 +260,19 @@ DATASETS = [
     # InfiniteBenchHF(),
     # MultiHopRAGHF(),
     # -----------------------------------------------
-    FinanceBenchHF(),
+    # FinanceBenchHF(),
     # HotPotQAHF(subset="train_hard"),
     # PhantomWikiv050(),
     # InfiniteBenchHF(),
     # -----------------------------------------------
     # BrightHF(subset="stackoverflow"),
-    # -----------------------
+    # BrightHF(subset="pony"),
     # BrightHF(subset="psychology"),
+    # -----------------------
     # BrightHF(subset="earth_science"),
     # BrightHF(subset="economics"),
     # BrightHF(subset="robotics"),
     # BrightHF(subset="sustainable_living"),
-    # BrightHF(subset="pony"),
 ]
 assert DATASETS, "No datasets found. Please check the dataset list."
 
@@ -284,9 +285,9 @@ def get_optimization_parameters():
         num_trials=NUM_TRIALS,
         baselines=BASELINES,
         baselines_cycle_llms=True,
-        shuffle_baselines=True,
-        max_concurrent_trials=100,
-        num_eval_samples=50,
+        shuffle_baselines=False,
+        max_concurrent_trials=MAX_CONCURRENT_TRIALS,
+        num_eval_samples=NUM_EVAL_SAMPLES,
         num_eval_batch=5,
         # rate_limiter_max_coros=30,  # control the number of concurrent evals ...
         rate_limiter_max_coros=60,  # control the number of concurrent evals ...
@@ -296,7 +297,6 @@ def get_optimization_parameters():
         seeder_timeout=None,  # None: wait until finished, 0: don't wait
         # -----------------------------------------------
         num_random_trials=0,
-        # num_random_trials=100,
         # -----------------------------------------------
         use_individual_baselines=False,
         use_agent_baselines=False,
@@ -304,7 +304,7 @@ def get_optimization_parameters():
         # -----------------------------------------------
         use_pareto_baselines=False,  # required for transfer learning
         # -----------------------------------------------
-        use_pareto_pruner=True,
+        use_pareto_pruner=False,
         use_cost_pruner=True,
         use_runtime_pruner=True,
         # -----------------------------------------------
@@ -320,9 +320,6 @@ def get_optimization_parameters():
             optimization_config = optimization_config.model_copy()
             optimization_config.baselines = BASELINES[i : i + BASELINES_BATCH_SIZE]
             yield DATASETS, SEARCH_SPACE, optimization_config, EVALUATION
-            if STOP_AFTER_ONE_BATCH_OF_BASELINES:
-                logger.warning("Stopping after one batch of baselines")
-                return  # single iteration through datasets with first batch of baselines
     else:
         yield DATASETS, SEARCH_SPACE, optimization_config, EVALUATION
 
@@ -381,10 +378,10 @@ def main():
             )
             job_ids.append(job_id)
             logger.info("Started job %s", job_id)
-            if i + 1 < len(configs):
-                # I think this might help the checkpointing bug
-                logger.info("Sleeping for 60 seconds before the next submission")
-                time.sleep(int(60 * MINUTES_BEFORE_NEXT_SUBMISSION))
+            # This might help the checkpointing bug
+            sleep_time = 60 * MINUTES_BEFORE_NEXT_SUBMISSION
+            logger.info(f"Sleeping for {sleep_time} seconds before the next submission")
+            time.sleep(int(sleep_time))
 
     # monitor benchmarks
     log_tailers = [client.tail_job_logs(job) for job in job_ids]
