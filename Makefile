@@ -52,13 +52,13 @@ aws-login:
 
 # Use like `make ray-submit-hotpot`, which submits study defined in studies/hotpot.yaml
 ray-submit-%: studies/%.yaml
-	@PYTHONUNBUFFERED=1 python -m syftr.ray.submit --remote --study-config $< 2>&1 | tee $(OUTFILE)
+	@PYTHONUNBUFFERED=1 python -m syftr.ray.submit --remote --study-config $<
 
 ray-stop-job:
 	@python -m syftr.ray.stop --remote --id="$(id)"
 
-ray-experiment:
-	@PYTHONUNBUFFERED=1 python -m $(module) --remote 2>&1 | tee $(OUTFILE)
+ray-benchmarks:
+	@PYTHONUNBUFFERED=1 python -m syftr.scripts.run_benchmarks --remote
 
 ray-cancel-jobs:
 	@PYTHONUNBUFFERED=1 python -m syftr.scripts.cancel_jobs --substring="$(substring)"
