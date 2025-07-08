@@ -246,7 +246,7 @@ EVALUATION = Evaluation(
     raise_on_exception=False,
 )
 
-DATASETS: T.List[str] = [
+DATASETS: T.List[SyftrQADataset] = [
     CragTask3HF(subset="music"),
     FinanceBenchHF(),
     HotPotQAHF(subset="train_hard"),
