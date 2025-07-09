@@ -124,6 +124,68 @@ class SearchSpaceMixin(ABC):
             raise NotImplementedError(f"Unsupported distribution type: {type(dist)}")
 
 
+# @pg.symbolize
+# class Splitter:
+#     def __init__(self, method: str, chunk_exp: int, overlap_frac: float, llm_name: str):
+#         self.method = method
+#         self.chunk_exp = chunk_exp
+#         self.overlap_frac = overlap_frac
+#         self.llm_name = llm_name
+
+#     def build(self) -> NodeParser:
+#         chunk_size = 2 ** self.chunk_exp
+#         overlap = int(self.overlap_frac * chunk_size)
+#         match self.method:
+#             case "html":
+#                 return CodeSplitter(
+#                     language="html",
+#                     max_chars=4 * chunk_size,
+#                 )
+#             case "sentence":
+#                 return SentenceSplitter(
+#                     chunk_size=chunk_size,
+#                     chunk_overlap=overlap,
+#                     tokenizer=get_tokenizer(self.llm_name),
+#                 )
+#             case "token":
+#                 return TokenTextSplitter(
+#                     chunk_size=chunk_size,
+#                     chunk_overlap=overlap,
+#                     tokenizer=get_tokenizer(self.llm_name),
+#                 )
+#             case "recursive":
+#                 return LangchainNodeParser(
+#                     RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
+#                         tokenizer=AutoTokenizer.from_pretrained("BAAI/bge-small-en-v1.5"),
+#                         chunk_size=chunk_size,
+#                         chunk_overlap=overlap,
+#                     )
+#                 )
+#             case _:
+#                 raise ValueError("Invalid splitter")
+
+# splitter = Splitter(
+#     method=pg.oneof(["html", "sentence", "token", "recursive"]),
+#     chunk_exp=pg.oneof(range(9, 15)),
+#     overlap_frac=pg.oneof(range(0.0, 0.5, 0.1)),
+#     # partial object - needs llm_name
+# )
+
+# for splitter, feedback in pg.sample(splitter.search_space, <<search algo definition>>):
+#     splitter = splitter.build()
+#     result test_splitter()
+#     feedback(result)
+
+
+# @pg.symbolize
+# class Retriever:
+#     def __init__(
+#             self,
+#             splitter: Splitter,
+#     ):
+#         self.splitter = splitter
+
+
 class Splitter(BaseModel, SearchSpaceMixin):
     chunk_min_exp: int = Field(
         default=6, description="Minimum exponent for chunk size (2^6 = 64)."
@@ -330,6 +392,7 @@ RAG_MODES: T.List[str] = [
     "sub_question_rag",
     "lats_rag_agent",
     "coa_rag_agent",
+    "graph_rag_agent",
     "no_rag",
 ]
 
@@ -924,6 +987,28 @@ class CoARagAgent(BaseModel, SearchSpaceMixin):
         return len(self.enable_calculator)
 
 
+class GraphRagAgent(BaseModel, SearchSpaceMixin):
+    enable_python: T.List[bool] = Field(
+        default_factory=lambda: [False, True],
+        description="Enable python tool for Graph agent.",
+    )
+
+    def defaults(self, prefix: str = "") -> T.Dict[str, T.Any]:
+        return {
+            f"{prefix}graph_enable_python": False,
+        }
+
+    def build_distributions(self, prefix: str = "") -> T.Dict[str, BaseDistribution]:
+        return {
+            f"{prefix}graph_enable_python": CategoricalDistribution(
+                self.enable_python,
+            ),
+        }
+
+    def get_cardinality(self) -> int:
+        return len(self.enable_python)
+
+
 class SearchSpace(BaseModel):
     model_config = ConfigDict(extra="forbid")  # Forbids unknown fields
     non_search_space_params: T.List[str] = Field(
@@ -999,6 +1084,10 @@ class SearchSpace(BaseModel):
         default_factory=CoARagAgent,
         description="Configuration for the CoA RAG agent.",
     )
+    graph_rag_agent: GraphRagAgent = Field(
+        default_factory=GraphRagAgent,
+        description="Configuration for the Graph RAG agent.",
+    )
     _custom_defaults: ParamDict = {}
 
     def _defaults(self) -> ParamDict:
@@ -1017,6 +1106,7 @@ class SearchSpace(BaseModel):
             **self.sub_question_rag.defaults(),
             **self.lats_rag_agent.defaults(),
             **self.coa_rag_agent.defaults(),
+            **self.graph_rag_agent.defaults(),
         }
 
     def update_defaults(self, defaults: ParamDict) -> None:
@@ -1065,6 +1155,7 @@ class SearchSpace(BaseModel):
         distributions.update(self.sub_question_rag.build_distributions())
         distributions.update(self.lats_rag_agent.build_distributions())
         distributions.update(self.coa_rag_agent.build_distributions())
+        distributions.update(self.graph_rag_agent.build_distributions())
 
         if params is not None:
             reduced_distributions = {
@@ -1166,6 +1257,11 @@ class SearchSpace(BaseModel):
                 params.update(**self.coa_rag_agent.sample(trial))
             else:
                 params.update(**self.coa_rag_agent.defaults())
+        elif params["rag_mode"] == "graph_rag_agent":
+            if "graph_rag_agent" in parameters:
+                params.update(**self.graph_rag_agent.sample(trial))
+            else:
+                params.update(**self.graph_rag_agent.defaults())
 
         if few_shot_enabled := trial.suggest_categorical(
             "few_shot_enabled", self.few_shot_enabled
@@ -1206,6 +1302,8 @@ class SearchSpace(BaseModel):
                 sub_card *= self.lats_rag_agent.get_cardinality()
             elif rag_mode == "coa_rag_agent":
                 sub_card *= self.coa_rag_agent.get_cardinality()
+            elif rag_mode == "graph_rag_agent":
+                sub_card *= self.graph_rag_agent.get_cardinality()
 
             if True in self.few_shot_enabled:
                 sub_card *= self.few_shot_retriever.get_cardinality()

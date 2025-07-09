@@ -50,6 +50,7 @@ from llama_index.core.tools import BaseTool, FunctionTool, QueryEngineTool, Tool
 from llama_index.packs.agents_coa import CoAAgentPack
 from numpy import ceil
 
+from syftr.agents.graph import Goal, GraphAgent
 from syftr.configuration import cfg
 from syftr.instrumentation.arize import instrument_arize
 from syftr.instrumentation.tokens import LLMCallData, TokenTrackingEventHandler
@@ -716,6 +717,66 @@ class CoAAgentFlow(AgenticRAGFlow):
         return pack.agent
 
 
+@dataclass(kw_only=True)
+class GraphAgentFlow(AgenticRAGFlow):
+    name: str = "Graph Agent Flow"
+    enable_python: bool = False
+
+    @cached_property
+    def tools(self) -> T.List[BaseTool]:
+        tools: T.List[BaseTool] = [
+            QueryEngineTool(
+                query_engine=self.query_engine,
+                metadata=ToolMetadata(
+                    name=self.dataset_name.replace("/", "_"),
+                    description=self.dataset_description,
+                ),
+            ),
+        ]
+
+        if self.enable_python:
+            from llama_index.tools.code_interpreter import CodeInterpreterToolSpec
+
+            code = CodeInterpreterToolSpec().to_tool_list()
+            code[
+                0
+            ].metadata.description += (
+                "Use print statements to view code execution results"
+            )
+            tools += code
+        return tools
+
+    @dispatcher.span
+    def _generate(
+        self,
+        query: str,
+        invocation_id: str,
+    ) -> T.Tuple[CompletionResponse, float]:
+        start_time = time.perf_counter()
+        goal = Goal(name=query, description="", acceptance_criteria="")
+        agent = GraphAgent(self.response_synthesizer_llm, self.tools, goal)
+        response: str = agent.run_until_complete().output
+        completion_response = CompletionResponse(
+            text=response,
+        )
+        duration = time.perf_counter() - start_time
+        return completion_response, duration
+
+    @dispatcher.span
+    async def _agenerate(
+        self,
+        query: str,
+        invocation_id: str,
+    ) -> T.Tuple[CompletionResponse, float]:
+        start_time = time.perf_counter()
+        goal = Goal(name=query, description="", acceptance_criteria="")
+        agent = GraphAgent(self.response_synthesizer_llm, self.tools, goal)
+        response: str = agent.run_until_complete().output
+        completion_response = CompletionResponse(text=response)
+        duration = time.perf_counter() - start_time
+        return completion_response, duration
+
+
 class Flows(Enum):
     GENERATOR_FLOW = Flow
     RAG_FLOW = RAGFlow
@@ -724,4 +785,5 @@ class Flows(Enum):
     LLAMA_INDEX_SUB_QUESTION_FLOW = SubQuestionRAGFlow
     LLAMA_INDEX_LATS_RAG_AGENT = LATSAgentFlow
     LLAMA_INDEX_COA_RAG_AGENT = CoAAgentFlow
+    GRAPH_AGENT = GraphAgentFlow
     RETRIEVER_FLOW = RetrieverFlow

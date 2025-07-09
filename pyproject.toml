@@ -63,11 +63,13 @@ dependencies = [
     "llama-index-readers-file",
     "llama-index-readers-llama-parse",
     "llama-index-retrievers-bm25",
+    "llama-index-tools-code-interpreter",
     "llama-index-vector-stores-faiss",
     "llama-index-vector-stores-qdrant",
     "llvmlite>=0.44", # Explicitly installed and pinned to avoid package conflicts
     "lz4",
     "maincontentextractor",
+    "networkx",
     "numba>=0.60", # Explicitly pinned to avoid package conflicts
     "numpy",
     "openinference-instrumentation-llama-index==3.3.1",

@@ -426,6 +426,19 @@ wheels = [
 ]
 
 [[package]]
+name = "arxiv"
+version = "2.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "feedparser" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0b/16/3d72446400a59d1fbda24fed2289661398994164e07d72cfa85e43ce5e36/arxiv-2.2.0.tar.gz", hash = "sha256:6072a2211e95697092ef32acde0144d7de2cfa71208e2751724316c9df322cc0", size = 16910, upload-time = "2025-04-08T06:16:09.824Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/71/1e/e7f0393e836b5347605fc356c24d9f9ae9b26e0f7e52573b80e3d28335eb/arxiv-2.2.0-py3-none-any.whl", hash = "sha256:545b8af5ab301efff7697cd112b5189e631b80521ccbc33fbc1e1f9cff63ca4d", size = 11696, upload-time = "2025-04-08T06:16:08.844Z" },
+]
+
+[[package]]
 name = "asttokens"
 version = "3.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1282,6 +1295,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/8b/50/4b769ce1ac4071a1ef6d86b1a3fb56cdc3a37615e8c5519e1af96cdac366/fastjsonschema-2.21.1.tar.gz", hash = "sha256:794d4f0a58f848961ba16af7b9c85a3e88cd360df008c59aac6fc5ae9323b5d4", size = 373939, upload-time = "2024-12-02T10:55:15.133Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/90/2b/0817a2b257fe88725c25589d89aec060581aabf668707a8d03b2e9e0cb2a/fastjsonschema-2.21.1-py3-none-any.whl", hash = "sha256:c9e5b7e908310918cf494a434eeb31384dd84a98b57a30bcb1f535015b554667", size = 23924, upload-time = "2024-12-02T10:55:07.599Z" },
+]
+
+[[package]]
+name = "feedparser"
+version = "6.0.11"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "sgmllib3k" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ff/aa/7af346ebeb42a76bf108027fe7f3328bb4e57a3a96e53e21fd9ef9dd6dd0/feedparser-6.0.11.tar.gz", hash = "sha256:c9d0407b64c6f2a065d0ebb292c2b35c01050cc0dc33757461aaabdc4c4184d5", size = 286197, upload-time = "2023-12-10T16:03:20.854Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7c/d4/8c31aad9cc18f451c49f7f9cfb5799dadffc88177f7917bc90a66459b1d7/feedparser-6.0.11-py3-none-any.whl", hash = "sha256:0be7ee7b395572b19ebeb1d6aafb0028dee11169f1c934e0ed67d54992f4ad45", size = 81343, upload-time = "2023-12-10T16:03:19.484Z" },
 ]
 
 [[package]]
@@ -3139,6 +3164,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/04/77/78a7a99eae011d332d59d48ca0682bf400254ba8110e0dcacbfcd1cc2684/llama_index_retrievers_bm25-0.5.2.tar.gz", hash = "sha256:e7cd84565dc9b523bc2263cf75c607c9e5e68ce0edc8a24d2ac6a837b1de557f", size = 3488, upload-time = "2025-01-20T16:48:29.626Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ff/0b/3bc5f1b7aeb7676aa802de8af3b630b25700c1bf4b049601e83d1bcab633/llama_index_retrievers_bm25-0.5.2-py3-none-any.whl", hash = "sha256:2f4c147f0957846b236a9619160dcc269824e3b4e8f98d9fd977c35a2d2f1978", size = 3729, upload-time = "2025-01-20T16:48:26.326Z" },
+]
+
+[[package]]
+name = "llama-index-tools-arxiv"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "arxiv" },
+    { name = "llama-index-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1b/c9/66d7c08a14c41dfbc1a9cfc340c48f0277c29ab8c9d66b906a1d210220ee/llama_index_tools_arxiv-0.3.0.tar.gz", hash = "sha256:eac577364e65c64d09d9becf85846b9e65b5bbe53e380cbd9494a55811940b06", size = 2368, upload-time = "2024-11-17T23:06:18.925Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/14/02e22d17b0f61d0b9870ebcb980f65d2185aa966b31df8e589d3a4a95931/llama_index_tools_arxiv-0.3.0-py3-none-any.whl", hash = "sha256:7032ce20ca28ec6799dd6394147030be037d920bc753dfb2bad14317cfbf1883", size = 2541, upload-time = "2024-11-17T23:06:17.425Z" },
 ]
 
 [[package]]
@@ -5060,6 +5098,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pyglove"
+version = "0.4.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "docstring-parser" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/75/5d/4801e02b5ec6fac86936d354e46dd8574db7203c184f8a3e6a1199caf4f2/pyglove-0.4.4.tar.gz", hash = "sha256:a928ccb198d83fcc14cb404cc930d4a6e9e913b740b62fecc3ec6bf3a4c142f6", size = 440533, upload-time = "2024-01-04T19:14:52.317Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0e/bd/6e5db8f7ed2f7547d4133f1e10448dabf14e6f1816839c70189f1f2419a9/pyglove-0.4.4-py3-none-any.whl", hash = "sha256:a3dee8f261bdd070b0833fec70d6b986bfc45c5f090740fb6bcf53e097465bc4", size = 577841, upload-time = "2024-01-04T19:14:46.849Z" },
+]
+
+[[package]]
 name = "pygments"
 version = "2.19.1"
 source = { registry = "https://pypi.org/simple" }
@@ -5874,6 +5924,12 @@ wheels = [
 ]
 
 [[package]]
+name = "sgmllib3k"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9e/bd/3704a8c3e0942d711c1299ebf7b9091930adae6675d7c8f476a7ce48653c/sgmllib3k-1.0.0.tar.gz", hash = "sha256:7868fb1c8bfa764c1ac563d3cf369c381d1325d36124933a726f29fcdaa812e9", size = 5750, upload-time = "2010-08-24T14:33:52.445Z" }
+
+[[package]]
 name = "shapely"
 version = "2.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -6226,11 +6282,13 @@ dependencies = [
     { name = "llama-index-readers-file" },
     { name = "llama-index-readers-llama-parse" },
     { name = "llama-index-retrievers-bm25" },
+    { name = "llama-index-tools-arxiv" },
     { name = "llama-index-vector-stores-faiss" },
     { name = "llama-index-vector-stores-qdrant" },
     { name = "llvmlite" },
     { name = "lz4" },
     { name = "maincontentextractor" },
+    { name = "networkx" },
     { name = "numba" },
     { name = "numpy" },
     { name = "openinference-instrumentation-llama-index" },
@@ -6247,6 +6305,7 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "pydantic-file-secrets" },
     { name = "pydantic-settings" },
+    { name = "pyglove" },
     { name = "python-dotenv" },
     { name = "python-slugify" },
     { name = "rapidfuzz" },
@@ -6375,6 +6434,7 @@ requires-dist = [
     { name = "llama-index-readers-file" },
     { name = "llama-index-readers-llama-parse" },
     { name = "llama-index-retrievers-bm25" },
+    { name = "llama-index-tools-arxiv", specifier = ">=0.3.0" },
     { name = "llama-index-vector-stores-faiss" },
     { name = "llama-index-vector-stores-qdrant" },
     { name = "llvmlite", specifier = ">=0.44" },
@@ -6384,6 +6444,7 @@ requires-dist = [
     { name = "mypy", marker = "extra == 'dev'" },
     { name = "nbformat", marker = "extra == 'dev'" },
     { name = "nbstripout", marker = "extra == 'dev'" },
+    { name = "networkx" },
     { name = "numba", specifier = ">=0.60" },
     { name = "numpy" },
     { name = "openinference-instrumentation-llama-index", specifier = "==3.3.1" },
@@ -6404,6 +6465,7 @@ requires-dist = [
     { name = "py-irt", marker = "extra == 'dev'" },
     { name = "pydantic-file-secrets" },
     { name = "pydantic-settings" },
+    { name = "pyglove", specifier = ">=0.4.4" },
     { name = "pyro-ppl", marker = "extra == 'dev'" },
     { name = "pytest-rerunfailures", marker = "extra == 'dev'" },
     { name = "python-dotenv" },
