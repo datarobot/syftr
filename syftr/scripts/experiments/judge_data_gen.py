@@ -36,7 +36,7 @@ from syftr.studies import (
 )
 from syftr.studyconfig_helper import build_configs
 
-DRY_RUN = True
+DRY_RUN = False
 
 BENCH_NUM = 1
 PREFIX = "judge-data"
@@ -217,6 +217,7 @@ def get_optimization_parameters():
             # -----------------------------------------------
             use_toy_baselines=False,
             # -----------------------------------------------
+            include_responses=True,
             sampler="tpe",
             objective_2_name=OBJ2_NAME,
         )
