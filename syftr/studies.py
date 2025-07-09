@@ -1455,7 +1455,8 @@ class OptimizationConfig(BaseModel):
         description="Whether to raise an exception for invalid baselines.",
     )
     baselines_cycle_llms: bool = Field(
-        default=False, description="Whether to cycle through LLMs for baselines."
+        default=False,
+        description="Replaces baseline LLMs with LLMs in the current search space.",
     )
     use_toy_baselines: bool = Field(
         default=False, description="Whether to use toy baselines."
@@ -1492,6 +1493,10 @@ class OptimizationConfig(BaseModel):
     sampler: T.Literal["tpe", "hierarchical"] = Field(
         default="tpe",
         description='Type of sampler to use (e.g., "tpe", "hierarchical").',
+    )
+    include_responses: bool = Field(
+        default=False,
+        description="Whether to include QA pairs and evaluation feedback in eval_results field",
     )
     ############################
     # seeder_timeout settings

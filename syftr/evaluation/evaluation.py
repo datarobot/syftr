@@ -223,6 +223,9 @@ class SyftrEvaluationResult(EvaluationResult):
     retriever_recall: T.Optional[float] = Field(
         default=None, description="Retriever recall score in [0, 1]"
     )
+    response_text: T.Optional[str] = Field(
+        default=None, description="Text of generated response."
+    )
 
 
 async def exception_catcher(
@@ -349,6 +352,7 @@ async def _aeval_pair(
         generation_exception=generation_exception,
         evaluation_exception=evaluation_exception,
         llm_call_data=call_data,
+        response_text=response.text,
         **(eval_result.model_dump() if eval_result else {}),
     )
 
@@ -443,6 +447,7 @@ async def _aeval_pair_debias(
         generation_exception=generation_exception,
         evaluation_exception=evaluation_exception,
         llm_call_data=call_data,
+        response_text=response.text,
         **(eval_result.model_dump() if eval_result else {}),
     )
 
@@ -483,6 +488,7 @@ async def _aeval_pair_consensus(
         generation_exception=generation_exception,
         evaluation_exception=evaluation_exception,
         llm_call_data=call_data,
+        response_text=response.text,
         **(eval_result.model_dump() if eval_result else {}),
     )
 
@@ -890,11 +896,6 @@ def calculate_metrics(
     acc = sum(passing) / num_total
     passing_std = np.std(passing)
 
-    eval_results = {
-        res.qa_pair.id: {"passing": 1 if res.passing else 0, "raw_score": res.score}
-        for res in results
-        if res.qa_pair is not None
-    }
     f1_scores = [
         core.f1_score(result.qa_pair.answer, result.response)
         for result in results
@@ -928,6 +929,9 @@ def calculate_metrics(
     latency_data = extract_llm_latency_data(results)
     cost_data = extract_cost_data(results)
     token_data = extract_token_data(results)
+    eval_results = extract_eval_results(
+        results, include_responses=study_config.optimization.include_responses
+    )
 
     if objective_1 == "accuracy":
         obj1_value = acc
@@ -988,6 +992,29 @@ def calculate_metrics(
         **token_data,
         **latency_data,
     }
+
+
+def extract_eval_results(
+    all_results: T.List[SyftrEvaluationResult], include_responses: bool = False
+) -> T.Dict:
+    if include_responses:
+        return {
+            res.qa_pair.id: {
+                "passing": 1 if res.passing else 0,
+                "raw_score": res.score,
+                "question": res.qa_pair.question,
+                "answer": res.qa_pair.answer,
+                "response": res.response_text,
+            }
+            for res in all_results
+            if res.qa_pair is not None
+        }
+    else:
+        return {
+            res.qa_pair.id: {"passing": 1 if res.passing else 0, "raw_score": res.score}
+            for res in all_results
+            if res.qa_pair is not None
+        }
 
 
 def extract_llm_latency_data(
