@@ -58,30 +58,31 @@ PREFIX = "seeding"  # this three parameters
 BENCH_NUM = 1  # are used to name
 RUN_NAME = "training"
 # -------------------------------------------------------
-NUM_TRIALS = 1000  # total number of optimization trials per submission
-NUM_RANDOM_TRIALS = 100
+NUM_TRIALS = 0  # total number of optimization trials per submission
+NUM_RANDOM_TRIALS = 0
 MAX_CONCURRENT_TRIALS = 50
 NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
-    True  # WARNING: do not use with simultaneous runs using the same study!
+    False  # WARNING: do not use with simultaneous runs using the same study!
 )
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-MINUTES_BEFORE_NEXT_SUBMISSION = 2
-
-# To seed with silver bullets, you first create the input file using silver_bullets.ipynb notebook
-CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
-# CUSTOM_BASELINES = "silver"  # "pareto", "all", "silver", None
+MINUTES_BEFORE_NEXT_SUBMISSION = 1
 OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
-CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
+# To seed with silver bullets, you first create the input file using silver_bullets.ipynb notebook
+CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
 BASELINES_START = 0  # you can restrict the number of baselines ...
-BASELINES_END = 100  # ... to start with here to avoid OOM issues
-# -------------------------------------------------------
-BASELINE_STUDIES: T.List[str] = []
+BASELINES_END = 4900  # ... to start with here to avoid OOM issues
+BASELINE_STUDIES: T.List[str] = [
+    "seeding1--training--crag_hf-music--music",
+    "seeding1--training--financebench_hf",
+    "seeding1--training--hotpotqa_hf-train_hard--train_hard",
+    "seeding1--training--multihoprag_hf",
+]
 
 BLOCKS = [
     Block(
