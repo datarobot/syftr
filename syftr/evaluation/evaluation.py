@@ -1243,6 +1243,7 @@ def extract_judge_results(
 ) -> T.Dict:
     """Extract result data from judge evaluations."""
     assert all(result.qa_pair is not None for result in all_results)
+
     labels = np.array([int(float(result.qa_pair.answer)) for result in all_results])  # type: ignore
     judge_responses = np.array([])
     for result, label in zip(all_results, labels):
@@ -1250,7 +1251,7 @@ def extract_judge_results(
             np.append(judge_responses, None)
         # Recover judge responses (as 0 or 1) from answer key + result.passing
         judge_response = label if result.passing else int(not bool(label))
-        np.append(judge_responses, judge_response)
+        judge_responses = np.append(judge_responses, judge_response)
 
     # Clean out None's (eg. from failed evals)
     labels = np.array(
@@ -1263,6 +1264,9 @@ def extract_judge_results(
     judge_responses = np.array(
         [response for response in judge_responses if response is not None]
     )
+
+    if len(labels) < 5:
+        return {}
 
     pearson_r, pearson_r_p_value = stats.pearsonr(labels, judge_responses)
     spearman_r, spearman_r_p_value = stats.spearmanr(labels, judge_responses)
@@ -1279,7 +1283,6 @@ def extract_judge_results(
         "kendalltau_r": kendalltau_r,
         "kendalltau_r_p_value": kendalltau_r_p_value,
         "cohens_kappa": cohens_kappa,
-        "log_loss": metrics.logloss(labels, judge_responses),
         "score_judge_mean": score_judge_mean,
         "score_human_mean": score_human_mean,
         "score_judge_std": judge_responses.std(),
