@@ -1291,7 +1291,9 @@ class RetrieverSearchSpace(BaseModel):
 
         return distributions
 
-    def sample(self, trial: Trial, prefix: str = "") -> ParamDict:
+    def sample(
+        self, trial: Trial, components: T.List[str], prefix: str = ""
+    ) -> ParamDict:
         params: ParamDict = {
             "rag_mode": trial.suggest_categorical("rag_mode", self.rag_modes),
             "response_synthesizer_llm": trial.suggest_categorical(
@@ -1321,6 +1323,109 @@ class RetrieverSearchSpace(BaseModel):
             * len(self.hyde_enabled)
             * len(self.additional_context_enabled)
         )
+
+
+class SingleCorrectnessEvaluator(BaseModel):
+    model_config = ConfigDict(extra="forbid")  # Forbids unknown fields
+    response_synthesizer_llms: T.List[str] = Field(
+        default_factory=lambda: DEFAULT_LLMS,
+        description="LLMs used for judgement.",
+    )
+    temperature_min: float = 0.0
+    temperature_max: float = 1.5
+    temperature_step: float = 0.1
+
+    def defaults(self) -> ParamDict:
+        return {
+            "response_synthesizer_llm": self.response_synthesizer_llms[0],
+            "response_synthesizer_temperature": 0.0,
+        }
+
+    def build_distributions(
+        self, params: T.Dict[str, T.Any] | T.List[str] | None = None
+    ) -> T.Dict[str, BaseDistribution]:
+        distributions: dict[str, BaseDistribution] = {
+            "response_synthesizer_llm": CategoricalDistribution(
+                self.response_synthesizer_llms
+            ),
+            "response_synthesizer_temperature": FloatDistribution(
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
+            ),
+        }
+        return distributions
+
+    def sample(self, trial: Trial, prefix: str = "") -> ParamDict:
+        params: ParamDict = {
+            "response_synthesizer_llm": trial.suggest_categorical(
+                "response_synthesizer_llm", self.response_synthesizer_llms
+            ),
+            "response_synthesizer_temperature": trial.suggest_float(
+                "response_synthesizer_temperature",
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
+            ),
+        }
+        return params
+
+    def get_cardinality(self) -> int:
+        llms = len(self.response_synthesizer_llms)
+        temperature_card = get_dist_cardinality(
+            self.temperature_min,
+            self.temperature_max,
+            self.temperature_step,
+        )
+        return llms * temperature_card
+
+
+class JudgeSearchSpace(BaseModel):
+    model_config = ConfigDict(extra="forbid")  # Forbids unknown fields
+    judge_types: T.List[str] = ["single_correctness_evaluator"]
+    single_correctness_evaluator: SingleCorrectnessEvaluator = Field(
+        default_factory=SingleCorrectnessEvaluator,
+        description="Simple single-llm using standard CorrectnessEvaluator",
+    )
+
+    def defaults(self) -> ParamDict:
+        return {
+            "judge_type": self.judge_types[0],
+        }
+
+    def build_distributions(
+        self, params: T.Dict[str, T.Any] | T.List[str] | None = None
+    ) -> T.Dict[str, BaseDistribution]:
+        distributions: dict[str, BaseDistribution] = {
+            "judge_type": CategoricalDistribution(self.judge_types),
+        }
+        if "single_correctness_evaluator" in self.judge_types:
+            distributions.update(
+                self.single_correctness_evaluator.build_distributions()
+            )
+        if params is not None:
+            reduced_distributions = {
+                key: val for key, val in distributions.items() if key in params
+            }
+            return reduced_distributions
+
+        return distributions
+
+    def sample(
+        self, trial: Trial, components: T.List[str], prefix: str = ""
+    ) -> ParamDict:
+        params: ParamDict = {
+            "judge_type": trial.suggest_categorical("judge_type", self.judge_types),
+        }
+        if params["judge_type"] == "single_correctness_evaluator":
+            params.update(**self.single_correctness_evaluator.sample(trial))
+        return params
+
+    def get_cardinality(self) -> int:
+        card = len(self.judge_types)
+        if "single_correctness_evaluator" in self.judge_types:
+            card *= self.single_correctness_evaluator.get_cardinality()
+        return card
 
 
 class AgentSearchSpace(BaseModel):
@@ -1455,7 +1560,8 @@ class OptimizationConfig(BaseModel):
         description="Whether to raise an exception for invalid baselines.",
     )
     baselines_cycle_llms: bool = Field(
-        default=False, description="Whether to cycle through LLMs for baselines."
+        default=False,
+        description="Replaces baseline LLMs with LLMs in the current search space.",
     )
     use_toy_baselines: bool = Field(
         default=False, description="Whether to use toy baselines."
@@ -1492,6 +1598,10 @@ class OptimizationConfig(BaseModel):
     sampler: T.Literal["tpe", "hierarchical"] = Field(
         default="tpe",
         description='Type of sampler to use (e.g., "tpe", "hierarchical").',
+    )
+    include_responses: bool = Field(
+        default=False,
+        description="Whether to include QA pairs and evaluation feedback in eval_results field",
     )
     ############################
     # seeder_timeout settings
@@ -1560,7 +1670,7 @@ class TimeoutConfig(BaseModel):
 
 
 class Evaluation(BaseModel):
-    mode: T.Literal["single", "random", "consensus", "retriever"] = Field(
+    mode: T.Literal["single", "random", "consensus", "retriever", "judge"] = Field(
         default="single", description="Evaluation mode."
     )
     llms: T.List[str] = Field(
@@ -1662,7 +1772,7 @@ class StudyConfig(BaseSettings):
         default=True,
         description="Whether to recreate the study if it already exists (potentially deleting old data).",
     )
-    search_space: SearchSpace = Field(
+    search_space: T.Union[SearchSpace, RetrieverSearchSpace, JudgeSearchSpace] = Field(
         default_factory=SearchSpace,
         description="Search space configuration for the optimization.",
     )
@@ -1753,6 +1863,10 @@ class StudyConfig(BaseSettings):
     @property
     def is_retriever_study(self) -> bool:
         return isinstance(self.search_space, RetrieverSearchSpace)
+
+    @property
+    def is_judge_study(self) -> bool:
+        return isinstance(self.search_space, JudgeSearchSpace)
 
 
 class AgentStudyConfig(BaseSettings):

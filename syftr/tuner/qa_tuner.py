@@ -24,6 +24,7 @@ from syftr.flows import (
     CoAAgentFlow,
     CritiqueAgentFlow,
     Flow,
+    JudgeFlow,
     LATSAgentFlow,
     RAGFlow,
     ReActAgentFlow,
@@ -140,6 +141,14 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
             additional_context_num_nodes=params.get("additional_context_num_nodes", 0),
             params=params,
             enforce_full_evaluation=enforce_full_evaluation,
+        )
+
+    if study_config.is_judge_study:
+        return JudgeFlow(
+            response_synthesizer_llm=response_synthesizer_llm,
+            params=params,
+            enforce_full_evaluation=enforce_full_evaluation,
+            temperature=params["response_synthesizer_temperature"],
         )
 
     get_qa_examples = None
