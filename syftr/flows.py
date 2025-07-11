@@ -293,13 +293,13 @@ class JudgeFlow(Flow):
         invocation_id = uuid4().hex
         self._llm_call_data[invocation_id] = []
         start_time = time.perf_counter()
-        response = self._judge(query)
+        response = self._judge(query, invocation_id)
         duration = time.perf_counter() - start_time
         call_data = self._llm_call_data.pop(invocation_id)
         return response, duration, call_data
 
     @dispatcher.span
-    def _judge(self, query) -> EvaluationResult:
+    def _judge(self, query: str, invocation_id: str) -> EvaluationResult:
         prompt = self.get_prompt(query)
         judge_response: CompletionResponse = self.response_synthesizer_llm.complete(
             prompt
@@ -313,13 +313,13 @@ class JudgeFlow(Flow):
         invocation_id = uuid4().hex
         self._llm_call_data[invocation_id] = []
         start_time = time.perf_counter()
-        response = await self._ajudge(query)
+        response = await self._ajudge(query, invocation_id)
         duration = time.perf_counter() - start_time
         call_data = self._llm_call_data.pop(invocation_id)
         return response, duration, call_data
 
     @dispatcher.span
-    async def _ajudge(self, query: str) -> EvaluationResult:
+    async def _ajudge(self, query: str, invocation_id: str) -> EvaluationResult:
         prompt = self.get_prompt(query)
         judge_response: CompletionResponse = (
             await self.response_synthesizer_llm.acomplete(prompt)
