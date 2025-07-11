@@ -1331,9 +1331,15 @@ class SingleCorrectnessEvaluator(BaseModel):
         default_factory=lambda: DEFAULT_LLMS,
         description="LLMs used for judgement.",
     )
+    temperature_min: float = 0.0
+    temperature_max: float = 1.5
+    temperature_step: float = 0.1
 
     def defaults(self) -> ParamDict:
-        return {"response_synthesizer_llm": self.response_synthesizer_llms[0]}
+        return {
+            "response_synthesizer_llm": self.response_synthesizer_llms[0],
+            "response_synthesizer_temperature": 0.0,
+        }
 
     def build_distributions(
         self, params: T.Dict[str, T.Any] | T.List[str] | None = None
@@ -1341,6 +1347,11 @@ class SingleCorrectnessEvaluator(BaseModel):
         distributions: dict[str, BaseDistribution] = {
             "response_synthesizer_llm": CategoricalDistribution(
                 self.response_synthesizer_llms
+            ),
+            "response_synthesizer_temperature": FloatDistribution(
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
             ),
         }
         return distributions
@@ -1350,11 +1361,23 @@ class SingleCorrectnessEvaluator(BaseModel):
             "response_synthesizer_llm": trial.suggest_categorical(
                 "response_synthesizer_llm", self.response_synthesizer_llms
             ),
+            "response_synthesizer_temperature": trial.suggest_float(
+                "response_synthesizer_temperature",
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
+            ),
         }
         return params
 
     def get_cardinality(self) -> int:
-        return len(self.response_synthesizer_llms)
+        llms = len(self.response_synthesizer_llms)
+        temperature_card = get_dist_cardinality(
+            self.temperature_min,
+            self.temperature_max,
+            self.temperature_step,
+        )
+        return llms * temperature_card
 
 
 class JudgeSearchSpace(BaseModel):

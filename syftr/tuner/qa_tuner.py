@@ -148,6 +148,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
             response_synthesizer_llm=response_synthesizer_llm,
             params=params,
             enforce_full_evaluation=enforce_full_evaluation,
+            temperature=params["response_synthesizer_temperature"],
         )
 
     get_qa_examples = None

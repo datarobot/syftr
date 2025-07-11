@@ -14,7 +14,7 @@ from syftr.studies import (
 
 
 def main():
-    name = "judge-eval-study-1"
+    name = "judge-eval-study-4"
     study_config = StudyConfig(
         name=name,
         dataset=JudgeEvalHF(),
@@ -25,9 +25,9 @@ def main():
             )
         ),
         optimization=OptimizationConfig(
-            num_trials=1,
+            num_trials=100,
             baselines=[],
-            num_random_trials=1,
+            num_random_trials=10,
             use_individual_baselines=False,
             use_agent_baselines=False,
             use_variations_of_baselines=False,

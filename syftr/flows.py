@@ -269,6 +269,7 @@ class JudgeFlow(Flow):
     output_parser: T.Callable[[str, str], EvaluationResult] = (
         parse_correctness_evaluation
     )
+    temperature: float = 0.0
 
     def __repr__(self):
         return f"{self.name}: {self.params}"
@@ -301,6 +302,7 @@ class JudgeFlow(Flow):
     @dispatcher.span
     def _judge(self, query: str, invocation_id: str) -> EvaluationResult:
         prompt = self.get_prompt(query)
+        self.response_synthesizer_llm.temperature = self.temperature
         judge_response: CompletionResponse = self.response_synthesizer_llm.complete(
             prompt
         )
@@ -321,6 +323,7 @@ class JudgeFlow(Flow):
     @dispatcher.span
     async def _ajudge(self, query: str, invocation_id: str) -> EvaluationResult:
         prompt = self.get_prompt(query)
+        self.response_synthesizer_llm.temperature = self.temperature
         judge_response: CompletionResponse = (
             await self.response_synthesizer_llm.acomplete(prompt)
         )
