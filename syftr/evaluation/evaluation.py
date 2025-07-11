@@ -27,6 +27,8 @@ from llama_index.core.prompts.mixin import PromptDictType
 from llama_index.core.schema import MetadataMode, NodeWithScore
 from optuna import TrialPruned
 from rapidfuzz.fuzz import partial_ratio
+from scipy import stats
+from sklearn import metrics
 from tenacity import (
     before_sleep_log,
     retry,
@@ -1068,6 +1070,7 @@ def calculate_metrics(
     eval_results = extract_eval_results(
         results, include_responses=study_config.optimization.include_responses
     )
+    judge_data = extract_judge_results(results) if study_config.is_judge_study else {}
 
     if objective_1 == "accuracy":
         obj1_value = acc
@@ -1127,6 +1130,7 @@ def calculate_metrics(
         **cost_data,
         **token_data,
         **latency_data,
+        **judge_data,
     }
 
 
@@ -1231,4 +1235,55 @@ def extract_token_data(
         "llm_output_tokens_median": float(np.median(run_output_tokens)),
         **total_input_tokens_per_model,
         **total_output_tokens_per_model,
+    }
+
+
+def extract_judge_results(
+    all_results: T.List[SyftrEvaluationResult], include_responses: bool = False
+) -> T.Dict:
+    """Extract result data from judge evaluations."""
+    assert all(result.qa_pair is not None for result in all_results)
+    labels = np.array([int(float(result.qa_pair.answer)) for result in all_results])  # type: ignore
+    judge_responses = np.array([])
+    for result, label in zip(all_results, labels):
+        if result.passing is None:
+            np.append(judge_responses, None)
+        # Recover judge responses (as 0 or 1) from answer key + result.passing
+        judge_response = label if result.passing else int(not bool(label))
+        np.append(judge_responses, judge_response)
+
+    # Clean out None's (eg. from failed evals)
+    labels = np.array(
+        [
+            label
+            for label, response in zip(labels, judge_responses)
+            if response is not None
+        ]
+    )
+    judge_responses = np.array(
+        [response for response in judge_responses if response is not None]
+    )
+
+    pearson_r, pearson_r_p_value = stats.pearsonr(labels, judge_responses)
+    spearman_r, spearman_r_p_value = stats.spearmanr(labels, judge_responses)
+    kendalltau_r, kendalltau_r_p_value = stats.kendalltau(labels, judge_responses)
+    cohens_kappa = metrics.cohen_kappa_score(labels, judge_responses)
+    score_judge_mean = labels.mean()
+    score_human_mean = judge_responses.mean()
+
+    return {
+        "pearson_r": pearson_r,
+        "pearson_r_p_value": pearson_r_p_value,
+        "spearman_r": spearman_r,
+        "spearman_r_p_value": spearman_r_p_value,
+        "kendalltau_r": kendalltau_r,
+        "kendalltau_r_p_value": kendalltau_r_p_value,
+        "cohens_kappa": cohens_kappa,
+        "log_loss": metrics.logloss(labels, judge_responses),
+        "score_judge_mean": score_judge_mean,
+        "score_human_mean": score_human_mean,
+        "score_judge_std": judge_responses.std(),
+        "score_human_std": labels.std(),
+        "score_difference_mean": score_judge_mean - score_human_mean,
+        "score_difference_std": (judge_responses - labels).std(),
     }
