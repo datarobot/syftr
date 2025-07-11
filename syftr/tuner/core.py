@@ -84,8 +84,10 @@ def set_trial(
     flow_json: str | None = None,
 ):
     if params:
-        flow_name = get_flow_name(str(params["rag_mode"]))
-        trial.set_user_attr("flow_name", flow_name)
+        rag_mode = params.get("rag_mode")
+        if rag_mode is not None:
+            flow_name = get_flow_name(str(rag_mode))
+            trial.set_user_attr("flow_name", flow_name)
     if study_config:
         trial.set_user_attr("dataset", study_config.dataset.name)
     if is_seeding is not None:

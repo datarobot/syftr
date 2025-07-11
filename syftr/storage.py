@@ -1244,8 +1244,8 @@ class JudgeEvalHF(SyftrQADataset):
         partition_ranges = {
             "sample": range(0, 20),
             "train": range(0, 300),
-            "test": range(300, 600),
-            "holdout": range(600, 700),
+            "test": range(300, 700),
+            "holdout": range(700, 807),
         }
         if partition in partition_ranges:
             return partition_ranges[partition]

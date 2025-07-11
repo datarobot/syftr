@@ -39,7 +39,7 @@ from tenacity import (
 
 from syftr import core, custom_metrics
 from syftr.configuration import EVAL__RAISE_ON_EXCEPTION
-from syftr.flows import Flow, RetrieverFlow
+from syftr.flows import Flow, JudgeFlow, RetrieverFlow
 from syftr.helpers import get_exception_report
 from syftr.instrumentation.tokens import LLMCallData
 from syftr.pruning import CostPruner, ParetoPruner, RuntimePruner
@@ -188,6 +188,65 @@ class FuzzyRecallEvaluator(BaseEvaluator):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self.aevaluate(query, response, contexts, **kwargs)
+        )
+
+    def _get_prompts(self) -> PromptDictType:
+        """Get prompts."""
+        return {}
+
+    def _update_prompts(self, prompts_dict: PromptDictType) -> None:
+        """Update prompts."""
+        pass
+
+
+class JudgeEvaluator(BaseEvaluator):
+    """
+    Evaluator that checks if the evaluation result (passing or not) matches the labeled value
+    """
+
+    async def aevaluate(
+        self,
+        query: str = "",
+        evaluation_result: T.Optional[EvaluationResult] = None,
+        label: str | int | None = None,
+        **kwargs: T.Any,
+    ) -> EvaluationResult:
+        assert evaluation_result is not None, (
+            "JudgeEvaluator needs an evaluation_result"
+        )
+        assert label is not None, "JudgeEvaluator needs a label"
+
+        label = bool(int(float(label)))
+        passing = evaluation_result.passing == label
+
+        return EvaluationResult(
+            query=query,
+            passing=passing,
+            response=str(evaluation_result),
+        )
+
+    def evaluate(
+        self,
+        query: str = "",
+        evaluation_result: T.Optional[EvaluationResult] = None,
+        label: str | int | None = None,
+        **kwargs: T.Any,
+    ) -> EvaluationResult:
+        """
+        Synchronous version of the evaluation method for compatibility with base class.
+        """
+        assert evaluation_result is not None, (
+            "JudgeEvaluator needs an evaluation_result"
+        )
+        assert label is not None, "JudgeEvaluator needs a label"
+
+        label = bool(int(label))
+        passing = evaluation_result.passing == label
+
+        return EvaluationResult(
+            query=query,
+            passing=passing,
+            response=str(evaluation_result),
         )
 
     def _get_prompts(self) -> PromptDictType:
@@ -421,6 +480,71 @@ async def _aeval_retriever_pair(
         retriever_context_length=retrieved_contexts_length,
         passing=result.passing,
     )
+
+
+@retry(
+    stop=stop_after_attempt(RETRY_ATTEMPTS),
+    wait=wait_exponential_jitter(
+        initial=RETRY_MIN_SLEEP, max=RETRY_MAX_SLEEP, exp_base=2, jitter=RETRY_MAX_SLEEP
+    ),
+    reraise=True,
+    retry=(
+        retry_if_exception_type(RETRIABLE_EXCEPTIONS)
+        | retry_if_exception_cause_type(RETRIABLE_EXCEPTIONS)
+    )
+    & retry_if_exception(should_retry),
+    before_sleep=before_sleep_log(log, logging.WARNING),
+)
+async def ajudge_pair(
+    qa_pair: core.QAPair,
+    flow: JudgeFlow,
+    rate_limiter: AsyncLimiter,
+    raise_on_exception: bool | None = EVAL__RAISE_ON_EXCEPTION,
+) -> T.Tuple[EvaluationResult | None, float, T.List[LLMCallData], Exception | None]:
+    """Get flow's retrieved documents from an Q&A pair asynchronously."""
+    result, run_time, call_data, exception = await exception_catcher(
+        func=flow.ajudge,
+        return_values_on_exception=(None, np.nan, []),
+        raise_on_exception=raise_on_exception,
+        query=qa_pair.question,
+    )
+    return result, run_time, call_data, exception
+
+
+async def _aeval_judge_pair(
+    qa_pair: core.QAPair,
+    flow: JudgeFlow,
+    evaluators: T.Sequence[BaseEvaluator],
+    rate_limiter: AsyncLimiter,
+    raise_on_exception: bool | None = EVAL__RAISE_ON_EXCEPTION,
+) -> SyftrEvaluationResult:
+    """Evaluate retrieval performance on a single Q&A item."""
+    judge_result, run_time, call_data, exception = await ajudge_pair(
+        qa_pair, flow, rate_limiter
+    )
+    if judge_result:
+        evaluator = evaluators[0]
+        result = await evaluator.aevaluate(
+            query=qa_pair.question,
+            evaluation_result=judge_result,
+            label=qa_pair.answer,
+        )
+        return SyftrEvaluationResult(
+            qa_pair=qa_pair,
+            run_time=run_time,
+            generation_exception=exception,
+            evaluation_exception=None,
+            llm_call_data=call_data,
+            passing=result.passing,
+        )
+    else:
+        return SyftrEvaluationResult(
+            qa_pair=qa_pair,
+            run_time=run_time,
+            generation_exception=exception,
+            evaluation_exception=None,
+            llm_call_data=call_data,
+        )
 
 
 async def _aeval_pair_debias(
@@ -747,18 +871,17 @@ def eval_dataset(
     study_config: T.Union[StudyConfig, AgentStudyConfig],
     dataset_iter,
     flow: Flow,
-    evaluation_mode: T.Literal["single", "random", "consensus", "retriever"] = "single",
+    evaluation_mode: T.Literal[
+        "single", "random", "consensus", "retriever", "judge"
+    ] = "single",
 ) -> T.Dict[str, T.Any]:
     eval_start = datetime.now(timezone.utc).timestamp()
     dataset = list(dataset_iter.iter_examples())
     assert len(dataset) > 2, dataset
     dataset = dataset[: study_config.optimization.num_eval_samples]
-    assert evaluation_mode in {
-        "single",
-        "random",
-        "consensus",
-        "retriever",
-    }, "Evaluation mode should be 'single', 'random', 'consensus', or 'retriever'."
+    assert evaluation_mode in {"single", "random", "consensus", "retriever", "judge"}, (
+        "Evaluation mode should be 'single', 'random', 'consensus', 'retriever' or 'judge'."
+    )
 
     evaluators = CorrectnessEvaluatorFactory(study_config).get_evaluators()
     rate_limiter = AsyncLimiter(
@@ -835,6 +958,19 @@ def eval_dataset(
                 flow=flow,
                 study_config=study_config,
                 evaluators=[FuzzyRecallEvaluator()],
+                raise_on_exception=study_config.evaluation.raise_on_exception,
+                pruner=pruner,
+                timeout_pruner=timeout,
+                cost_pruner=costout,
+                rate_limiter=rate_limiter,
+            )
+        case "judge":
+            results, prune_reason = _async_eval_runner(
+                pair_eval_runner=_aeval_judge_pair,
+                items=dataset,
+                flow=flow,
+                study_config=study_config,
+                evaluators=[JudgeEvaluator()],
                 raise_on_exception=study_config.evaluation.raise_on_exception,
                 pruner=pruner,
                 timeout_pruner=timeout,

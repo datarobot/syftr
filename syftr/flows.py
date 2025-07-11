@@ -26,9 +26,8 @@ from llama_index.core.agent import (
     ReActAgent,
 )
 from llama_index.core.agent.react.formatter import ReActChatFormatter
-from llama_index.core.indices.query.query_transform.base import (
-    HyDEQueryTransform,
-)
+from llama_index.core.evaluation import EvaluationResult
+from llama_index.core.indices.query.query_transform.base import HyDEQueryTransform
 from llama_index.core.llms import ChatMessage, CompletionResponse, MessageRole
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.llms.llm import LLM
@@ -50,10 +49,12 @@ from llama_index.packs.agents_coa import CoAAgentPack
 from numpy import ceil
 
 from syftr.configuration import cfg
+from syftr.evaluation.evaluator_factory import json_parser_function
 from syftr.instrumentation.arize import instrument_arize
 from syftr.instrumentation.tokens import LLMCallData, TokenTrackingEventHandler
 from syftr.llm import get_llm_name, get_tokenizer
 from syftr.logger import logger
+from syftr.prompts.judge import DEFAULT_JUDGE_SYSTEM_PROMPT
 from syftr.studies import get_critique_template, get_react_template
 
 dispatcher = instrument.get_dispatcher()
@@ -247,6 +248,84 @@ class RetrieverFlow(Flow):
             retrieval_result = await self.query_engine.aretrieve(qb)
         duration = time.perf_counter() - start_time
         return retrieval_result, duration
+
+
+def parse_correctness_evaluation(query: str, response: str) -> EvaluationResult:
+    score, feedback = json_parser_function(response)
+    if score is None:
+        raise ValueError(f"Could not parse score from response: {response}")
+    passing = score >= 4.0
+    return EvaluationResult(
+        query=query, response=response, passing=passing, score=score, feedback=feedback
+    )
+
+
+@dataclass(kw_only=True)
+class JudgeFlow(Flow):
+    """Flow that evaluates whether a response is correct."""
+
+    name: str = "Judge Flow"
+    system_prompt: str = DEFAULT_JUDGE_SYSTEM_PROMPT
+    output_parser: T.Callable[[str, str], EvaluationResult] = (
+        parse_correctness_evaluation
+    )
+
+    def __repr__(self):
+        return f"{self.name}: {self.params}"
+
+    @property
+    def tokenizer(self) -> T.Callable:
+        return get_tokenizer(get_llm_name(self.response_synthesizer_llm))
+
+    def get_prompt(self, query) -> str:
+        """Returns final prompt string to send in completion request."""
+        return self.system_prompt + "\n" + query
+
+    def generate(self, query: str, *args, **kwargs):
+        raise NotImplementedError("JudgeFlow does not support generation.")
+
+    async def agenerate(self, query: str, *args, **kwargs):
+        raise NotImplementedError("JudgeFlow does not support generation.")
+
+    def judge(
+        self, query: str
+    ) -> T.Tuple[EvaluationResult, float, T.List[LLMCallData]]:
+        invocation_id = uuid4().hex
+        self._llm_call_data[invocation_id] = []
+        start_time = time.perf_counter()
+        response = self._judge(query)
+        duration = time.perf_counter() - start_time
+        call_data = self._llm_call_data.pop(invocation_id)
+        return response, duration, call_data
+
+    @dispatcher.span
+    def _judge(self, query) -> EvaluationResult:
+        prompt = self.get_prompt(query)
+        judge_response: CompletionResponse = self.response_synthesizer_llm.complete(
+            prompt
+        )
+        result = self.output_parser(prompt, judge_response.text)
+        return result
+
+    async def ajudge(
+        self, query: str
+    ) -> T.Tuple[EvaluationResult, float, T.List[LLMCallData]]:
+        invocation_id = uuid4().hex
+        self._llm_call_data[invocation_id] = []
+        start_time = time.perf_counter()
+        response = await self._ajudge(query)
+        duration = time.perf_counter() - start_time
+        call_data = self._llm_call_data.pop(invocation_id)
+        return response, duration, call_data
+
+    @dispatcher.span
+    async def _ajudge(self, query: str) -> EvaluationResult:
+        prompt = self.get_prompt(query)
+        judge_response: CompletionResponse = (
+            await self.response_synthesizer_llm.acomplete(prompt)
+        )
+        result = self.output_parser(prompt, judge_response.text)
+        return result
 
 
 @dataclass(kw_only=True)
