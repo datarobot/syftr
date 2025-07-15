@@ -25,4 +25,7 @@ def parse_correctness_evaluation_ten(query: str, response: str) -> EvaluationRes
 
 def parse_correctness_evaluation_simple(query: str, response: str) -> EvaluationResult:
     passing = response.split("\n")[0].strip().lower() == "yes"
-    return EvaluationResult(query=query, response=response, passing=passing)
+    feedback = "\n".join(response.split("\n")[1:]).strip()
+    return EvaluationResult(
+        query=query, response=response, passing=passing, feedback=feedback
+    )
