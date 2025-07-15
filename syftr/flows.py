@@ -49,11 +49,11 @@ from llama_index.packs.agents_coa import CoAAgentPack
 from numpy import ceil
 
 from syftr.configuration import cfg
-from syftr.evaluation.evaluator_factory import json_parser_function
 from syftr.instrumentation.arize import instrument_arize
 from syftr.instrumentation.tokens import LLMCallData, TokenTrackingEventHandler
 from syftr.llm import get_llm_name, get_tokenizer
 from syftr.logger import logger
+from syftr.output_parsers.judge import parse_correctness_evaluation
 from syftr.prompts.judge import DEFAULT_JUDGE_SYSTEM_PROMPT
 from syftr.studies import get_critique_template, get_react_template
 
@@ -250,16 +250,6 @@ class RetrieverFlow(Flow):
         return retrieval_result, duration
 
 
-def parse_correctness_evaluation(query: str, response: str) -> EvaluationResult:
-    score, feedback = json_parser_function(response)
-    if score is None:
-        raise ValueError(f"Could not parse score from response: {response}")
-    passing = score >= 4.0
-    return EvaluationResult(
-        query=query, response=response, passing=passing, score=score, feedback=feedback
-    )
-
-
 @dataclass(kw_only=True)
 class JudgeFlow(Flow):
     """Flow that evaluates whether a response is correct."""
@@ -329,6 +319,22 @@ class JudgeFlow(Flow):
         )
         result = self.output_parser(prompt, judge_response.text)
         return result
+
+
+@dataclass(kw_only=True)
+class MasterRMFlow(JudgeFlow):
+    """Flow specific to Master-RM model."""
+
+    name: str = "Judge Flow"
+    system_prompt: str = (
+        "Return YES if the Generated Answer is correct relative to the Reference Answer"
+    )
+    output_parser: T.Callable[[str, str], EvaluationResult] = (
+        lambda q, r: EvaluationResult(
+            query=q, response=r, passing=r.strip().lower() == "yes"
+        )
+    )
+    temperature: float = 0.0
 
 
 @dataclass(kw_only=True)

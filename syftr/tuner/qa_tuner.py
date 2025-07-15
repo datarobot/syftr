@@ -41,6 +41,17 @@ from syftr.optuna_helper import (
     trial_exists,
     without_non_search_space_params,
 )
+from syftr.output_parsers.judge import (
+    parse_correctness_evaluation,
+    parse_correctness_evaluation_simple,
+    parse_correctness_evaluation_ten,
+)
+from syftr.prompts.judge import (
+    DEFAULT_JUDGE_SYSTEM_PROMPT,
+    JUDGE_SYSTEM_PROMPT_DETAILED,
+    JUDGE_SYSTEM_PROMPT_SIMPLE,
+    JUDGE_SYSTEM_PROMPT_TEN,
+)
 from syftr.ray.utils import ray_init
 from syftr.retrievers.build import build_rag_retriever
 from syftr.startup import prepare_worker
@@ -144,8 +155,22 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
         )
 
     if study_config.is_judge_study:
+        prompt = DEFAULT_JUDGE_SYSTEM_PROMPT
+        output_parser = parse_correctness_evaluation
+        if params["judge_prompt"] == "simple":
+            prompt = JUDGE_SYSTEM_PROMPT_SIMPLE
+            output_parser = parse_correctness_evaluation_simple
+        elif params["judge_prompt"] == "out_of_ten":
+            prompt = JUDGE_SYSTEM_PROMPT_TEN
+            output_parser = parse_correctness_evaluation_ten
+        elif params["judge_prompt"] == "detailed":
+            prompt = JUDGE_SYSTEM_PROMPT_DETAILED
+            output_parser = parse_correctness_evaluation
+
         return JudgeFlow(
             response_synthesizer_llm=response_synthesizer_llm,
+            system_prompt=prompt,
+            output_parser=output_parser,
             params=params,
             enforce_full_evaluation=enforce_full_evaluation,
             temperature=params["response_synthesizer_temperature"],

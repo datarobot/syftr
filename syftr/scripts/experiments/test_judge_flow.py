@@ -14,23 +14,26 @@ from syftr.studies import (
 
 
 def main():
-    name = "judge-eval-study-4"
+    name = "judge-eval-study-10-multi-prompt"
     study_config = StudyConfig(
         name=name,
         dataset=JudgeEvalHF(),
         evaluation=Evaluation(mode="judge"),
         search_space=JudgeSearchSpace(
             single_correctness_evaluator=SingleCorrectnessEvaluator(
-                response_synthesizer_llms=["gpt-4o-mini"]
+                response_synthesizer_llms=["master-rm", "qwen2.5-7b"]
             )
         ),
         optimization=OptimizationConfig(
-            num_trials=100,
+            num_trials=128,
             baselines=[],
-            num_random_trials=10,
+            num_random_trials=16,
             use_individual_baselines=False,
             use_agent_baselines=False,
             use_variations_of_baselines=False,
+            max_concurrent_trials=4,
+            num_eval_batch=10,
+            max_eval_failure_rate=0.05,
         ),
     )
     path = Path("studies") / f"{name}.yaml"

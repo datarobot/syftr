@@ -1332,7 +1332,7 @@ class SingleCorrectnessEvaluator(BaseModel):
         description="LLMs used for judgement.",
     )
     temperature_min: float = 0.0
-    temperature_max: float = 1.5
+    temperature_max: float = 1.0
     temperature_step: float = 0.1
 
     def defaults(self) -> ParamDict:
@@ -1387,10 +1387,12 @@ class JudgeSearchSpace(BaseModel):
         default_factory=SingleCorrectnessEvaluator,
         description="Simple single-llm using standard CorrectnessEvaluator",
     )
+    judge_prompts: T.List[str] = ["default", "simple", "out_of_ten", "detailed"]
 
     def defaults(self) -> ParamDict:
         return {
             "judge_type": self.judge_types[0],
+            "judge_prompt": self.judge_types[0],
         }
 
     def build_distributions(
@@ -1398,6 +1400,7 @@ class JudgeSearchSpace(BaseModel):
     ) -> T.Dict[str, BaseDistribution]:
         distributions: dict[str, BaseDistribution] = {
             "judge_type": CategoricalDistribution(self.judge_types),
+            "judge_prompt": CategoricalDistribution(self.judge_prompts),
         }
         if "single_correctness_evaluator" in self.judge_types:
             distributions.update(
@@ -1416,13 +1419,16 @@ class JudgeSearchSpace(BaseModel):
     ) -> ParamDict:
         params: ParamDict = {
             "judge_type": trial.suggest_categorical("judge_type", self.judge_types),
+            "judge_prompt": trial.suggest_categorical(
+                "judge_prompt", self.judge_prompts
+            ),
         }
         if params["judge_type"] == "single_correctness_evaluator":
             params.update(**self.single_correctness_evaluator.sample(trial))
         return params
 
     def get_cardinality(self) -> int:
-        card = len(self.judge_types)
+        card = len(self.judge_types) * len(self.judge_prompts)
         if "single_correctness_evaluator" in self.judge_types:
             card *= self.single_correctness_evaluator.get_cardinality()
         return card
