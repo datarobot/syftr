@@ -182,9 +182,12 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                 temperature=params["response_synthesizer_temperature"],
             )
 
+        llm_names = JUDGE_LLMS or DEFAULT_LLMS
+        response_synthesizer_llms = [get_llm(llm_name) for llm_name in llm_names]
+
         if params["judge_type"] == "random_correctness_evaluator":
             return RandomJudgeFlow(
-                response_synthesizer_llms=JUDGE_LLMS or DEFAULT_LLMS,
+                response_synthesizer_llms=response_synthesizer_llms,  # type: ignore
                 system_prompt=prompt,
                 output_parser=output_parser,
                 params=params,
@@ -194,7 +197,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
 
         if params["judge_type"] == "consensus_correctness_evaluator":
             return ConsensusJudgeFlow(
-                response_synthesizer_llms=JUDGE_LLMS or DEFAULT_LLMS,
+                response_synthesizer_llms=response_synthesizer_llms,  # type: ignore
                 system_prompt=prompt,
                 output_parser=output_parser,
                 params=params,

@@ -53,7 +53,7 @@ from numpy import ceil
 from syftr.configuration import cfg
 from syftr.instrumentation.arize import instrument_arize
 from syftr.instrumentation.tokens import LLMCallData, TokenTrackingEventHandler
-from syftr.llm import get_llm, get_llm_name, get_tokenizer
+from syftr.llm import get_llm_name, get_tokenizer
 from syftr.logger import logger
 from syftr.output_parsers.judge import parse_correctness_evaluation
 from syftr.prompts.judge import DEFAULT_JUDGE_SYSTEM_PROMPT
@@ -349,51 +349,12 @@ class MasterRMFlow(JudgeFlow):
     temperature: float = 0.0
 
 
-# async def _aeval_pair_consensus(
-#     qa_pair: core.QAPair,
-#     flow: Flow,
-#     evaluators: T.Sequence[BaseEvaluator],
-#     rate_limiter: AsyncLimiter,
-#     raise_on_exception: bool | None = EVAL__RAISE_ON_EXCEPTION,
-# ) -> SyftrEvaluationResult:
-#     """Evaluate single Q&A item asynchronously using provided evaluators and average the results."""
-#     response, run_time, call_data, generation_exception = await agenerate_pair(
-#         qa_pair, flow, rate_limiter
-#     )
-#     eval_result, evaluation_exception = None, None
-#     if response is not None:
-#         eval_results: T.List[EvaluationResult] = []
-#         for evaluator in evaluators:
-#             eval_result, exception = await aevaluate_pair(
-#                 qa_pair,
-#                 response,
-#                 evaluator,
-#                 rate_limiter,
-#                 raise_on_exception,
-#             )
-#             if not eval_result:
-#                 evaluation_exception = exception
-#                 continue
-#             eval_results.append(eval_result)
-#         eval_result = eval_results[0]
-#         eval_result.passing = Counter([r.passing for r in eval_results]).most_common(1)[
-#             0
-#         ][0]
-#     return SyftrEvaluationResult(
-#         qa_pair=qa_pair,
-#         run_time=run_time,
-#         generation_exception=generation_exception,
-#         evaluation_exception=evaluation_exception,
-#         llm_call_data=call_data,
-#         response_text=response.text,
-#         **(eval_result.model_dump() if eval_result else {}),
-#     )
 @dataclass(kw_only=True)
 class ConsensusJudgeFlow(JudgeFlow):
     """Flow that evaluates whether a response is correct."""
 
     name: str = "Consensus Judge Flow"
-    response_synthesizer_llms: T.List[str]
+    response_synthesizer_llms: T.List[LLM | FunctionCallingLLM]
 
     def judge(
         self, query: str
@@ -404,8 +365,9 @@ class ConsensusJudgeFlow(JudgeFlow):
 
         responses: T.List[EvaluationResult] = []
         for response_synthesizer_llm in self.response_synthesizer_llms:
-            llm = get_llm(response_synthesizer_llm)
-            response: EvaluationResult = self._judge(query, invocation_id, llm)
+            response: EvaluationResult = self._judge(
+                query, invocation_id, response_synthesizer_llm
+            )
             responses.append(response)
 
         response.passing = Counter([r.passing for r in responses]).most_common(1)[0][0]
@@ -429,8 +391,9 @@ class ConsensusJudgeFlow(JudgeFlow):
 
         responses: T.List[EvaluationResult] = []
         for response_synthesizer_llm in self.response_synthesizer_llms:
-            llm = get_llm(response_synthesizer_llm)
-            response: EvaluationResult = await self._ajudge(query, invocation_id, llm)
+            response: EvaluationResult = await self._ajudge(
+                query, invocation_id, response_synthesizer_llm
+            )
             responses.append(response)
 
         response.passing = Counter([r.passing for r in responses]).most_common(1)[0][0]
@@ -451,7 +414,7 @@ class RandomJudgeFlow(JudgeFlow):
     """Flow that evaluates whether a response is correct."""
 
     name: str = "Random Judge Flow"
-    response_synthesizer_llms: T.List[str]
+    response_synthesizer_llms: T.List[LLM | FunctionCallingLLM]
 
     def judge(
         self, query: str
@@ -460,8 +423,7 @@ class RandomJudgeFlow(JudgeFlow):
         self._llm_call_data[invocation_id] = []
         start_time = time.perf_counter()
         response_synthesizer_llm = random.choice(self.response_synthesizer_llms)
-        llm = get_llm(response_synthesizer_llm)
-        response = self._judge(query, invocation_id, llm)
+        response = self._judge(query, invocation_id, response_synthesizer_llm)
         duration = time.perf_counter() - start_time
         call_data = self._llm_call_data.pop(invocation_id)
         return response, duration, call_data
@@ -473,8 +435,7 @@ class RandomJudgeFlow(JudgeFlow):
         self._llm_call_data[invocation_id] = []
         start_time = time.perf_counter()
         response_synthesizer_llm = random.choice(self.response_synthesizer_llms)
-        llm = get_llm(response_synthesizer_llm)
-        response = await self._ajudge(query, invocation_id, llm)
+        response = await self._ajudge(query, invocation_id, response_synthesizer_llm)
         duration = time.perf_counter() - start_time
         call_data = self._llm_call_data.pop(invocation_id)
         return response, duration, call_data
