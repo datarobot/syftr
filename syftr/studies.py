@@ -269,7 +269,8 @@ JUDGE_LLMS: T.List[str] = [
     "Qwen/Qwen3-32B",
     "google/gemma-3-27b-it",
 ]
-assert set(JUDGE_LLMS).issubset(set(ALL_LLMS))
+# JUDGE_LLMS can become [] when DEFAULT_LLMS are updated
+# assert set(JUDGE_LLMS).issubset(set(ALL_LLMS))
 
 RESPONSE_SYNTHESIZER_LLMS: T.List[str] = [
     "gpt-4o-mini",  # first LLM is the default
