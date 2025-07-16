@@ -63,11 +63,11 @@ Your job is to judge the relevance and correctness of the generated answer.
 Output a syntactically correct JSON string that contains a 'reasoning' field to develop thoughts about what the score should be, followed by a 'score field.
 
 Follow these guidelines for scoring:
-- Your score has to be between 1 and 5, where 1 is the worst and 10 is the best.
+- Your score has to be between 1 and 5, where 1 is the worst and 5 is the best.
 - The generated answer is correct if it is in agreement with the reference answer and incorrect otherwise.
 - If the generated answer is not relevant to the user query, you should give a score of 1
 - If the generated answer is relevant but contains mistakes, you should give a score between 2 and 3
-- If the generated answer is relevant and fully correct, you should give a score between 4 and 10
+- If the generated answer is relevant and fully correct, you should give a score between 4 and 5
 
 General rules to follow:
 - If the generated answer is more specific than the reference answer, but still in agreement, mark it as correct.

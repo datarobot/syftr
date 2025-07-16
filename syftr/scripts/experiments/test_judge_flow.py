@@ -14,24 +14,24 @@ from syftr.studies import (
 
 
 def main():
-    name = "judge-eval-study-10-multi-prompt"
+    name = "judge-eval-study-11-multi-prompt"
     study_config = StudyConfig(
         name=name,
         dataset=JudgeEvalHF(),
         evaluation=Evaluation(mode="judge"),
         search_space=JudgeSearchSpace(
             single_correctness_evaluator=SingleCorrectnessEvaluator(
-                response_synthesizer_llms=["master-rm", "qwen2.5-7b"]
+                response_synthesizer_llms=["master-rm", "qwen2.5-7b", "gpt-4o-mini"]
             )
         ),
         optimization=OptimizationConfig(
-            num_trials=128,
+            num_trials=48,
             baselines=[],
-            num_random_trials=16,
+            num_random_trials=8,
             use_individual_baselines=False,
             use_agent_baselines=False,
             use_variations_of_baselines=False,
-            max_concurrent_trials=4,
+            max_concurrent_trials=5,
             num_eval_batch=10,
             max_eval_failure_rate=0.05,
         ),
