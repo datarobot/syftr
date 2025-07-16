@@ -264,6 +264,13 @@ DEFAULT_LLMS: T.List[str] = list(
 )
 assert set(DEFAULT_LLMS).issubset(set(ALL_LLMS))
 
+JUDGE_LLMS: T.List[str] = [
+    "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
+    "Qwen/Qwen3-32B",
+    "google/gemma-3-27b-it",
+]
+assert set(JUDGE_LLMS).issubset(set(ALL_LLMS))
+
 RESPONSE_SYNTHESIZER_LLMS: T.List[str] = [
     "gpt-4o-mini",  # first LLM is the default
     "gpt-4o-std",
@@ -1325,16 +1332,18 @@ class RetrieverSearchSpace(BaseModel):
         )
 
 
-class SingleCorrectnessEvaluator(BaseModel):
+class CorrectnessEvaluator(BaseModel):
     model_config = ConfigDict(extra="forbid")  # Forbids unknown fields
     response_synthesizer_llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS,
+        default_factory=lambda: JUDGE_LLMS or DEFAULT_LLMS,
         description="LLMs used for judgement.",
     )
     temperature_min: float = 0.0
     temperature_max: float = 1.0
     temperature_step: float = 0.1
 
+
+class SingleCorrectnessEvaluator(CorrectnessEvaluator):
     def defaults(self) -> ParamDict:
         return {
             "response_synthesizer_llm": self.response_synthesizer_llms[0],
@@ -1380,12 +1389,100 @@ class SingleCorrectnessEvaluator(BaseModel):
         return llms * temperature_card
 
 
+class ConsensusCorrectnessEvaluator(CorrectnessEvaluator):
+    def defaults(self) -> ParamDict:
+        return {
+            "response_synthesizer_temperature": 0.0,
+        }
+
+    def build_distributions(
+        self, params: T.Dict[str, T.Any] | T.List[str] | None = None
+    ) -> T.Dict[str, BaseDistribution]:
+        distributions: dict[str, BaseDistribution] = {
+            "response_synthesizer_temperature": FloatDistribution(
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
+            ),
+        }
+        return distributions
+
+    def sample(self, trial: Trial, prefix: str = "") -> ParamDict:
+        params: ParamDict = {
+            "response_synthesizer_temperature": trial.suggest_float(
+                "response_synthesizer_temperature",
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
+            ),
+        }
+        return params
+
+    def get_cardinality(self) -> int:
+        temperature_card = get_dist_cardinality(
+            self.temperature_min,
+            self.temperature_max,
+            self.temperature_step,
+        )
+        return temperature_card
+
+
+class RandomCorrectnessEvaluator(CorrectnessEvaluator):
+    def defaults(self) -> ParamDict:
+        return {
+            "response_synthesizer_temperature": 0.0,
+        }
+
+    def build_distributions(
+        self, params: T.Dict[str, T.Any] | T.List[str] | None = None
+    ) -> T.Dict[str, BaseDistribution]:
+        distributions: dict[str, BaseDistribution] = {
+            "response_synthesizer_temperature": FloatDistribution(
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
+            ),
+        }
+        return distributions
+
+    def sample(self, trial: Trial, prefix: str = "") -> ParamDict:
+        params: ParamDict = {
+            "response_synthesizer_temperature": trial.suggest_float(
+                "response_synthesizer_temperature",
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
+            ),
+        }
+        return params
+
+    def get_cardinality(self) -> int:
+        temperature_card = get_dist_cardinality(
+            self.temperature_min,
+            self.temperature_max,
+            self.temperature_step,
+        )
+        return temperature_card
+
+
 class JudgeSearchSpace(BaseModel):
     model_config = ConfigDict(extra="forbid")  # Forbids unknown fields
-    judge_types: T.List[str] = ["single_correctness_evaluator"]
+    judge_types: T.List[str] = [
+        "single_correctness_evaluator",
+        "consensus_correctness_evaluator",
+        "random_correctness_evaluator",
+    ]
     single_correctness_evaluator: SingleCorrectnessEvaluator = Field(
         default_factory=SingleCorrectnessEvaluator,
         description="Simple single-llm using standard CorrectnessEvaluator",
+    )
+    consensus_correctness_evaluator: ConsensusCorrectnessEvaluator = Field(
+        default_factory=ConsensusCorrectnessEvaluator,
+        description="Consensus Correctness Evaluator using multiple LLMs",
+    )
+    random_correctness_evaluator: RandomCorrectnessEvaluator = Field(
+        default_factory=RandomCorrectnessEvaluator,
+        description="Random Correctness Evaluator using multiple LLMs",
     )
     judge_prompts: T.List[str] = ["default", "simple", "out_of_ten", "detailed"]
 
@@ -1406,6 +1503,14 @@ class JudgeSearchSpace(BaseModel):
             distributions.update(
                 self.single_correctness_evaluator.build_distributions()
             )
+        if "consensus_correctness_evaluator" in self.judge_types:
+            distributions.update(
+                self.consensus_correctness_evaluator.build_distributions()
+            )
+        if "random_correctness_evaluator" in self.judge_types:
+            distributions.update(
+                self.random_correctness_evaluator.build_distributions()
+            )
         if params is not None:
             reduced_distributions = {
                 key: val for key, val in distributions.items() if key in params
@@ -1425,6 +1530,10 @@ class JudgeSearchSpace(BaseModel):
         }
         if params["judge_type"] == "single_correctness_evaluator":
             params.update(**self.single_correctness_evaluator.sample(trial))
+        if params["judge_type"] == "consensus_correctness_evaluator":
+            params.update(**self.consensus_correctness_evaluator.sample(trial))
+        if params["judge_type"] == "random_correctness_evaluator":
+            params.update(**self.random_correctness_evaluator.sample(trial))
         return params
 
     def get_cardinality(self) -> int:

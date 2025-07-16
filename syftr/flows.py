@@ -1,5 +1,7 @@
+import random
 import time
 import typing as T
+from collections import Counter
 from dataclasses import dataclass, field
 from enum import Enum
 from uuid import uuid4
@@ -51,7 +53,7 @@ from numpy import ceil
 from syftr.configuration import cfg
 from syftr.instrumentation.arize import instrument_arize
 from syftr.instrumentation.tokens import LLMCallData, TokenTrackingEventHandler
-from syftr.llm import get_llm_name, get_tokenizer
+from syftr.llm import get_llm, get_llm_name, get_tokenizer
 from syftr.logger import logger
 from syftr.output_parsers.judge import parse_correctness_evaluation
 from syftr.prompts.judge import DEFAULT_JUDGE_SYSTEM_PROMPT
@@ -68,7 +70,7 @@ if cfg.instrumentation.tracing_enabled:
 
 @dataclass(kw_only=True)
 class Flow:
-    response_synthesizer_llm: LLM | FunctionCallingLLM
+    response_synthesizer_llm: LLM | FunctionCallingLLM | None = None
     template: str | None = None
     get_examples: T.Callable | None = None
     name: str = "Generator Flow"
@@ -245,7 +247,7 @@ class RetrieverFlow(Flow):
             assert hasattr(self.query_engine, "aretrieve"), (
                 f"{self.query_engine} does not have 'aretrieve' method"
             )
-            retrieval_result = await self.query_engine.aretrieve(qb)
+            retrieval_result = await self.query_engine.aretrieve(qb)  # type: ignore
         duration = time.perf_counter() - start_time
         return retrieval_result, duration
 
@@ -290,12 +292,17 @@ class JudgeFlow(Flow):
         return response, duration, call_data
 
     @dispatcher.span
-    def _judge(self, query: str, invocation_id: str) -> EvaluationResult:
+    def _judge(
+        self,
+        query: str,
+        invocation_id: str,
+        response_synthesizer_llm: T.Optional[LLM | FunctionCallingLLM] = None,
+    ) -> EvaluationResult:
         prompt = self.get_prompt(query)
-        self.response_synthesizer_llm.temperature = self.temperature
-        judge_response: CompletionResponse = self.response_synthesizer_llm.complete(
-            prompt
-        )
+        llm = response_synthesizer_llm or self.response_synthesizer_llm
+        assert llm is not None, "Response synthesizer LLM is not set. Cannot judge."
+        llm.temperature = self.temperature  # type: ignore
+        judge_response: CompletionResponse = llm.complete(prompt)
         result = self.output_parser(prompt, judge_response.text)
         return result
 
@@ -311,12 +318,17 @@ class JudgeFlow(Flow):
         return response, duration, call_data
 
     @dispatcher.span
-    async def _ajudge(self, query: str, invocation_id: str) -> EvaluationResult:
+    async def _ajudge(
+        self,
+        query: str,
+        invocation_id: str,
+        response_synthesizer_llm: T.Optional[LLM | FunctionCallingLLM] = None,
+    ) -> EvaluationResult:
         prompt = self.get_prompt(query)
-        self.response_synthesizer_llm.temperature = self.temperature
-        judge_response: CompletionResponse = (
-            await self.response_synthesizer_llm.acomplete(prompt)
-        )
+        llm = response_synthesizer_llm or self.response_synthesizer_llm
+        assert llm is not None, "Response synthesizer LLM is not set. Cannot judge."
+        llm.temperature = self.temperature  # type: ignore
+        judge_response: CompletionResponse = await llm.acomplete(prompt)
         result = self.output_parser(prompt, judge_response.text)
         return result
 
@@ -335,6 +347,137 @@ class MasterRMFlow(JudgeFlow):
         )
     )
     temperature: float = 0.0
+
+
+# async def _aeval_pair_consensus(
+#     qa_pair: core.QAPair,
+#     flow: Flow,
+#     evaluators: T.Sequence[BaseEvaluator],
+#     rate_limiter: AsyncLimiter,
+#     raise_on_exception: bool | None = EVAL__RAISE_ON_EXCEPTION,
+# ) -> SyftrEvaluationResult:
+#     """Evaluate single Q&A item asynchronously using provided evaluators and average the results."""
+#     response, run_time, call_data, generation_exception = await agenerate_pair(
+#         qa_pair, flow, rate_limiter
+#     )
+#     eval_result, evaluation_exception = None, None
+#     if response is not None:
+#         eval_results: T.List[EvaluationResult] = []
+#         for evaluator in evaluators:
+#             eval_result, exception = await aevaluate_pair(
+#                 qa_pair,
+#                 response,
+#                 evaluator,
+#                 rate_limiter,
+#                 raise_on_exception,
+#             )
+#             if not eval_result:
+#                 evaluation_exception = exception
+#                 continue
+#             eval_results.append(eval_result)
+#         eval_result = eval_results[0]
+#         eval_result.passing = Counter([r.passing for r in eval_results]).most_common(1)[
+#             0
+#         ][0]
+#     return SyftrEvaluationResult(
+#         qa_pair=qa_pair,
+#         run_time=run_time,
+#         generation_exception=generation_exception,
+#         evaluation_exception=evaluation_exception,
+#         llm_call_data=call_data,
+#         response_text=response.text,
+#         **(eval_result.model_dump() if eval_result else {}),
+#     )
+@dataclass(kw_only=True)
+class ConsensusJudgeFlow(JudgeFlow):
+    """Flow that evaluates whether a response is correct."""
+
+    name: str = "Consensus Judge Flow"
+    response_synthesizer_llms: T.List[str]
+
+    def judge(
+        self, query: str
+    ) -> T.Tuple[EvaluationResult, float, T.List[LLMCallData]]:
+        invocation_id = uuid4().hex
+        self._llm_call_data[invocation_id] = []
+        start_time = time.perf_counter()
+
+        responses: T.List[EvaluationResult] = []
+        for response_synthesizer_llm in self.response_synthesizer_llms:
+            llm = get_llm(response_synthesizer_llm)
+            response: EvaluationResult = self._judge(query, invocation_id, llm)
+            responses.append(response)
+
+        response.passing = Counter([r.passing for r in responses]).most_common(1)[0][0]
+        float_scores = [
+            r.score
+            for r in responses
+            if isinstance(r.score, float) and r.score is not None
+        ]
+        response.score = sum(float_scores) / len(float_scores) if float_scores else None
+
+        duration = time.perf_counter() - start_time
+        call_data = self._llm_call_data.pop(invocation_id)
+        return response, duration, call_data
+
+    async def ajudge(
+        self, query: str
+    ) -> T.Tuple[EvaluationResult, float, T.List[LLMCallData]]:
+        invocation_id = uuid4().hex
+        self._llm_call_data[invocation_id] = []
+        start_time = time.perf_counter()
+
+        responses: T.List[EvaluationResult] = []
+        for response_synthesizer_llm in self.response_synthesizer_llms:
+            llm = get_llm(response_synthesizer_llm)
+            response: EvaluationResult = await self._ajudge(query, invocation_id, llm)
+            responses.append(response)
+
+        response.passing = Counter([r.passing for r in responses]).most_common(1)[0][0]
+        float_scores = [
+            r.score
+            for r in responses
+            if isinstance(r.score, float) and r.score is not None
+        ]
+        response.score = sum(float_scores) / len(float_scores) if float_scores else None
+
+        duration = time.perf_counter() - start_time
+        call_data = self._llm_call_data.pop(invocation_id)
+        return response, duration, call_data
+
+
+@dataclass(kw_only=True)
+class RandomJudgeFlow(JudgeFlow):
+    """Flow that evaluates whether a response is correct."""
+
+    name: str = "Random Judge Flow"
+    response_synthesizer_llms: T.List[str]
+
+    def judge(
+        self, query: str
+    ) -> T.Tuple[EvaluationResult, float, T.List[LLMCallData]]:
+        invocation_id = uuid4().hex
+        self._llm_call_data[invocation_id] = []
+        start_time = time.perf_counter()
+        response_synthesizer_llm = random.choice(self.response_synthesizer_llms)
+        llm = get_llm(response_synthesizer_llm)
+        response = self._judge(query, invocation_id, llm)
+        duration = time.perf_counter() - start_time
+        call_data = self._llm_call_data.pop(invocation_id)
+        return response, duration, call_data
+
+    async def ajudge(
+        self, query: str
+    ) -> T.Tuple[EvaluationResult, float, T.List[LLMCallData]]:
+        invocation_id = uuid4().hex
+        self._llm_call_data[invocation_id] = []
+        start_time = time.perf_counter()
+        response_synthesizer_llm = random.choice(self.response_synthesizer_llms)
+        llm = get_llm(response_synthesizer_llm)
+        response = await self._ajudge(query, invocation_id, llm)
+        duration = time.perf_counter() - start_time
+        call_data = self._llm_call_data.pop(invocation_id)
+        return response, duration, call_data
 
 
 @dataclass(kw_only=True)

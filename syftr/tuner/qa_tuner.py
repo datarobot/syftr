@@ -22,11 +22,13 @@ from syftr.baselines import set_baselines
 from syftr.evaluation.evaluation import eval_dataset
 from syftr.flows import (
     CoAAgentFlow,
+    ConsensusJudgeFlow,
     CritiqueAgentFlow,
     Flow,
     JudgeFlow,
     LATSAgentFlow,
     RAGFlow,
+    RandomJudgeFlow,
     ReActAgentFlow,
     RetrieverFlow,
     SubQuestionRAGFlow,
@@ -56,6 +58,8 @@ from syftr.ray.utils import ray_init
 from syftr.retrievers.build import build_rag_retriever
 from syftr.startup import prepare_worker
 from syftr.studies import (
+    DEFAULT_LLMS,
+    JUDGE_LLMS,
     RetrieverStudyConfig,
     StudyConfig,
     get_default_study_name,
@@ -136,10 +140,10 @@ def evaluate(
 def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
     from syftr.llm import get_llm
 
-    response_synthesizer_llm = get_llm(params["response_synthesizer_llm"])
     enforce_full_evaluation = params.get("enforce_full_evaluation", False)
 
     if study_config.is_retriever_study:
+        response_synthesizer_llm = get_llm(params["response_synthesizer_llm"])
         hyde_llm = (
             get_llm(params["hyde_llm_name"]) if params.get("hyde_enabled") else None
         )
@@ -167,15 +171,40 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
             prompt = JUDGE_SYSTEM_PROMPT_DETAILED
             output_parser = parse_correctness_evaluation
 
-        return JudgeFlow(
-            response_synthesizer_llm=response_synthesizer_llm,
-            system_prompt=prompt,
-            output_parser=output_parser,
-            params=params,
-            enforce_full_evaluation=enforce_full_evaluation,
-            temperature=params["response_synthesizer_temperature"],
-        )
+        if params["judge_type"] == "single_correctness_evaluator":
+            response_synthesizer_llm = get_llm(params["response_synthesizer_llm"])
+            return JudgeFlow(
+                response_synthesizer_llm=response_synthesizer_llm,
+                system_prompt=prompt,
+                output_parser=output_parser,
+                params=params,
+                enforce_full_evaluation=enforce_full_evaluation,
+                temperature=params["response_synthesizer_temperature"],
+            )
 
+        if params["judge_type"] == "random_correctness_evaluator":
+            return RandomJudgeFlow(
+                response_synthesizer_llms=JUDGE_LLMS or DEFAULT_LLMS,
+                system_prompt=prompt,
+                output_parser=output_parser,
+                params=params,
+                enforce_full_evaluation=enforce_full_evaluation,
+                temperature=params["response_synthesizer_temperature"],
+            )
+
+        if params["judge_type"] == "consensus_correctness_evaluator":
+            return ConsensusJudgeFlow(
+                response_synthesizer_llms=JUDGE_LLMS or DEFAULT_LLMS,
+                system_prompt=prompt,
+                output_parser=output_parser,
+                params=params,
+                enforce_full_evaluation=enforce_full_evaluation,
+                temperature=params["response_synthesizer_temperature"],
+            )
+
+        raise RuntimeError("Unknown judge type: %s" % params["judge_type"])
+
+    response_synthesizer_llm = get_llm(params["response_synthesizer_llm"])
     get_qa_examples = None
     is_few_shot = study_config.search_space.is_few_shot(params)
     if is_few_shot:
