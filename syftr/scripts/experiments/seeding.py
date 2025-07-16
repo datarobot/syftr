@@ -69,14 +69,14 @@ RECREATE_STUDY = (
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-MINUTES_BEFORE_NEXT_SUBMISSION = 2
+MINUTES_BEFORE_NEXT_SUBMISSION = 10
 OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
 # To seed with silver bullets, you first create the input file using silver_bullets.ipynb notebook
 CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
-BASELINES_START = 4200  # you can restrict the number of baselines ...
-BASELINES_END = 5000  # ... to start with here to avoid OOM issues
+BASELINES_START = 0  # you can restrict the number of baselines ...
+BASELINES_END = 10000  # ... to start with here to avoid OOM issues
 BASELINE_STUDIES: T.List[str] = [
     "seeding1--training--crag_hf-music--music",
     "seeding1--training--financebench_hf",
