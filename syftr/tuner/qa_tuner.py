@@ -58,8 +58,6 @@ from syftr.ray.utils import ray_init
 from syftr.retrievers.build import build_rag_retriever
 from syftr.startup import prepare_worker
 from syftr.studies import (
-    DEFAULT_LLMS,
-    JUDGE_LLMS,
     RetrieverStudyConfig,
     StudyConfig,
     get_default_study_name,
@@ -182,7 +180,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                 temperature=params["response_synthesizer_temperature"],
             )
 
-        llm_names = JUDGE_LLMS or DEFAULT_LLMS
+        llm_names = ast.literal_eval(params["response_synthesizer_llm_combinations"])
         response_synthesizer_llms = [get_llm(llm_name) for llm_name in llm_names]
 
         if params["judge_type"] == "random_correctness_evaluator":

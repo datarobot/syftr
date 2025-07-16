@@ -3,6 +3,7 @@ import os
 import typing as T
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from itertools import combinations
 from pathlib import Path
 
 import pandas as pd
@@ -71,6 +72,17 @@ Example Response:
   "score": 4.0,
 }
 """
+
+
+def get_llm_name_combinations(
+    llm_names: T.List[str], n_llms: T.List[int]
+) -> T.List[str]:
+    llm_combinations = []
+    for n in n_llms:
+        if n <= len(llm_names):
+            llm_combinations_n = [str(c) for c in combinations(llm_names, n)]
+            llm_combinations.extend(llm_combinations_n)
+    return llm_combinations
 
 
 class SearchSpaceMixin(ABC):
@@ -269,8 +281,6 @@ JUDGE_LLMS: T.List[str] = [
     "Qwen/Qwen3-32B",
     "google/gemma-3-27b-it",
 ]
-# JUDGE_LLMS can become [] when DEFAULT_LLMS are updated
-# assert set(JUDGE_LLMS).issubset(set(ALL_LLMS))
 
 RESPONSE_SYNTHESIZER_LLMS: T.List[str] = [
     "gpt-4o-mini",  # first LLM is the default
@@ -1336,7 +1346,7 @@ class RetrieverSearchSpace(BaseModel):
 class CorrectnessEvaluator(BaseModel):
     model_config = ConfigDict(extra="forbid")  # Forbids unknown fields
     response_synthesizer_llms: T.List[str] = Field(
-        default_factory=lambda: JUDGE_LLMS or DEFAULT_LLMS,
+        default_factory=lambda: DEFAULT_LLMS,
         description="LLMs used for judgement.",
     )
     temperature_min: float = 0.0
@@ -1391,8 +1401,16 @@ class SingleCorrectnessEvaluator(CorrectnessEvaluator):
 
 
 class ConsensusCorrectnessEvaluator(CorrectnessEvaluator):
+    response_synthesizer_llm_combinations: T.List[str] = Field(
+        default_factory=lambda: get_llm_name_combinations(DEFAULT_LLMS, [3]),
+        description="List of combinations of LLMs for consensus judgement.",
+    )
+
     def defaults(self) -> ParamDict:
         return {
+            "response_synthesizer_llm_combination": self.response_synthesizer_llm_combinations[
+                0
+            ],
             "response_synthesizer_temperature": 0.0,
         }
 
@@ -1400,6 +1418,9 @@ class ConsensusCorrectnessEvaluator(CorrectnessEvaluator):
         self, params: T.Dict[str, T.Any] | T.List[str] | None = None
     ) -> T.Dict[str, BaseDistribution]:
         distributions: dict[str, BaseDistribution] = {
+            "response_synthesizer_llm_combination": CategoricalDistribution(
+                self.response_synthesizer_llm_combinations
+            ),
             "response_synthesizer_temperature": FloatDistribution(
                 self.temperature_min,
                 self.temperature_max,
@@ -1410,6 +1431,10 @@ class ConsensusCorrectnessEvaluator(CorrectnessEvaluator):
 
     def sample(self, trial: Trial, prefix: str = "") -> ParamDict:
         params: ParamDict = {
+            "response_synthesizer_llm_combination": trial.suggest_categorical(
+                "response_synthesizer_llm_combination",
+                self.response_synthesizer_llm_combinations,
+            ),
             "response_synthesizer_temperature": trial.suggest_float(
                 "response_synthesizer_temperature",
                 self.temperature_min,
@@ -1425,12 +1450,20 @@ class ConsensusCorrectnessEvaluator(CorrectnessEvaluator):
             self.temperature_max,
             self.temperature_step,
         )
-        return temperature_card
+        return len(self.response_synthesizer_llm_combinations) * temperature_card
 
 
 class RandomCorrectnessEvaluator(CorrectnessEvaluator):
+    response_synthesizer_llm_combinations: T.List[str] = Field(
+        default_factory=lambda: get_llm_name_combinations(DEFAULT_LLMS, [3]),
+        description="List of combinations of LLMs for random judgement.",
+    )
+
     def defaults(self) -> ParamDict:
         return {
+            "response_synthesizer_llm_combination": self.response_synthesizer_llm_combinations[
+                0
+            ],
             "response_synthesizer_temperature": 0.0,
         }
 
@@ -1438,6 +1471,9 @@ class RandomCorrectnessEvaluator(CorrectnessEvaluator):
         self, params: T.Dict[str, T.Any] | T.List[str] | None = None
     ) -> T.Dict[str, BaseDistribution]:
         distributions: dict[str, BaseDistribution] = {
+            "response_synthesizer_llm_combination": CategoricalDistribution(
+                self.response_synthesizer_llm_combinations
+            ),
             "response_synthesizer_temperature": FloatDistribution(
                 self.temperature_min,
                 self.temperature_max,
@@ -1448,6 +1484,10 @@ class RandomCorrectnessEvaluator(CorrectnessEvaluator):
 
     def sample(self, trial: Trial, prefix: str = "") -> ParamDict:
         params: ParamDict = {
+            "response_synthesizer_llm_combination": trial.suggest_categorical(
+                "response_synthesizer_llm_combination",
+                self.response_synthesizer_llm_combinations,
+            ),
             "response_synthesizer_temperature": trial.suggest_float(
                 "response_synthesizer_temperature",
                 self.temperature_min,
@@ -1463,7 +1503,7 @@ class RandomCorrectnessEvaluator(CorrectnessEvaluator):
             self.temperature_max,
             self.temperature_step,
         )
-        return temperature_card
+        return len(self.response_synthesizer_llm_combinations) * temperature_card
 
 
 class JudgeSearchSpace(BaseModel):
