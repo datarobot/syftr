@@ -1577,7 +1577,7 @@ class JudgeSearchSpace(BaseModel):
         return distributions
 
     def sample(
-        self, trial: Trial, components: T.List[str], prefix: str = ""
+        self, trial: Trial, components: T.List[str] = ALL_COMPONENTS, prefix: str = ""
     ) -> ParamDict:
         params: ParamDict = {
             "judge_type": trial.suggest_categorical("judge_type", self.judge_types),
