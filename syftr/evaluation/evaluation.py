@@ -1245,7 +1245,7 @@ def extract_judge_results(
     """Extract result data from judge evaluations."""
     assert all(result.qa_pair is not None for result in all_results)
 
-    labels = np.array([int(float(result.qa_pair.answer)) for result in all_results])  # type: ignore
+    labels = np.array([result.qa_pair.label for result in all_results])  # type: ignore
     judge_responses = np.array([])
     for result, label in zip(all_results, labels):
         if result.passing is None:
