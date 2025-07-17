@@ -11,7 +11,7 @@ from overrides import overrides
 from pydantic import BaseModel
 
 from syftr.configuration import cfg
-from syftr.core import QAPair
+from syftr.core import QAPair, QARTriplet
 from syftr.utils.locks import distributed_lock
 
 
@@ -1269,22 +1269,19 @@ class JudgeEvalHF(SyftrQADataset):
     def iter_grounding_data(self, partition="notused") -> T.Iterator[Document]:
         raise NotImplementedError("judge_eval does not have a grounding dataset")
 
-    def _row_to_qapair(self, row):
-        """Dataset-specific conversion of row to QAPair struct.
-
-        Invoked by iter_examples.
-
-        Default implementation assumes row is already in QAPair format.
-        """
-        return QAPair(
-            question=row["qar_prompt"],
-            answer=str(row["Human Passing"]),
+    def _row_to_qartriplet(self, row):
+        """Dataset-specific conversion of row to QARTriplet."""
+        return QARTriplet(
+            question=row["question"],
+            answer=row["answer"],
             id=str(row["index"]),
             context={},
             supporting_facts=[],
             difficulty="",
             qtype="",
             gold_evidence=[],
+            response=row["response"],
+            label=bool(int(float(row["Human Passing"]))),
         )
 
     @overrides
@@ -1296,4 +1293,4 @@ class JudgeEvalHF(SyftrQADataset):
 
         for i in partition_range:
             row = qa_examples[i]
-            yield self._row_to_qapair(row)
+            yield self._row_to_qartriplet(row)

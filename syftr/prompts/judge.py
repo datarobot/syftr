@@ -60,7 +60,7 @@ You are given the following information:
 
 Your job is to judge the relevance and correctness of the generated answer.
 
-Output a syntactically correct JSON string that contains a 'reasoning' field to develop thoughts about what the score should be, followed by a 'score field.
+Output a syntactically correct JSON string that contains a 'reasoning' field to develop thoughts about what the score should be, followed by a 'score' field.
 
 Follow these guidelines for scoring:
 - Your score has to be between 1 and 5, where 1 is the worst and 5 is the best.
@@ -82,8 +82,49 @@ General rules to follow:
 Example Response:
 {
   "reasoning": "Thinking step by step, the generated answer has the exact same metrics as the reference answer, but it is not as concise.",
-  "score": 8.0
+  "score": 4.0
 }
 """
 
 JUDGE_SYSTEM_PROMPT_SIMPLE: str = "Return YES if the Generated Answer is correct relative to the Reference Answer, or NO if it is not."
+
+JUDGE_SYSTEM_PROMPT_COMPARISON: str = """
+You are an expert evaluation system for a question answering chatbot.
+
+You are given two answers to an unseen question.
+
+Your job is to judge the degree to which the two answers agree with each other.
+
+Output a syntactically correct JSON string that contains a 'reasoning' field to develop thoughts about what the score should be, followed by a 'score' field.
+
+Follow these guidelines for scoring:
+- Your score has to be between 1 and 3, where 1 is diagreement and 3 is complete agreement.
+- If the answers disagree, you should give a score of 1.
+- If the answers agree but differ in level of detail, you should give a score of 2.
+- If the answers completely agree, you should give a score of 3
+
+Example Response:
+{
+    "reasoning": "The answers agree with each other, but one has more details than the other",
+    "score": 2.0
+}
+"""
+
+DEFAULT_JUDGE_QUERY_PROMPT_TEMPLATE: str = """
+## User Query
+{question}
+
+## Reference Answer
+{answer}
+
+## Generated Answer
+{response}
+"""
+
+COMPARISON_JUDGE_QUERY_PROMPT_TEMPLATE: str = """
+## Answer 1
+{answer}
+
+## Answer 2
+{response}
+"""

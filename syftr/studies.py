@@ -1541,7 +1541,13 @@ class JudgeSearchSpace(BaseModel):
         default_factory=RandomCorrectnessEvaluator,
         description="Random Correctness Evaluator using multiple LLMs",
     )
-    judge_prompts: T.List[str] = ["default", "simple", "out_of_ten", "detailed"]
+    judge_prompts: T.List[str] = [
+        "default",
+        "simple",
+        "out_of_ten",
+        "detailed",
+        "comparison",
+    ]
 
     def defaults(self) -> ParamDict:
         return {

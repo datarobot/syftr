@@ -56,7 +56,10 @@ from syftr.instrumentation.tokens import LLMCallData, TokenTrackingEventHandler
 from syftr.llm import get_llm_name, get_tokenizer
 from syftr.logger import logger
 from syftr.output_parsers.judge import parse_correctness_evaluation
-from syftr.prompts.judge import DEFAULT_JUDGE_SYSTEM_PROMPT
+from syftr.prompts.judge import (
+    DEFAULT_JUDGE_QUERY_PROMPT_TEMPLATE,
+    DEFAULT_JUDGE_SYSTEM_PROMPT,
+)
 from syftr.studies import get_critique_template, get_react_template
 
 dispatcher = instrument.get_dispatcher()
@@ -258,6 +261,7 @@ class JudgeFlow(Flow):
 
     name: str = "Judge Flow"
     system_prompt: str = DEFAULT_JUDGE_SYSTEM_PROMPT
+    query_prompt_template: str = DEFAULT_JUDGE_QUERY_PROMPT_TEMPLATE
     output_parser: T.Callable[[str, str], EvaluationResult] = (
         parse_correctness_evaluation
     )
@@ -270,8 +274,11 @@ class JudgeFlow(Flow):
     def tokenizer(self) -> T.Callable:
         return get_tokenizer(get_llm_name(self.response_synthesizer_llm))
 
-    def get_prompt(self, query) -> str:
+    def get_prompt(self, question, answer, response) -> str:
         """Returns final prompt string to send in completion request."""
+        query = self.query_prompt_template.format(
+            question=question, answer=answer, response=response
+        )
         return self.system_prompt + "\n" + query
 
     def generate(self, query: str, *args, **kwargs):
@@ -281,12 +288,12 @@ class JudgeFlow(Flow):
         raise NotImplementedError("JudgeFlow does not support generation.")
 
     def judge(
-        self, query: str
+        self, question: str, answer: str, response: str
     ) -> T.Tuple[EvaluationResult, float, T.List[LLMCallData]]:
         invocation_id = uuid4().hex
         self._llm_call_data[invocation_id] = []
         start_time = time.perf_counter()
-        response = self._judge(query, invocation_id)
+        response = self._judge(question, answer, response, invocation_id)
         duration = time.perf_counter() - start_time
         call_data = self._llm_call_data.pop(invocation_id)
         return response, duration, call_data
@@ -294,11 +301,13 @@ class JudgeFlow(Flow):
     @dispatcher.span
     def _judge(
         self,
-        query: str,
+        question: str,
+        answer: str,
+        response: str,
         invocation_id: str,
         response_synthesizer_llm: T.Optional[LLM | FunctionCallingLLM] = None,
     ) -> EvaluationResult:
-        prompt = self.get_prompt(query)
+        prompt = self.get_prompt(question, answer, response)
         llm = response_synthesizer_llm or self.response_synthesizer_llm
         assert llm is not None, "Response synthesizer LLM is not set. Cannot judge."
         llm.temperature = self.temperature  # type: ignore
@@ -307,12 +316,12 @@ class JudgeFlow(Flow):
         return result
 
     async def ajudge(
-        self, query: str
+        self, question: str, answer: str, response: str
     ) -> T.Tuple[EvaluationResult, float, T.List[LLMCallData]]:
         invocation_id = uuid4().hex
         self._llm_call_data[invocation_id] = []
         start_time = time.perf_counter()
-        response = await self._ajudge(query, invocation_id)
+        response = await self._ajudge(question, answer, response, invocation_id)
         duration = time.perf_counter() - start_time
         call_data = self._llm_call_data.pop(invocation_id)
         return response, duration, call_data
@@ -320,11 +329,13 @@ class JudgeFlow(Flow):
     @dispatcher.span
     async def _ajudge(
         self,
-        query: str,
+        question: str,
+        answer: str,
+        response: str,
         invocation_id: str,
         response_synthesizer_llm: T.Optional[LLM | FunctionCallingLLM] = None,
     ) -> EvaluationResult:
-        prompt = self.get_prompt(query)
+        prompt = self.get_prompt(question, answer, response)
         llm = response_synthesizer_llm or self.response_synthesizer_llm
         assert llm is not None, "Response synthesizer LLM is not set. Cannot judge."
         llm.temperature = self.temperature  # type: ignore

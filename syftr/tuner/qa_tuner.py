@@ -45,11 +45,15 @@ from syftr.optuna_helper import (
 )
 from syftr.output_parsers.judge import (
     parse_correctness_evaluation,
+    parse_correctness_evaluation_comparison,
     parse_correctness_evaluation_simple,
     parse_correctness_evaluation_ten,
 )
 from syftr.prompts.judge import (
+    COMPARISON_JUDGE_QUERY_PROMPT_TEMPLATE,
+    DEFAULT_JUDGE_QUERY_PROMPT_TEMPLATE,
     DEFAULT_JUDGE_SYSTEM_PROMPT,
+    JUDGE_SYSTEM_PROMPT_COMPARISON,
     JUDGE_SYSTEM_PROMPT_DETAILED,
     JUDGE_SYSTEM_PROMPT_SIMPLE,
     JUDGE_SYSTEM_PROMPT_TEN,
@@ -159,6 +163,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
     if study_config.is_judge_study:
         prompt = DEFAULT_JUDGE_SYSTEM_PROMPT
         output_parser = parse_correctness_evaluation
+        template = DEFAULT_JUDGE_QUERY_PROMPT_TEMPLATE
         if params["judge_prompt"] == "simple":
             prompt = JUDGE_SYSTEM_PROMPT_SIMPLE
             output_parser = parse_correctness_evaluation_simple
@@ -168,6 +173,10 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
         elif params["judge_prompt"] == "detailed":
             prompt = JUDGE_SYSTEM_PROMPT_DETAILED
             output_parser = parse_correctness_evaluation
+        elif params["judge_prompt"] == "comparison":
+            prompt = JUDGE_SYSTEM_PROMPT_COMPARISON
+            output_parser = parse_correctness_evaluation_comparison
+            template = COMPARISON_JUDGE_QUERY_PROMPT_TEMPLATE
 
         if params["judge_type"] == "single_correctness_evaluator":
             response_synthesizer_llm = get_llm(params["response_synthesizer_llm"])
@@ -175,6 +184,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                 response_synthesizer_llm=response_synthesizer_llm,
                 system_prompt=prompt,
                 output_parser=output_parser,
+                query_prompt_template=template,
                 params=params,
                 enforce_full_evaluation=enforce_full_evaluation,
                 temperature=params["response_synthesizer_temperature"],
@@ -188,6 +198,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                 response_synthesizer_llms=response_synthesizer_llms,  # type: ignore
                 system_prompt=prompt,
                 output_parser=output_parser,
+                query_prompt_template=template,
                 params=params,
                 enforce_full_evaluation=enforce_full_evaluation,
                 temperature=params["response_synthesizer_temperature"],
@@ -198,6 +209,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                 response_synthesizer_llms=response_synthesizer_llms,  # type: ignore
                 system_prompt=prompt,
                 output_parser=output_parser,
+                query_prompt_template=template,
                 params=params,
                 enforce_full_evaluation=enforce_full_evaluation,
                 temperature=params["response_synthesizer_temperature"],

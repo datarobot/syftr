@@ -6,7 +6,6 @@ import yaml
 from syftr.ray.submit import get_client, start_study, tail
 from syftr.storage import JudgeEvalHF
 from syftr.studies import (
-    LOCAL_LLMS,
     ConsensusCorrectnessEvaluator,
     Evaluation,
     JudgeSearchSpace,
@@ -18,12 +17,12 @@ from syftr.studies import (
 )
 
 N_JUDGES: T.List[int] = [3, 5]
-JUDGE_LLMS: T.List[str] = LOCAL_LLMS
+JUDGE_LLMS: T.List[str] = ["master-rm", "qwen2.5-7b"]
 
 
 def main():
-    name = "judge-eval-consensus"
-    # name = "judge-eval-study-11-multi-prompt"
+    # name = "judge-eval-consensus"
+    name = "judge-eval-study-13-comparison"
     study_config = StudyConfig(
         name=name,
         reuse_study=False,
@@ -31,9 +30,9 @@ def main():
         dataset=JudgeEvalHF(),
         evaluation=Evaluation(mode="judge"),
         search_space=JudgeSearchSpace(
+            judge_prompts=["detailed", "comparison"],
             single_correctness_evaluator=SingleCorrectnessEvaluator(
                 response_synthesizer_llms=JUDGE_LLMS
-                # response_synthesizer_llms=["master-rm", "qwen2.5-7b", "gpt-4o-mini"]
             ),
             consensus_correctness_evaluator=ConsensusCorrectnessEvaluator(
                 response_synthesizer_llms=JUDGE_LLMS,
