@@ -210,7 +210,7 @@ class JudgeEvaluator(BaseEvaluator):
         self,
         query: str = "",
         evaluation_result: T.Optional[EvaluationResult] = None,
-        label: str | int | None = None,
+        label: bool | None = None,
         **kwargs: T.Any,
     ) -> EvaluationResult:
         assert evaluation_result is not None, (
@@ -218,7 +218,6 @@ class JudgeEvaluator(BaseEvaluator):
         )
         assert label is not None, "JudgeEvaluator needs a label"
 
-        label = bool(int(float(label)))
         passing = evaluation_result.passing == label
 
         return EvaluationResult(
@@ -531,7 +530,7 @@ async def _aeval_judge_pair(
         result = await evaluator.aevaluate(
             query=qa_pair.question,
             evaluation_result=judge_result,
-            label=qa_pair.answer,
+            label=qa_pair.label,
         )
         return SyftrEvaluationResult(
             qa_pair=qa_pair,
