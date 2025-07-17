@@ -73,6 +73,22 @@ Example Response:
 }
 """
 
+ALL_COMPONENTS = [
+    "rag_retriever",
+    "splitter",
+    "additional_context",
+    "few_shot_retriever",
+    "hyde",
+    "critique_rag_agent",
+    "lats_rag_agent",
+    "react_rag_agent",
+    "rag_mode",
+    "reranker",
+    "response_synthesizer_llm",
+    "sub_question_rag",
+    "template_name",
+]
+
 
 def get_llm_name_combinations(
     llm_names: T.List[str], n_llms: T.List[int]
@@ -1310,7 +1326,7 @@ class RetrieverSearchSpace(BaseModel):
         return distributions
 
     def sample(
-        self, trial: Trial, components: T.List[str], prefix: str = ""
+        self, trial: Trial, components: T.List[str] = ALL_COMPONENTS, prefix: str = ""
     ) -> ParamDict:
         params: ParamDict = {
             "rag_mode": trial.suggest_categorical("rag_mode", self.rag_modes),
