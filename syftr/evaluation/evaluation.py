@@ -508,7 +508,9 @@ async def ajudge_pair(
         func=flow.ajudge,
         return_values_on_exception=(None, np.nan, []),
         raise_on_exception=raise_on_exception,
-        query=qa_pair.question,
+        question=qa_pair.question,
+        answer=qa_pair.answer,
+        response=qa_pair.response,
     )
     return result, run_time, call_data, exception
 
