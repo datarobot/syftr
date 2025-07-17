@@ -180,7 +180,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                 temperature=params["response_synthesizer_temperature"],
             )
 
-        llm_names = ast.literal_eval(params["response_synthesizer_llm_combinations"])
+        llm_names = ast.literal_eval(params["response_synthesizer_llm_combination"])
         response_synthesizer_llms = [get_llm(llm_name) for llm_name in llm_names]
 
         if params["judge_type"] == "random_correctness_evaluator":
