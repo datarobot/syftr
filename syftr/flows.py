@@ -368,7 +368,7 @@ class ConsensusJudgeFlow(JudgeFlow):
     response_synthesizer_llms: T.List[LLM | FunctionCallingLLM]
 
     def judge(
-        self, query: str
+        self, question: str, answer: str, response: str
     ) -> T.Tuple[EvaluationResult, float, T.List[LLMCallData]]:
         invocation_id = uuid4().hex
         self._llm_call_data[invocation_id] = []
@@ -377,7 +377,7 @@ class ConsensusJudgeFlow(JudgeFlow):
         responses: T.List[EvaluationResult] = []
         for response_synthesizer_llm in self.response_synthesizer_llms:
             response: EvaluationResult = self._judge(
-                query, invocation_id, response_synthesizer_llm
+                question, answer, response, invocation_id, response_synthesizer_llm
             )
             responses.append(response)
 
@@ -394,7 +394,7 @@ class ConsensusJudgeFlow(JudgeFlow):
         return response, duration, call_data
 
     async def ajudge(
-        self, query: str
+        self, question: str, answer: str, response: str
     ) -> T.Tuple[EvaluationResult, float, T.List[LLMCallData]]:
         invocation_id = uuid4().hex
         self._llm_call_data[invocation_id] = []
@@ -403,7 +403,7 @@ class ConsensusJudgeFlow(JudgeFlow):
         responses: T.List[EvaluationResult] = []
         for response_synthesizer_llm in self.response_synthesizer_llms:
             response: EvaluationResult = await self._ajudge(
-                query, invocation_id, response_synthesizer_llm
+                question, answer, response, invocation_id, response_synthesizer_llm
             )
             responses.append(response)
 
@@ -428,25 +428,25 @@ class RandomJudgeFlow(JudgeFlow):
     response_synthesizer_llms: T.List[LLM | FunctionCallingLLM]
 
     def judge(
-        self, query: str
+        self, question: str, answer: str, response: str
     ) -> T.Tuple[EvaluationResult, float, T.List[LLMCallData]]:
         invocation_id = uuid4().hex
         self._llm_call_data[invocation_id] = []
         start_time = time.perf_counter()
         response_synthesizer_llm = random.choice(self.response_synthesizer_llms)
-        response = self._judge(query, invocation_id, response_synthesizer_llm)
+        response = self._judge(question, answer, response, invocation_id, response_synthesizer_llm)
         duration = time.perf_counter() - start_time
         call_data = self._llm_call_data.pop(invocation_id)
         return response, duration, call_data
 
     async def ajudge(
-        self, query: str
+        self, question: str, answer: str, response: str
     ) -> T.Tuple[EvaluationResult, float, T.List[LLMCallData]]:
         invocation_id = uuid4().hex
         self._llm_call_data[invocation_id] = []
         start_time = time.perf_counter()
         response_synthesizer_llm = random.choice(self.response_synthesizer_llms)
-        response = await self._ajudge(query, invocation_id, response_synthesizer_llm)
+        response = await self._ajudge(question, answer, response, invocation_id, response_synthesizer_llm)
         duration = time.perf_counter() - start_time
         call_data = self._llm_call_data.pop(invocation_id)
         return response, duration, call_data
