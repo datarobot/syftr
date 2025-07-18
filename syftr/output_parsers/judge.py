@@ -26,8 +26,8 @@ def parse_correctness_evaluation_comparison(
 
 
 def parse_correctness_evaluation_simple(query: str, response: str) -> EvaluationResult:
-    passing = response.split("\n")[0].strip().lower() == "yes"
-    feedback = "\n".join(response.split("\n")[1:]).strip()
+    passing = "YES" in response
+    feedback = response
     return EvaluationResult(
         query=query, response=response, passing=passing, feedback=feedback
     )
