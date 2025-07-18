@@ -56,27 +56,27 @@ from syftr.studyconfig_helper import build_configs
 # -------------------------------------------------------
 PREFIX = "seeding"  # this three parameters
 BENCH_NUM = 1  # are used to name
-RUN_NAME = "training"
+RUN_NAME = "testing-transfer"
 # -------------------------------------------------------
-NUM_TRIALS = 0  # total number of optimization trials per submission
+NUM_TRIALS = 1000  # total number of optimization trials per submission
 NUM_RANDOM_TRIALS = 0
-MAX_CONCURRENT_TRIALS = 50
+MAX_CONCURRENT_TRIALS = 25
 NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
-    False  # WARNING: do not use with simultaneous runs using the same study!
+    True  # WARNING: do not use with simultaneous runs using the same study!
 )
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-MINUTES_BEFORE_NEXT_SUBMISSION = 10
+MINUTES_BEFORE_NEXT_SUBMISSION = 2
 OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
 # To seed with silver bullets, you first create the input file using silver_bullets.ipynb notebook
-CUSTOM_BASELINES = "all"  # "pareto", "all", "silver", None
+CUSTOM_BASELINES = "transfer"  # valid values are: "pareto", "all", "silver", "transfer", None  # valid values are: "pareto", "all", "silver", "tansfer", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
 BASELINES_START = 0  # you can restrict the number of baselines ...
-BASELINES_END = 10000  # ... to start with here to avoid OOM issues
+BASELINES_END = 100  # ... to start with here to avoid OOM issues
 BASELINE_STUDIES: T.List[str] = [
     "seeding1--training--crag_hf-music--music",
     "seeding1--training--financebench_hf",
@@ -129,6 +129,7 @@ BLOCKS = [
     # ),
 ]
 
+TRANSFER_LEARNING = None
 BASELINES = []
 if CUSTOM_BASELINES == "pareto":
     for study in BASELINE_STUDIES:
@@ -145,20 +146,17 @@ elif CUSTOM_BASELINES == "all":
 elif CUSTOM_BASELINES == "silver":
     BASELINES = json.load(open(cfg.paths.results_dir / "silver-bullets.json", "r"))
     logger.info(f"We have {len(BASELINES)} silver bullet baselines for seeding")
+elif CUSTOM_BASELINES == "transfer":
+    TRANSFER_LEARNING = TransferLearningConfig(
+        studies=BASELINE_STUDIES,
+        max_fronts=2,
+        max_total=23,
+        success_rate=0.9,
+        embedding_model="BAAI/bge-large-en-v1.5",
+    )
 else:
     logger.info("No custom baselines provided")
 
-# TRANSFER_LEARNING = TransferLearningConfig(
-#     studies=[
-#         "bench14--small-models--crag-music",
-#         "bench14--small-models--drdocs",
-#         "bench14--small-models--financebench",
-#     ],
-#     max_fronts=6,
-#     max_total=37,
-#     success_rate=0.9,
-#     embedding_model="BAAI/bge-large-en-v1.5",
-# )
 
 LLMS: T.List[str] = LOCAL_LLMS
 
@@ -248,15 +246,15 @@ EVALUATION = Evaluation(
 )
 
 DATASETS: T.List[SyftrQADataset] = [
-    CragTask3HF(subset="music"),
-    FinanceBenchHF(),
-    HotPotQAHF(subset="train_hard"),
-    MultiHopRAGHF(),
+    # CragTask3HF(subset="music"),
+    # FinanceBenchHF(),
+    # HotPotQAHF(subset="train_hard"),
+    # MultiHopRAGHF(),
     # -----------------------------------------------
-    # BrightHF(subset="biology"),
-    # DRDocsHF(),
-    # InfiniteBenchHF(),
-    # PhantomWikiv050(),
+    BrightHF(subset="biology"),
+    DRDocsHF(),
+    InfiniteBenchHF(),
+    PhantomWikiv050(),
     # ###############################################
     # BrightHF(subset="earth_science"),
     # BrightHF(subset="economics"),
@@ -352,7 +350,7 @@ def main():
             prefix=PREFIX,
             run_name=RUN_NAME,
             embedding_max_time=EMBEDDING_MAX_TIME,
-            transfer_learning=None,
+            transfer_learning=TRANSFER_LEARNING,
         )
 
         if DRY_RUN:
