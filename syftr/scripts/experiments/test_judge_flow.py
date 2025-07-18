@@ -17,12 +17,20 @@ from syftr.studies import (
 )
 
 N_JUDGES: T.List[int] = [3, 5]
-JUDGE_LLMS: T.List[str] = ["master-rm", "qwen2.5-7b"]
+
+JUDGE_LLMS: T.List[str] = [
+    "Qwen/Qwen2.5",
+    "Qwen/Qwen3-32B",
+    "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
+    "google/gemma-3-27b-it",
+    "microsoft/Phi-4-multimodal-instruct",
+    "nvidia/Llama-3_3-Nemotron-Super-49B",
+]
 
 
 def main():
     # name = "judge-eval-consensus"
-    name = "judge-eval-study-13-comparison"
+    name = "judge-eval-study-14-simplefix"
     study_config = StudyConfig(
         name=name,
         reuse_study=False,
@@ -48,13 +56,13 @@ def main():
             ),
         ),
         optimization=OptimizationConfig(
-            num_trials=48,
+            num_trials=150,
             baselines=[],
             num_random_trials=8,
             use_individual_baselines=False,
             use_agent_baselines=False,
             use_variations_of_baselines=False,
-            max_concurrent_trials=5,
+            max_concurrent_trials=10,
             num_eval_batch=10,
             max_eval_failure_rate=0.05,
         ),
