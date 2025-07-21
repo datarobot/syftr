@@ -55,7 +55,7 @@ evaluation:
   raise_on_exception: false
   score_threshold: 4.0
   use_tracing_metrics: false
-name: judge-eval-consensus
+name: judge-eval-consensus-with-replacement
 optimization:
   baselines: []
   baselines_cycle_llms: false
@@ -76,20 +76,20 @@ optimization:
     - template_name
     name: global
     num_trials: 1000
-  cpus_per_trial: 2
+  cpus_per_trial: 1
   embedding_device: null
   gpus_per_trial: 0.0
   include_responses: false
-  max_concurrent_trials: 5
+  max_concurrent_trials: 50
   max_eval_failure_rate: 0.05
   max_trial_cost: 10.0
   method: expanding
   num_eval_batch: 10
   num_eval_samples: 500
   num_prompt_optimization_batch: 50
-  num_random_trials: 8
+  num_random_trials: 20
   num_retries_unique_params: 100
-  num_trials: 48
+  num_trials: 1200
   num_warmup_steps_costout: 2
   num_warmup_steps_pareto: 30
   num_warmup_steps_timeout: 3
