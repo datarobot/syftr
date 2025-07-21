@@ -90,7 +90,6 @@ ALL_COMPONENTS = [
 ]
 
 
-# e (got "combinations[Any]", expected "list[tuple[Any, Any]]")  [return-value]
 def get_llm_name_combinations(
     llm_names: T.List[str],
     n_llms: T.List[int],
