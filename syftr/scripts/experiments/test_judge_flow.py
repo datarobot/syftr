@@ -6,14 +6,11 @@ import yaml
 from syftr.ray.submit import get_client, start_study, tail
 from syftr.storage import JudgeEvalHF
 from syftr.studies import (
-    ConsensusCorrectnessEvaluator,
     Evaluation,
     JudgeSearchSpace,
     OptimizationConfig,
-    RandomCorrectnessEvaluator,
     SingleCorrectnessEvaluator,
     StudyConfig,
-    get_llm_name_combinations,
 )
 
 N_JUDGES: T.List[int] = [3, 5]
@@ -30,7 +27,8 @@ JUDGE_LLMS: T.List[str] = [
 
 def main():
     # name = "judge-eval-consensus"
-    name = "judge-eval-study-14-simplefix"
+    # name = "judge-eval-study-14-simplefix"
+    name = "judge-eval-simple"
     study_config = StudyConfig(
         name=name,
         reuse_study=False,
@@ -42,18 +40,18 @@ def main():
             single_correctness_evaluator=SingleCorrectnessEvaluator(
                 response_synthesizer_llms=JUDGE_LLMS
             ),
-            consensus_correctness_evaluator=ConsensusCorrectnessEvaluator(
-                response_synthesizer_llms=JUDGE_LLMS,
-                response_synthesizer_llm_combinations=get_llm_name_combinations(
-                    JUDGE_LLMS, [3, 5]
-                ),
-            ),
-            random_correctness_evaluator=RandomCorrectnessEvaluator(
-                response_synthesizer_llms=JUDGE_LLMS,
-                response_synthesizer_llm_combinations=get_llm_name_combinations(
-                    JUDGE_LLMS, [3, 5]
-                ),
-            ),
+            # consensus_correctness_evaluator=ConsensusCorrectnessEvaluator(
+            #     response_synthesizer_llms=JUDGE_LLMS,
+            #     response_synthesizer_llm_combinations=get_llm_name_combinations(
+            #         JUDGE_LLMS, [3, 5]
+            #     ),
+            # ),
+            # random_correctness_evaluator=RandomCorrectnessEvaluator(
+            #     response_synthesizer_llms=JUDGE_LLMS,
+            #     response_synthesizer_llm_combinations=get_llm_name_combinations(
+            #         JUDGE_LLMS, [3, 5]
+            #     ),
+            # ),
         ),
         optimization=OptimizationConfig(
             num_trials=150,
