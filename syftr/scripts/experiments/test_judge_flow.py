@@ -36,7 +36,8 @@ def main():
         dataset=JudgeEvalHF(),
         evaluation=Evaluation(mode="judge"),
         search_space=JudgeSearchSpace(
-            judge_prompts=["detailed", "comparison"],
+            judge_prompts=["simple"],
+            # judge_prompts=["detailed", "comparison", "simple"],
             single_correctness_evaluator=SingleCorrectnessEvaluator(
                 response_synthesizer_llms=JUDGE_LLMS
             ),
