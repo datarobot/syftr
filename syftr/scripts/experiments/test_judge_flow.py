@@ -42,13 +42,13 @@ def main():
             consensus_correctness_evaluator=ConsensusCorrectnessEvaluator(
                 response_synthesizer_llms=JUDGE_LLMS,
                 response_synthesizer_llm_combinations=get_llm_name_combinations(
-                    JUDGE_LLMS, [2, 3, 4, 5]
+                    JUDGE_LLMS, [3, 5]
                 ),
             ),
             random_correctness_evaluator=RandomCorrectnessEvaluator(
                 response_synthesizer_llms=JUDGE_LLMS,
                 response_synthesizer_llm_combinations=get_llm_name_combinations(
-                    JUDGE_LLMS, [2, 3, 4, 5]
+                    JUDGE_LLMS, [3, 5]
                 ),
             ),
         ),
