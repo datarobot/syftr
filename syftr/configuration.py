@@ -117,7 +117,6 @@ loaded as configuration.
 
 class Paths(BaseModel):
     root_dir: Path = REPO_ROOT
-    datasets_dir: Path = REPO_ROOT / "datasets"
     syftr_dir: Path = REPO_ROOT / "syftr"
     data_dir: Annotated[Path, Field(validate_default=True)] = syftr_dir / "data"
     templates_dir: Path = data_dir / "templates"
@@ -139,6 +138,12 @@ class Paths(BaseModel):
     lock_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "syftr-locks"
     nltk_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "nltk-data"
     sqlite_dir: Annotated[Path, Field(validate_default=True)] = Path.home() / ".syftr"
+    grounding_dir: Annotated[Path, Field(validate_default=True)] = (
+        REPO_ROOT / "grounding_data"
+    )
+    rise_insights_grounding_data: Annotated[Path, Field(validate_default=True)] = (
+        grounding_dir / "rise_insights.md"
+    )
 
     @property
     def templates_without_context(self) -> Path:
@@ -331,6 +336,10 @@ class HFEmbeddings(BaseModel, APIKeySerializationMixin):
             ),
         ),
     }
+
+
+class HFDatasets(BaseModel, APIKeySerializationMixin):
+    token: SecretStr = SecretStr("NOT SET")
 
 
 class AzureOAI(BaseModel, APIKeySerializationMixin):
@@ -675,6 +684,7 @@ class Settings(BaseSettings):
 
     aws: AWS = AWS()
     hf_embeddings: HFEmbeddings = HFEmbeddings()
+    hf_datasets: HFDatasets = HFDatasets()
     azure_inference_llama33: AzureInferenceLlama33 = AzureInferenceLlama33()
     azure_inference_mistral: AzureInferenceMistral = AzureInferenceMistral()
     azure_inference_phi4: AzureInferencePhi4 = AzureInferencePhi4()
