@@ -117,6 +117,7 @@ loaded as configuration.
 
 class Paths(BaseModel):
     root_dir: Path = REPO_ROOT
+    datasets_dir: Path = REPO_ROOT / "datasets"
     syftr_dir: Path = REPO_ROOT / "syftr"
     data_dir: Annotated[Path, Field(validate_default=True)] = syftr_dir / "data"
     templates_dir: Path = data_dir / "templates"
