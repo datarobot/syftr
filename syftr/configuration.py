@@ -339,7 +339,7 @@ class HFEmbeddings(BaseModel, APIKeySerializationMixin):
 
 
 class HFDatasets(BaseModel, APIKeySerializationMixin):
-    token: SecretStr = SecretStr("NOT SET")
+    api_key: SecretStr = SecretStr("NOT SET")
 
 
 class AzureOAI(BaseModel, APIKeySerializationMixin):

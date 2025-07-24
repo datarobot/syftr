@@ -42,17 +42,17 @@ from syftr.studyconfig_helper import build_configs
 
 # -------------------------------------------------------
 PREFIX = "rise"  # this three parameters
-BENCH_NUM = 1  # are used to name
+BENCH_NUM = 5  # are used to name
 RUN_NAME = "rag-and-agents"
 # -------------------------------------------------------
-NUM_TRIALS = 1000  # total number of optimization trials per submission
+NUM_TRIALS = 2000  # total number of optimization trials per submission
 MAX_CONCURRENT_TRIALS = 50
 NUM_EVAL_SAMPLES = 100
-REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
+REUSE_STUDY = False  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
     True  # WARNING: do not use with simultaneous runs using the same study!
 )
-EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
+EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 MINUTES_BEFORE_NEXT_SUBMISSION = 1
@@ -193,7 +193,12 @@ SEARCH_SPACE = SearchSpace(
 
 EVALUATION = Evaluation(
     mode=EVAL_MODE,
-    llms=["gpt-4o-mini"],
+    llms=[
+        # "gpt-4o-mini",
+        "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
+        "Qwen/Qwen3-32B",
+        "nvidia/Llama-3_3-Nemotron-Super-49B",
+    ],
     raise_on_exception=False,
 )
 

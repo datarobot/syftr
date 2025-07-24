@@ -1242,9 +1242,9 @@ class RiseInsightsHF(SyftrQADataset):
         ):
             dataset = datasets.load_dataset(
                 "DataRobot-Research/making-data-count-with-ai",
-                data_dir="grounding_data",
+                name="grounding",
                 cache_dir=cfg.paths.huggingface_cache.as_posix(),
-                token=cfg.hf_datasets.token.get_secret_value(),
+                token=cfg.hf_datasets.api_key.get_secret_value(),
             )
         assert isinstance(dataset, datasets.DatasetDict)
         return dataset
@@ -1254,10 +1254,10 @@ class RiseInsightsHF(SyftrQADataset):
             self.name, timeout_s=self.load_examples_timeout_s, host_only=True
         ):
             dataset = datasets.load_dataset(
-                "DataRobot-Research/drdocs",
-                data_dir="examples",
+                "DataRobot-Research/making-data-count-with-ai",
+                name="qa",
                 cache_dir=cfg.paths.huggingface_cache.as_posix(),
-                token=cfg.hf_datasets.token.get_secret_value(),
+                token=cfg.hf_datasets.api_key.get_secret_value(),
             )
         assert isinstance(dataset, datasets.DatasetDict)
         return dataset
