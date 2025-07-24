@@ -1963,7 +1963,13 @@ def param_pareto_plot(df: pd.DataFrame, study_name, param_col, titles=None):
     else:
         df_pareto["Title"] = ""
     plot_pareto_plot(
-        df_pareto, study_name, is_cost, df_trials, ax=axes[1], show_title=SHOW_TITLE
+        df_pareto,
+        study_name,
+        is_cost,
+        df_trials,
+        ax=axes[1],
+        titles=titles,
+        show_title=SHOW_TITLE,
     )
 
     if SHOW_TITLE:
