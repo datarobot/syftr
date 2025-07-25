@@ -1,0 +1,341 @@
+dataset:
+  description: The dataset contains a large number of books.
+  eval_user_template: '
+
+    ## User Query
+
+    {query}
+
+
+    ## Reference Answer
+
+    {reference_answer}
+
+
+    ## Generated Answer
+
+    {generated_answer}
+
+    '
+  load_examples_timeout_s: 3600
+  load_grounding_data_timeout_s: 3600
+  partition_map:
+    holdout: holdout
+    sample: sample
+    test: test
+    train: train
+  storage_partitions:
+  - sample
+  - train
+  - test
+  - holdout
+  subset: longbook_qa_eng
+  xname: infinitebench_hf
+evaluation:
+  eval_system_template: "\nYou are an expert evaluation system for a question answering\
+    \ chatbot.\n\nYou are given the following information:\n- a user query, and\n\
+    - a reference answer\n- a generated answer\n\nYour job is to judge the relevance\
+    \ and correctness of the generated answer.\n\nOutput a syntactically correct JSON\
+    \ string that contains a 'score' field that represents a holistic evaluation and\
+    \ a 'reasoning' field that explains the score.\n\nFollow these guidelines for\
+    \ scoring:\n- Your score has to be between 1 and 5, where 1 is the worst and 5\
+    \ is the best.\n- The generated answer is correct if it is in agreement with the\
+    \ reference answer and incorrect otherwise.\n- If the generated answer is not\
+    \ relevant to the user query, you should give a score of 1.\n- If the generated\
+    \ answer is relevant but contains mistakes, you should give a score between 2\
+    \ and 3.\n- If the generated answer is relevant and fully correct, you should\
+    \ give a score between 4 and 5.\n\nExample Response:\n{\n  \"reasoning\": \"The\
+    \ generated answer has the exact same metrics as the reference answer, but it\
+    \ is not as concise.\"\n  \"score\": 4.0,\n}\n"
+  eval_type: correctness
+  llms:
+  - gpt-4o-mini
+  min_reporting_success_rate: 0.5
+  mode: single
+  raise_on_exception: false
+  score_threshold: 4.0
+  use_tracing_metrics: false
+name: seeding1--testing-random--infinitebench_hf--longbook_qa_eng
+optimization:
+  baselines: []
+  baselines_cycle_llms: true
+  blocks:
+  - components:
+    - rag_retriever
+    - splitter
+    - additional_context
+    - few_shot_retriever
+    - hyde
+    - critique_rag_agent
+    - lats_rag_agent
+    - react_rag_agent
+    - rag_mode
+    - reranker
+    - response_synthesizer_llm
+    - sub_question_rag
+    - template_name
+    name: global
+    num_trials: 1000
+  cpus_per_trial: 1
+  embedding_device: null
+  gpus_per_trial: 0.0
+  max_concurrent_trials: 25
+  max_eval_failure_rate: 0.5
+  max_trial_cost: 40.0
+  method: expanding
+  num_eval_batch: 5
+  num_eval_samples: 50
+  num_prompt_optimization_batch: 50
+  num_random_trials: 23
+  num_retries_unique_params: 100
+  num_trials: 1000
+  num_warmup_steps_costout: 2
+  num_warmup_steps_pareto: 30
+  num_warmup_steps_timeout: 3
+  obj1_zscore: 1.645
+  obj2_zscore: 1.645
+  objective_1_name: accuracy
+  objective_2_name: p80_time
+  pareto_eval_success_rate: 0.9
+  pareto_pruner_success_rate: 0.9
+  raise_on_failed_trial: false
+  raise_on_invalid_baseline: false
+  rate_limiter_max_coros: 30
+  rate_limiter_period: 60
+  sampler: tpe
+  seeder_timeout: null
+  shuffle_baselines: true
+  shuffle_blocks: false
+  skip_existing: true
+  use_agent_baselines: false
+  use_cost_pruner: true
+  use_hf_embedding_models: false
+  use_individual_baselines: false
+  use_pareto_baselines: false
+  use_pareto_pruner: true
+  use_runtime_pruner: true
+  use_toy_baselines: false
+  use_variations_of_baselines: false
+pareto: null
+recreate_study: true
+reuse_study: true
+search_space:
+  additional_context:
+    num_nodes_max: 20
+    num_nodes_min: 2
+  additional_context_enabled:
+  - false
+  - true
+  coa_rag_agent:
+    enable_calculator:
+    - false
+    - true
+  critique_rag_agent:
+    critique_agent_llms:
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    max_iterations_max: 11
+    max_iterations_min: 10
+    reflection_agent_llms:
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    subquestion_engine_llms:
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    subquestion_response_synthesizer_llms:
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+  few_shot_enabled:
+  - false
+  - true
+  few_shot_retriever:
+    embedding_models:
+    - BAAI/bge-small-en-v1.5
+    - thenlper/gte-large
+    - mixedbread-ai/mxbai-embed-large-v1
+    - sentence-transformers/all-MiniLM-L12-v2
+    - sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+    - BAAI/bge-base-en-v1.5
+    - BAAI/bge-large-en-v1.5
+    - TencentBAC/Conan-embedding-v1
+    - Linq-AI-Research/Linq-Embed-Mistral
+    - Snowflake/snowflake-arctic-embed-l-v2.0
+    - BAAI/bge-multilingual-gemma2
+    top_k:
+      kmax: 20
+      kmin: 2
+      log: false
+      step: 1
+  hyde:
+    llms:
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+  hyde_enabled:
+  - false
+  - true
+  lats_rag_agent:
+    max_rollouts_max: 5
+    max_rollouts_min: 2
+    max_rollouts_step: 1
+    num_expansions_max: 3
+    num_expansions_min: 2
+    num_expansions_step: 1
+  non_search_space_params:
+  - enforce_full_evaluation
+  - retrievers
+  rag_modes:
+  - rag
+  - lats_rag_agent
+  - react_rag_agent
+  - critique_rag_agent
+  - sub_question_rag
+  rag_retriever:
+    embedding_models:
+    - BAAI/bge-small-en-v1.5
+    - thenlper/gte-large
+    - mixedbread-ai/mxbai-embed-large-v1
+    - sentence-transformers/all-MiniLM-L12-v2
+    - sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+    - BAAI/bge-base-en-v1.5
+    - BAAI/bge-large-en-v1.5
+    - TencentBAC/Conan-embedding-v1
+    - Linq-AI-Research/Linq-Embed-Mistral
+    - Snowflake/snowflake-arctic-embed-l-v2.0
+    - BAAI/bge-multilingual-gemma2
+    fusion:
+      fusion_modes:
+      - simple
+      - reciprocal_rerank
+      - relative_score
+      - dist_based_score
+    hybrid:
+      bm25_weight_max: 0.9
+      bm25_weight_min: 0.1
+      bm25_weight_step: 0.1
+    methods:
+    - dense
+    - sparse
+    - hybrid
+    query_decomposition:
+      llm_names:
+      - microsoft/Phi-4-multimodal-instruct
+      - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+      - Qwen/Qwen2.5
+      - Qwen/Qwen3-32B
+      - google/gemma-3-27b-it
+      - nvidia/Llama-3_3-Nemotron-Super-49B
+      num_queries_max: 5
+      num_queries_min: 2
+      num_queries_step: 1
+    query_decomposition_enabled:
+    - true
+    - false
+    top_k:
+      kmax: 10
+      kmin: 1
+      log: false
+      step: 1
+  react_rag_agent:
+    max_iterations_max: 11
+    max_iterations_min: 10
+    subquestion_engine_llms:
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    subquestion_response_synthesizer_llms:
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+  reranker:
+    llms:
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    top_k:
+      kmax: 128
+      kmin: 2
+      log: true
+      step: 1
+  reranker_enabled:
+  - false
+  - true
+  response_synthesizer_llms:
+  - microsoft/Phi-4-multimodal-instruct
+  - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+  - Qwen/Qwen2.5
+  - Qwen/Qwen3-32B
+  - google/gemma-3-27b-it
+  - nvidia/Llama-3_3-Nemotron-Super-49B
+  splitter:
+    chunk_max_exp: 10
+    chunk_min_exp: 7
+    chunk_overlap_frac_max: 0.5
+    chunk_overlap_frac_min: 0.0
+    chunk_overlap_frac_step: 0.05
+    methods:
+    - recursive
+    - sentence
+    - token
+  sub_question_rag:
+    subquestion_engine_llms:
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    subquestion_response_synthesizer_llms:
+    - microsoft/Phi-4-multimodal-instruct
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+  template_names:
+  - default
+  - concise
+  - CoT
+timeouts:
+  embedding_max_time: 28800
+  embedding_min_chunks_to_process: 100
+  embedding_min_time_to_process: 120
+  embedding_timeout_active: true
+  eval_timeout: 36000
+  onnx_timeout: 600
+  single_eval_timeout: 7200
+toy_mode: false
+transfer_learning:
+  embedding_model: BAAI/bge-large-en-v1.5
+  max_fronts: 2
+  max_total: 100
+  studies: []
+  success_rate: 0.9
