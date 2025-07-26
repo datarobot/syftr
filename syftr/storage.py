@@ -1234,14 +1234,16 @@ class PhantomWikiV001HF(SyftrQADataset):
 
 class RiseInsightsHF(SyftrQADataset):
     xname: T.Literal["rise_insights_hf"] = "rise_insights_hf"  # type: ignore
-    description: str = """This dataset is a "Rise Insights report" titled "Making data count with AI". The report explores the evolving relationship between data and Artificial Intelligence (AI) in the financial services sector. It discusses how data has become valuable, the role of data commercialization, and various AI use cases in finance, including fighting financial crime, institutional investing, and improving customer experience. The report also addresses ethical considerations, bias, and trust in AI systems. It highlights the increasing adoption of AI by fintechs and emphasizes the importance of data strategy for banks to innovate and create new revenue streams. Additionally, it features updates from Rise global sites and their initiatives to support fintech startups."""
+    description: str = (
+        """This dataset is a "Rise Insights report" titled "Making data count with AI". The report explores the evolving relationship between data and Artificial Intelligence (AI) in the financial services sector. It discusses how data has become valuable, the role of data commercialization, and various AI use cases in finance, including fighting financial crime, institutional investing, and improving customer experience. The report also addresses ethical considerations, bias, and trust in AI systems. It highlights the increasing adoption of AI by fintechs and emphasizes the importance of data strategy for banks to innovate and create new revenue streams. Additionally, it features updates from Rise global sites and their initiatives to support fintech startups."""
+    )
 
     def _load_grounding_dataset(self) -> datasets.DatasetDict:
         with distributed_lock(
             self.name, timeout_s=self.load_examples_timeout_s, host_only=True
         ):
             dataset = datasets.load_dataset(
-                "DataRobot-Research/making-data-count-with-ai",
+                "DataRobot-Research/making-data-count-with-ai-2",
                 name="grounding",
                 cache_dir=cfg.paths.huggingface_cache.as_posix(),
                 token=cfg.hf_datasets.api_key.get_secret_value(),
@@ -1254,7 +1256,7 @@ class RiseInsightsHF(SyftrQADataset):
             self.name, timeout_s=self.load_examples_timeout_s, host_only=True
         ):
             dataset = datasets.load_dataset(
-                "DataRobot-Research/making-data-count-with-ai",
+                "DataRobot-Research/making-data-count-with-ai-2",
                 name="qa",
                 cache_dir=cfg.paths.huggingface_cache.as_posix(),
                 token=cfg.hf_datasets.api_key.get_secret_value(),
@@ -1271,7 +1273,7 @@ class RiseInsightsHF(SyftrQADataset):
         for row in grounding_dataset["train"]:
             yield Document(text=row["text"])
 
-    def _row_to_qapair(self, row):
+    def _row_to_qapair(self, row, id: int):
         """Dataset-specific conversion of row to QAPair struct.
 
         Invoked by iter_examples.
@@ -1281,12 +1283,12 @@ class RiseInsightsHF(SyftrQADataset):
         return QAPair(
             question=row["question"],
             answer=row["answer"],
-            id=str(row["id"]),
+            id=str(id),
             context={},
             supporting_facts=[],
             difficulty="default",
-            qtype=row["qtype"],
-            gold_evidence=row["gold_evidence"],
+            qtype="default",
+            gold_evidence=[],
         )
 
     @overrides
@@ -1294,5 +1296,5 @@ class RiseInsightsHF(SyftrQADataset):
         assert partition in self.storage_partitions
         partition = self._get_storage_partition(partition)
         qa_examples = self._load_qa_dataset()
-        for row in qa_examples[partition]:
-            yield self._row_to_qapair(row)
+        for id, row in enumerate(qa_examples[partition]):
+            yield self._row_to_qapair(row, id=id)
