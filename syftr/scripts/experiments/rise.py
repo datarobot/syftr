@@ -42,7 +42,7 @@ from syftr.studyconfig_helper import build_configs
 
 # -------------------------------------------------------
 PREFIX = "rise"  # this three parameters
-BENCH_NUM = 5  # are used to name
+BENCH_NUM = 6  # are used to name
 RUN_NAME = "rag-and-agents"
 # -------------------------------------------------------
 NUM_TRIALS = 2000  # total number of optimization trials per submission
