@@ -129,6 +129,9 @@ class Paths(BaseModel):
         if os.getenv("SYFTR_WORKER_JOB", "false").lower() == "true"
         else Path(f"/tmp/syftr_{getpass.getuser()}")  # syftr tmp dir for local jobs
     )
+    # ray_working_dir: Path = tmp_dir / "ray_working_dir
+    local_data_dir: Path = root_dir / "local_data"
+
     huggingface_cache: Annotated[Path, Field(validate_default=True)] = (
         tmp_dir / "huggingface"
     )

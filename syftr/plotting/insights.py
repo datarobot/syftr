@@ -691,9 +691,6 @@ def generate_trial_description_table(df):
 
 @log_function_call
 def style_pareto_table(df_pareto_descriptions, is_cost):
-    df_pareto_descriptions = df_pareto_descriptions[
-        ["Accuracy", "Latency", "Title", "Description"]
-    ].copy()
 
     if is_cost:
         obj2_fmt = "{:.4f}¢"
@@ -701,6 +698,10 @@ def style_pareto_table(df_pareto_descriptions, is_cost):
         obj2_fmt = "{:.2f}s"
 
     objective_2_name = get_objective_2_name(is_cost=is_cost)
+    
+    df_pareto_descriptions = df_pareto_descriptions[
+        ["Accuracy", objective_2_name, "Title", "Description"]
+    ].copy()
 
     df_desc_styled = (
         df_pareto_descriptions.style.set_table_styles(

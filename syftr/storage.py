@@ -1,14 +1,17 @@
 import hashlib
 import typing as T
 from abc import ABC, abstractmethod
+from functools import cached_property
+from pathlib import Path
 
 import datasets
 import pandas as pd
 from datasets import Features, Sequence, Value
-from llama_index.core import Document
+from llama_index.core import Document, SimpleDirectoryReader
 from llama_index.core.evaluation.correctness import DEFAULT_USER_TEMPLATE
 from overrides import overrides
 from pydantic import BaseModel
+from ray._private.utils import get_ray_temp_dir
 
 from syftr.configuration import cfg
 from syftr.core import QAPair
@@ -1230,3 +1233,98 @@ class PhantomWikiV001HF(SyftrQADataset):
         for i in partition_range:
             row = qa_examples[i]
             yield self._row_to_qapair(row)
+
+
+class CustomDataset(SyftrQADataset):
+    """
+    Custom dataset class that loads data from local files.
+
+    This class allows you to evaluate a RAG pipeline using local documents and QA pairs
+    stored on your machine, without downloading from Hugging Face datasets.
+    It expects the following files to exist under `local_data/` at the root of the repository:
+
+        - `custom_qa_data.csv`: A CSV file containing QA pairs with 'id', 'question', and 'answer' columns.
+        - `grounding_docs/`: A directory containing Markdown files to be used as grounding documents.
+
+    In your study YAML file, specify this dataset by setting `xname: my_dataset`.
+    """
+    
+    xname: T.Literal["my_dataset"] = "my_dataset"
+    
+    qa_csv: str = "custom_qa_data.csv"
+    grounding_data_dir: str = "grounding_docs"
+    
+    description: str = (
+        "Custom local dataset for testing purposes."
+        "This dataset loads QA pairs from a local CSV file and grounding data from a local directory."
+    )
+    
+    @cached_property
+    def data_root(self) -> Path:
+        return Path(get_ray_temp_dir()) / "data" / "local_data"
+
+    def _get_qa_abspath(self) -> str:
+        """
+        Ray worker-visible QA CSV path.
+        """
+        path = self.data_root / self.qa_csv
+        if not path.exists():
+            raise FileNotFoundError(f"QA CSV not found: {path}")
+        return str(path)
+
+    def _get_grounding_dir_abspath(self) -> str:
+        """
+        Ray worker-visible grounding directory path.
+        """
+        path = self.data_root / self.grounding_data_dir
+        if not path.exists():
+            raise FileNotFoundError(f"Grounding dir not found: {path}")
+        return str(path)
+
+    def _load_qa_dataset(self, partition: str = "test") -> datasets.Dataset:
+        """
+        This method reads a CSV file of QA pairs and returns all examples as the 'test' partition.
+        Other partitions ('sample', 'train', 'holdout') are not supported.
+        """
+        if partition != "test":
+            raise ValueError(f"Only 'test' partition is supported in CustomLocalDataset (got '{partition}')")
+        dataset = pd.read_csv(self._get_qa_abspath())
+        return datasets.Dataset.from_pandas(dataset)
+
+    def _load_grounding_dataset(self) -> datasets.DatasetDict:
+        reader = SimpleDirectoryReader(input_dir=self._get_grounding_dir_abspath())
+        docs = reader.load_data()
+        dataset = datasets.Dataset.from_pandas(pd.DataFrame([
+            {"markdown": doc.text, "filename": doc.metadata.get("file_name", "unknown")}
+            for doc in docs
+        ]))
+        return datasets.DatasetDict({"train": dataset})
+
+    def _row_to_qapair(self, row) -> QAPair:
+        """Dataset-specific conversion of row to QAPair struct."""
+        return QAPair(
+            question=row["question"],
+            answer=row["answer"],
+            id=str(row["id"]),
+            context={},
+            supporting_facts=[],
+            difficulty="default",
+            qtype="default",
+        )
+
+    @overrides
+    def iter_examples(self, partition="test") -> T.Iterator[QAPair]:
+        assert partition in self.storage_partitions
+        partition = self._get_storage_partition(partition)
+        qa_dataset = self._load_qa_dataset(partition)
+        for row in qa_dataset:
+            yield self._row_to_qapair(row)
+
+    @overrides
+    def iter_grounding_data(self, partition="test") -> T.Iterator[Document]:
+        grounding_dataset = self._load_grounding_dataset()
+        for row in grounding_dataset["train"]:
+            yield Document(
+                text=row["markdown"],
+                metadata={"file_name": row["filename"]},
+            )
