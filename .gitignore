@@ -216,5 +216,3 @@ notebooks/.nfs*
 *private*
 /flowgen/data/nltk-data
 .nfs*
-
-/local_data/
