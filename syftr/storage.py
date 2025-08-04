@@ -1285,8 +1285,8 @@ class RiseInsightsHF(SyftrQADataset):
             context={},
             supporting_facts=[],
             difficulty="default",
-            qtype="default",
-            gold_evidence=[],
+            qtype=row.get("qtype", "default"),
+            gold_evidence=row.get("gold_evidence", []),
         )
 
     @overrides
