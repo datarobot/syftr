@@ -55,6 +55,7 @@ def _build_excludes() -> List[str]:
         "data/financebench/**",
         "data/hotpot/**",
         "data/synth/**",
+        "data/local_data/**",
         "results/**",
         "studies/**",
     }

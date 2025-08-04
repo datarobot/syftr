@@ -1,0 +1,92 @@
+dataset:
+  xname: my_dataset
+name: my-docs
+optimization:
+  cpus_per_trial: 1
+  max_concurrent_trials: 10
+  num_eval_batch: 5
+  num_eval_samples: 10
+  num_trials: 30
+recreate_study: true
+reuse_study: false
+search_space:
+  additional_context_enabled:
+    - false
+    - true
+  few_shot_enabled:
+  - false
+  hyde_enabled:
+  - false
+  - true
+  hyde:
+    llms:
+    - gpt-4o-mini
+  rag_modes:
+  - no_rag
+  - rag
+  - react_rag_agent
+  - critique_rag_agent
+  - sub_question_rag
+  - lats_rag_agent"
+  rag_retriever:
+    embedding_models:
+    - BAAI/bge-small-en-v1.5
+    - BAAI/bge-large-en-v1.5
+    - sentence-transformers/all-MiniLM-L12-v2
+    methods:
+    - dense
+    - sparse
+    - hybrid
+    query_decomposition_enabled:
+    - false
+    - true
+    top_k:
+      kmax: 50
+      kmin: 2
+      log: false
+      step: 1
+  reranker_enabled:
+  - true
+  reranker:
+    llms:
+    - gpt-4o-mini
+  response_synthesizer_llms:
+  - gpt-4o-mini
+  - gpt-35-turbo
+  - gpt-4o-std
+  react_rag_agent:
+    subquestion_engine_llms:
+    - gpt-4o-mini
+    subquestion_response_synthesizer_llms:
+    - gpt-4o-mini
+  critique_rag_agent:
+    subquestion_engine_llms:
+    - gpt-4o-mini
+    subquestion_response_synthesizer_llms:
+    - gpt-4o-mini
+    critique_agent_llms:
+    - gpt-4o-mini
+    reflection_agent_llms:
+    - gpt-4o-mini
+  sub_question_rag:
+    subquestion_engine_llms:
+    - gpt-4o-mini
+    subquestion_response_synthesizer_llms:
+    - gpt-4o-mini
+  splitter:
+    methods:
+      - recursive
+      - sentence
+      - token
+      - html
+    chunk_min_exp: 8
+    chunk_max_exp: 12
+    chunk_overlap_frac_min: 0.1
+    chunk_overlap_frac_max: 0.5
+    chunk_overlap_frac_step: 0.05
+  template_names:
+  - default
+  - concise
+  - CoT
+  - finance-expert
+toy_mode: false
