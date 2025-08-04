@@ -59,6 +59,11 @@ class QAPair(BaseModel):
     )
 
 
+class QARTriplet(QAPair):
+    response: str
+    label: bool
+
+
 class RandomTrial:
     """A dummy trial class for generating random parameters."""
 
