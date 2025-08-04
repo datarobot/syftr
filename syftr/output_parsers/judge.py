@@ -26,7 +26,8 @@ def parse_correctness_evaluation_comparison(
 
 
 def parse_correctness_evaluation_simple(query: str, response: str) -> EvaluationResult:
-    passing = "YES" in response
+    response_formatted = response.upper().replace(" ", "")
+    passing = "*YES*" in response_formatted and "*NO*" not in response_formatted
     feedback = response
     return EvaluationResult(
         query=query, response=response, passing=passing, feedback=feedback

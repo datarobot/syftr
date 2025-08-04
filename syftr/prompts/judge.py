@@ -86,7 +86,7 @@ Example Response:
 }
 """
 
-JUDGE_SYSTEM_PROMPT_SIMPLE: str = "Return YES if the Generated Answer is correct relative to the Reference Answer, or NO if it is not."
+JUDGE_SYSTEM_PROMPT_SIMPLE: str = "Return *YES* if the Generated Answer is correct relative to the Reference Answer, or *NO* if it is not. Make sure to use asterisks around the answer and return only *YES* or *NO*."
 
 JUDGE_SYSTEM_PROMPT_COMPARISON: str = """
 You are an expert evaluation system for a question answering chatbot.

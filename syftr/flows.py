@@ -274,7 +274,7 @@ class JudgeFlow(Flow):
     def tokenizer(self) -> T.Callable:
         return get_tokenizer(get_llm_name(self.response_synthesizer_llm))
 
-    def get_prompt(self, question, answer, response) -> str:
+    def get_prompt(self, question, answer, response) -> str:  # type: ignore
         """Returns final prompt string to send in completion request."""
         query = self.query_prompt_template.format(
             question=question, answer=answer, response=response
@@ -376,22 +376,22 @@ class ConsensusJudgeFlow(JudgeFlow):
 
         responses: T.List[EvaluationResult] = []
         for response_synthesizer_llm in self.response_synthesizer_llms:
-            response: EvaluationResult = self._judge(
+            resp: EvaluationResult = self._judge(
                 question, answer, response, invocation_id, response_synthesizer_llm
             )
-            responses.append(response)
+            responses.append(resp)
 
-        response.passing = Counter([r.passing for r in responses]).most_common(1)[0][0]
+        resp.passing = Counter([r.passing for r in responses]).most_common(1)[0][0]
         float_scores = [
             r.score
             for r in responses
             if isinstance(r.score, float) and r.score is not None
         ]
-        response.score = sum(float_scores) / len(float_scores) if float_scores else None
+        resp.score = sum(float_scores) / len(float_scores) if float_scores else None
 
         duration = time.perf_counter() - start_time
         call_data = self._llm_call_data.pop(invocation_id)
-        return response, duration, call_data
+        return resp, duration, call_data
 
     async def ajudge(
         self, question: str, answer: str, response: str
@@ -402,22 +402,22 @@ class ConsensusJudgeFlow(JudgeFlow):
 
         responses: T.List[EvaluationResult] = []
         for response_synthesizer_llm in self.response_synthesizer_llms:
-            response: EvaluationResult = await self._ajudge(
+            resp: EvaluationResult = await self._ajudge(
                 question, answer, response, invocation_id, response_synthesizer_llm
             )
-            responses.append(response)
+            responses.append(resp)
 
-        response.passing = Counter([r.passing for r in responses]).most_common(1)[0][0]
+        resp.passing = Counter([r.passing for r in responses]).most_common(1)[0][0]
         float_scores = [
             r.score
             for r in responses
             if isinstance(r.score, float) and r.score is not None
         ]
-        response.score = sum(float_scores) / len(float_scores) if float_scores else None
+        resp.score = sum(float_scores) / len(float_scores) if float_scores else None
 
         duration = time.perf_counter() - start_time
         call_data = self._llm_call_data.pop(invocation_id)
-        return response, duration, call_data
+        return resp, duration, call_data
 
 
 @dataclass(kw_only=True)
@@ -434,7 +434,9 @@ class RandomJudgeFlow(JudgeFlow):
         self._llm_call_data[invocation_id] = []
         start_time = time.perf_counter()
         response_synthesizer_llm = random.choice(self.response_synthesizer_llms)
-        response = self._judge(question, answer, response, invocation_id, response_synthesizer_llm)
+        response = self._judge(
+            question, answer, response, invocation_id, response_synthesizer_llm
+        )
         duration = time.perf_counter() - start_time
         call_data = self._llm_call_data.pop(invocation_id)
         return response, duration, call_data
@@ -446,7 +448,9 @@ class RandomJudgeFlow(JudgeFlow):
         self._llm_call_data[invocation_id] = []
         start_time = time.perf_counter()
         response_synthesizer_llm = random.choice(self.response_synthesizer_llms)
-        response = await self._ajudge(question, answer, response, invocation_id, response_synthesizer_llm)
+        response = await self._ajudge(
+            question, answer, response, invocation_id, response_synthesizer_llm
+        )
         duration = time.perf_counter() - start_time
         call_data = self._llm_call_data.pop(invocation_id)
         return response, duration, call_data

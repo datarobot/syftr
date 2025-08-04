@@ -166,16 +166,16 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
         template = DEFAULT_JUDGE_QUERY_PROMPT_TEMPLATE
         if params["judge_prompt"] == "simple":
             prompt = JUDGE_SYSTEM_PROMPT_SIMPLE
-            output_parser = parse_correctness_evaluation_simple
+            output_parser = parse_correctness_evaluation_simple  # type: ignore
         elif params["judge_prompt"] == "out_of_ten":
             prompt = JUDGE_SYSTEM_PROMPT_TEN
-            output_parser = parse_correctness_evaluation_ten
+            output_parser = parse_correctness_evaluation_ten  # type: ignore
         elif params["judge_prompt"] == "detailed":
             prompt = JUDGE_SYSTEM_PROMPT_DETAILED
             output_parser = parse_correctness_evaluation
         elif params["judge_prompt"] == "comparison":
             prompt = JUDGE_SYSTEM_PROMPT_COMPARISON
-            output_parser = parse_correctness_evaluation_comparison
+            output_parser = parse_correctness_evaluation_comparison  # type: ignore
             template = COMPARISON_JUDGE_QUERY_PROMPT_TEMPLATE
 
         if params["judge_type"] == "single_correctness_evaluator":

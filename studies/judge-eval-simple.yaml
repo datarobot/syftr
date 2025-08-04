@@ -1,0 +1,685 @@
+dataset:
+  description: Contains human labeled Question-Answer-Response triplets for evaluation
+    of LLM-a-judge flows.
+  eval_user_template: '
+
+    ## User Query
+
+    {query}
+
+
+    ## Reference Answer
+
+    {reference_answer}
+
+
+    ## Generated Answer
+
+    {generated_answer}
+
+    '
+  load_examples_timeout_s: 3600
+  load_grounding_data_timeout_s: 3600
+  partition_map:
+    holdout: holdout
+    sample: sample
+    test: test
+    train: train
+  storage_partitions:
+  - sample
+  - train
+  - test
+  - holdout
+  xname: judge_eval
+evaluation:
+  eval_system_template: "\nYou are an expert evaluation system for a question answering\
+    \ chatbot.\n\nYou are given the following information:\n- a user query, and\n\
+    - a reference answer\n- a generated answer\n\nYour job is to judge the relevance\
+    \ and correctness of the generated answer.\n\nOutput a syntactically correct JSON\
+    \ string that contains a 'score' field that represents a holistic evaluation and\
+    \ a 'reasoning' field that explains the score.\n\nFollow these guidelines for\
+    \ scoring:\n- Your score has to be between 1 and 5, where 1 is the worst and 5\
+    \ is the best.\n- The generated answer is correct if it is in agreement with the\
+    \ reference answer and incorrect otherwise.\n- If the generated answer is not\
+    \ relevant to the user query, you should give a score of 1.\n- If the generated\
+    \ answer is relevant but contains mistakes, you should give a score between 2\
+    \ and 3.\n- If the generated answer is relevant and fully correct, you should\
+    \ give a score between 4 and 5.\n\nExample Response:\n{\n  \"reasoning\": \"The\
+    \ generated answer has the exact same metrics as the reference answer, but it\
+    \ is not as concise.\"\n  \"score\": 4.0,\n}\n"
+  eval_type: correctness
+  llms:
+  - gpt-4o-mini
+  min_reporting_success_rate: 0.5
+  mode: judge
+  raise_on_exception: false
+  score_threshold: 4.0
+  use_tracing_metrics: false
+name: judge-eval-simple
+optimization:
+  baselines: []
+  baselines_cycle_llms: false
+  blocks:
+  - components:
+    - rag_retriever
+    - splitter
+    - additional_context
+    - few_shot_retriever
+    - hyde
+    - reranker
+    - rag_mode
+    - sub_question_rag
+    - critique_rag_agent
+    - lats_rag_agent
+    - react_rag_agent
+    - response_synthesizer_llm
+    - template_name
+    name: global
+    num_trials: 1000
+  cpus_per_trial: 2
+  embedding_device: null
+  gpus_per_trial: 0.0
+  include_responses: false
+  max_concurrent_trials: 10
+  max_eval_failure_rate: 0.05
+  max_trial_cost: 10.0
+  method: expanding
+  num_eval_batch: 10
+  num_eval_samples: 500
+  num_prompt_optimization_batch: 50
+  num_random_trials: 8
+  num_retries_unique_params: 100
+  num_trials: 150
+  num_warmup_steps_costout: 2
+  num_warmup_steps_pareto: 30
+  num_warmup_steps_timeout: 3
+  obj1_zscore: 1.645
+  obj2_zscore: 1.645
+  objective_1_name: accuracy
+  objective_2_name: llm_cost_mean
+  pareto_eval_success_rate: 0.9
+  pareto_pruner_success_rate: 0.9
+  raise_on_failed_trial: false
+  raise_on_invalid_baseline: false
+  rate_limiter_max_coros: 3
+  rate_limiter_period: 10
+  sampler: tpe
+  seeder_timeout: 3600
+  shuffle_baselines: true
+  shuffle_blocks: false
+  skip_existing: true
+  use_agent_baselines: false
+  use_cost_pruner: true
+  use_hf_embedding_models: false
+  use_individual_baselines: false
+  use_pareto_baselines: false
+  use_pareto_pruner: true
+  use_runtime_pruner: true
+  use_toy_baselines: false
+  use_variations_of_baselines: false
+pareto: null
+recreate_study: false
+reuse_study: false
+search_space:
+  consensus_correctness_evaluator:
+    response_synthesizer_llm_combinations:
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'microsoft/Phi-4-multimodal-instruct')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'gpt-4o-mini')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'anthropic-haiku-35')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'o3-mini')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'Qwen/Qwen2.5')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'gpt-4o-mini')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'anthropic-haiku-35')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'o3-mini')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'Qwen/Qwen2.5')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'anthropic-haiku-35')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'o3-mini')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'Qwen/Qwen2.5')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'o3-mini')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'Qwen/Qwen2.5')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen2.5', 'Qwen/Qwen2.5')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen2.5', 'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen2.5', 'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen2.5', 'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gemini-flash', 'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'gpt-4o-mini')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'anthropic-haiku-35')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'o3-mini')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'Qwen/Qwen2.5')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'google/gemma-3-27b-it')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'gemini-flash')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'anthropic-haiku-35')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'o3-mini')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'Qwen/Qwen2.5')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'google/gemma-3-27b-it')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'gemini-flash')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'o3-mini', 'o3-mini')
+    - ('gpt-4o-mini', 'o3-mini', 'Qwen/Qwen2.5')
+    - ('gpt-4o-mini', 'o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('gpt-4o-mini', 'o3-mini', 'google/gemma-3-27b-it')
+    - ('gpt-4o-mini', 'o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'o3-mini', 'gemini-flash')
+    - ('gpt-4o-mini', 'o3-mini', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'Qwen/Qwen2.5', 'Qwen/Qwen2.5')
+    - ('gpt-4o-mini', 'Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('gpt-4o-mini', 'Qwen/Qwen2.5', 'google/gemma-3-27b-it')
+    - ('gpt-4o-mini', 'Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'Qwen/Qwen2.5', 'gemini-flash')
+    - ('gpt-4o-mini', 'Qwen/Qwen2.5', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it')
+    - ('gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'gemini-flash')
+    - ('gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('gpt-4o-mini', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('gpt-4o-mini', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash')
+    - ('gpt-4o-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'gemini-flash', 'gemini-flash')
+    - ('gpt-4o-mini', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'anthropic-haiku-35')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'o3-mini')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'Qwen/Qwen2.5')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'google/gemma-3-27b-it')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'gemini-flash')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'o3-mini', 'o3-mini')
+    - ('anthropic-haiku-35', 'o3-mini', 'Qwen/Qwen2.5')
+    - ('anthropic-haiku-35', 'o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('anthropic-haiku-35', 'o3-mini', 'google/gemma-3-27b-it')
+    - ('anthropic-haiku-35', 'o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('anthropic-haiku-35', 'o3-mini', 'gemini-flash')
+    - ('anthropic-haiku-35', 'o3-mini', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'Qwen/Qwen2.5', 'Qwen/Qwen2.5')
+    - ('anthropic-haiku-35', 'Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('anthropic-haiku-35', 'Qwen/Qwen2.5', 'google/gemma-3-27b-it')
+    - ('anthropic-haiku-35', 'Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('anthropic-haiku-35', 'Qwen/Qwen2.5', 'gemini-flash')
+    - ('anthropic-haiku-35', 'Qwen/Qwen2.5', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it')
+    - ('anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'gemini-flash')
+    - ('anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('anthropic-haiku-35', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('anthropic-haiku-35', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('anthropic-haiku-35', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('anthropic-haiku-35', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash')
+    - ('anthropic-haiku-35', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'gemini-flash', 'gemini-flash')
+    - ('anthropic-haiku-35', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'o3-mini', 'o3-mini')
+    - ('o3-mini', 'o3-mini', 'Qwen/Qwen2.5')
+    - ('o3-mini', 'o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('o3-mini', 'o3-mini', 'google/gemma-3-27b-it')
+    - ('o3-mini', 'o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('o3-mini', 'o3-mini', 'gemini-flash')
+    - ('o3-mini', 'o3-mini', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'Qwen/Qwen2.5', 'Qwen/Qwen2.5')
+    - ('o3-mini', 'Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('o3-mini', 'Qwen/Qwen2.5', 'google/gemma-3-27b-it')
+    - ('o3-mini', 'Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('o3-mini', 'Qwen/Qwen2.5', 'gemini-flash')
+    - ('o3-mini', 'Qwen/Qwen2.5', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it')
+    - ('o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'gemini-flash')
+    - ('o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('o3-mini', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('o3-mini', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('o3-mini', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash')
+    - ('o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'gemini-flash', 'gemini-flash')
+    - ('o3-mini', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen2.5', 'Qwen/Qwen2.5')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen2.5', 'google/gemma-3-27b-it')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen2.5', 'gemini-flash')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen2.5', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it')
+    - ('Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'gemini-flash')
+    - ('Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen2.5', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('Qwen/Qwen2.5', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('Qwen/Qwen2.5', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('Qwen/Qwen2.5', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash')
+    - ('Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen2.5', 'gemini-flash', 'gemini-flash')
+    - ('Qwen/Qwen2.5', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'google/gemma-3-27b-it')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'gemini-flash')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'Qwen/Qwen3-32B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'gemini-flash')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'Qwen/Qwen3-32B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'gemini-flash', 'gemini-flash')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('google/gemma-3-27b-it', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('google/gemma-3-27b-it', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('google/gemma-3-27b-it', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('google/gemma-3-27b-it', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash')
+    - ('google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'Qwen/Qwen3-32B')
+    - ('google/gemma-3-27b-it', 'gemini-flash', 'gemini-flash')
+    - ('google/gemma-3-27b-it', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('google/gemma-3-27b-it', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'gemini-flash')
+    - ('nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'Qwen/Qwen3-32B')
+    - ('nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash', 'gemini-flash')
+    - ('nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('nvidia/Llama-3_3-Nemotron-Super-49B', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('gemini-flash', 'gemini-flash', 'gemini-flash')
+    - ('gemini-flash', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('gemini-flash', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen3-32B', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    response_synthesizer_llms:
+    - microsoft/Phi-4-multimodal-instruct
+    - gpt-4o-mini
+    - anthropic-haiku-35
+    - o3-mini
+    - Qwen/Qwen2.5
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    - gemini-flash
+    - Qwen/Qwen3-32B
+    temperature_max: 1.0
+    temperature_min: 0.0
+    temperature_step: 0.1
+  judge_prompts:
+  - simple
+  judge_types:
+  - single_correctness_evaluator
+  - consensus_correctness_evaluator
+  - random_correctness_evaluator
+  random_correctness_evaluator:
+    response_synthesizer_llm_combinations:
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'microsoft/Phi-4-multimodal-instruct')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'gpt-4o-mini')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'anthropic-haiku-35')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'o3-mini')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'Qwen/Qwen2.5')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'microsoft/Phi-4-multimodal-instruct',
+      'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'gpt-4o-mini')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'anthropic-haiku-35')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'o3-mini')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'Qwen/Qwen2.5')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gpt-4o-mini', 'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'anthropic-haiku-35')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'o3-mini')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'Qwen/Qwen2.5')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'anthropic-haiku-35', 'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'o3-mini')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'Qwen/Qwen2.5')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'o3-mini', 'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen2.5', 'Qwen/Qwen2.5')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen2.5', 'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen2.5', 'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen2.5', 'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('microsoft/Phi-4-multimodal-instruct', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gemini-flash', 'gemini-flash')
+    - ('microsoft/Phi-4-multimodal-instruct', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('microsoft/Phi-4-multimodal-instruct', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'gpt-4o-mini')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'anthropic-haiku-35')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'o3-mini')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'Qwen/Qwen2.5')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'google/gemma-3-27b-it')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'gemini-flash')
+    - ('gpt-4o-mini', 'gpt-4o-mini', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'anthropic-haiku-35')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'o3-mini')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'Qwen/Qwen2.5')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'google/gemma-3-27b-it')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'gemini-flash')
+    - ('gpt-4o-mini', 'anthropic-haiku-35', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'o3-mini', 'o3-mini')
+    - ('gpt-4o-mini', 'o3-mini', 'Qwen/Qwen2.5')
+    - ('gpt-4o-mini', 'o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('gpt-4o-mini', 'o3-mini', 'google/gemma-3-27b-it')
+    - ('gpt-4o-mini', 'o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'o3-mini', 'gemini-flash')
+    - ('gpt-4o-mini', 'o3-mini', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'Qwen/Qwen2.5', 'Qwen/Qwen2.5')
+    - ('gpt-4o-mini', 'Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('gpt-4o-mini', 'Qwen/Qwen2.5', 'google/gemma-3-27b-it')
+    - ('gpt-4o-mini', 'Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'Qwen/Qwen2.5', 'gemini-flash')
+    - ('gpt-4o-mini', 'Qwen/Qwen2.5', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it')
+    - ('gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'gemini-flash')
+    - ('gpt-4o-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('gpt-4o-mini', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('gpt-4o-mini', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('gpt-4o-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash')
+    - ('gpt-4o-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'gemini-flash', 'gemini-flash')
+    - ('gpt-4o-mini', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('gpt-4o-mini', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'anthropic-haiku-35')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'o3-mini')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'Qwen/Qwen2.5')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'google/gemma-3-27b-it')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'gemini-flash')
+    - ('anthropic-haiku-35', 'anthropic-haiku-35', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'o3-mini', 'o3-mini')
+    - ('anthropic-haiku-35', 'o3-mini', 'Qwen/Qwen2.5')
+    - ('anthropic-haiku-35', 'o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('anthropic-haiku-35', 'o3-mini', 'google/gemma-3-27b-it')
+    - ('anthropic-haiku-35', 'o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('anthropic-haiku-35', 'o3-mini', 'gemini-flash')
+    - ('anthropic-haiku-35', 'o3-mini', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'Qwen/Qwen2.5', 'Qwen/Qwen2.5')
+    - ('anthropic-haiku-35', 'Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('anthropic-haiku-35', 'Qwen/Qwen2.5', 'google/gemma-3-27b-it')
+    - ('anthropic-haiku-35', 'Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('anthropic-haiku-35', 'Qwen/Qwen2.5', 'gemini-flash')
+    - ('anthropic-haiku-35', 'Qwen/Qwen2.5', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it')
+    - ('anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'gemini-flash')
+    - ('anthropic-haiku-35', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('anthropic-haiku-35', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('anthropic-haiku-35', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('anthropic-haiku-35', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('anthropic-haiku-35', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash')
+    - ('anthropic-haiku-35', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'gemini-flash', 'gemini-flash')
+    - ('anthropic-haiku-35', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('anthropic-haiku-35', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'o3-mini', 'o3-mini')
+    - ('o3-mini', 'o3-mini', 'Qwen/Qwen2.5')
+    - ('o3-mini', 'o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('o3-mini', 'o3-mini', 'google/gemma-3-27b-it')
+    - ('o3-mini', 'o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('o3-mini', 'o3-mini', 'gemini-flash')
+    - ('o3-mini', 'o3-mini', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'Qwen/Qwen2.5', 'Qwen/Qwen2.5')
+    - ('o3-mini', 'Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('o3-mini', 'Qwen/Qwen2.5', 'google/gemma-3-27b-it')
+    - ('o3-mini', 'Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('o3-mini', 'Qwen/Qwen2.5', 'gemini-flash')
+    - ('o3-mini', 'Qwen/Qwen2.5', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it')
+    - ('o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'gemini-flash')
+    - ('o3-mini', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('o3-mini', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('o3-mini', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('o3-mini', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash')
+    - ('o3-mini', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'gemini-flash', 'gemini-flash')
+    - ('o3-mini', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('o3-mini', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen2.5', 'Qwen/Qwen2.5')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen2.5', 'google/gemma-3-27b-it')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen2.5', 'gemini-flash')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen2.5', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it')
+    - ('Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'gemini-flash')
+    - ('Qwen/Qwen2.5', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen2.5', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('Qwen/Qwen2.5', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('Qwen/Qwen2.5', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('Qwen/Qwen2.5', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash')
+    - ('Qwen/Qwen2.5', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen2.5', 'gemini-flash', 'gemini-flash')
+    - ('Qwen/Qwen2.5', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen2.5', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'google/gemma-3-27b-it')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'gemini-flash')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      'Qwen/Qwen3-32B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'gemini-flash')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'Qwen/Qwen3-32B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'gemini-flash', 'gemini-flash')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('deepseek-ai/DeepSeek-R1-Distill-Llama-70B', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('google/gemma-3-27b-it', 'google/gemma-3-27b-it', 'google/gemma-3-27b-it')
+    - ('google/gemma-3-27b-it', 'google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('google/gemma-3-27b-it', 'google/gemma-3-27b-it', 'gemini-flash')
+    - ('google/gemma-3-27b-it', 'google/gemma-3-27b-it', 'Qwen/Qwen3-32B')
+    - ('google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash')
+    - ('google/gemma-3-27b-it', 'nvidia/Llama-3_3-Nemotron-Super-49B', 'Qwen/Qwen3-32B')
+    - ('google/gemma-3-27b-it', 'gemini-flash', 'gemini-flash')
+    - ('google/gemma-3-27b-it', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('google/gemma-3-27b-it', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'nvidia/Llama-3_3-Nemotron-Super-49B')
+    - ('nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'gemini-flash')
+    - ('nvidia/Llama-3_3-Nemotron-Super-49B', 'nvidia/Llama-3_3-Nemotron-Super-49B',
+      'Qwen/Qwen3-32B')
+    - ('nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash', 'gemini-flash')
+    - ('nvidia/Llama-3_3-Nemotron-Super-49B', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('nvidia/Llama-3_3-Nemotron-Super-49B', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('gemini-flash', 'gemini-flash', 'gemini-flash')
+    - ('gemini-flash', 'gemini-flash', 'Qwen/Qwen3-32B')
+    - ('gemini-flash', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    - ('Qwen/Qwen3-32B', 'Qwen/Qwen3-32B', 'Qwen/Qwen3-32B')
+    response_synthesizer_llms:
+    - microsoft/Phi-4-multimodal-instruct
+    - gpt-4o-mini
+    - anthropic-haiku-35
+    - o3-mini
+    - Qwen/Qwen2.5
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - google/gemma-3-27b-it
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    - gemini-flash
+    - Qwen/Qwen3-32B
+    temperature_max: 1.0
+    temperature_min: 0.0
+    temperature_step: 0.1
+  single_correctness_evaluator:
+    response_synthesizer_llms:
+    - Qwen/Qwen2.5
+    - Qwen/Qwen3-32B
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    - google/gemma-3-27b-it
+    - microsoft/Phi-4-multimodal-instruct
+    - nvidia/Llama-3_3-Nemotron-Super-49B
+    temperature_max: 1.0
+    temperature_min: 0.0
+    temperature_step: 0.1
+timeouts:
+  embedding_max_time: 14400
+  embedding_min_chunks_to_process: 100
+  embedding_min_time_to_process: 120
+  embedding_timeout_active: false
+  eval_timeout: 36000
+  onnx_timeout: 600
+  single_eval_timeout: 7200
+toy_mode: false
+transfer_learning:
+  embedding_model: BAAI/bge-large-en-v1.5
+  max_fronts: 2
+  max_total: 100
+  studies: []
+  success_rate: 0.9
