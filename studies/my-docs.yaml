@@ -1,5 +1,7 @@
 dataset:
-  xname: my_dataset
+  xname: custom_dataset
+  qa_csv_path: /path/to/dataset.csv
+  grounding_data_dir: /path/to/grounding/data
 name: my-docs
 optimization:
   cpus_per_trial: 1

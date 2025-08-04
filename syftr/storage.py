@@ -10,7 +10,7 @@ from datasets import Features, Sequence, Value
 from llama_index.core import Document, SimpleDirectoryReader
 from llama_index.core.evaluation.correctness import DEFAULT_USER_TEMPLATE
 from overrides import overrides
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from ray._private.utils import get_ray_temp_dir
 
 from syftr.configuration import cfg
@@ -53,6 +53,9 @@ class SyftrQADataset(BaseModel, ABC):
     # The user may use this template to insert task-specific instructions to the evaluator to ensure the appropriate
     # criteria are being used.
     eval_user_template: str = DEFAULT_USER_TEMPLATE
+
+    # Whether the dataset is local and must be copied into the Ray runtime environment
+    is_local: bool = False
 
     @property
     def name(self) -> str:
@@ -1240,46 +1243,59 @@ class CustomDataset(SyftrQADataset):
     Custom dataset class that loads data from local files.
 
     This class allows you to evaluate a RAG pipeline using local documents and QA pairs
-    stored on your machine, without downloading from Hugging Face datasets.
-    It expects the following files to exist under `local_data/` at the root of the repository:
+    stored on your machine.
 
-        - `custom_qa_data.csv`: A CSV file containing QA pairs with 'id', 'question', and 'answer' columns.
-        - `grounding_docs/`: A directory containing Markdown files to be used as grounding documents.
+    The qa_csv and grounding_data_path fields must be absolute paths so that they can be
+    resolved by both Ray workers and local scripts.
 
-    In your study YAML file, specify this dataset by setting `xname: my_dataset`.
+    The CustomDataset class is not intended for use in distributed Ray environments. To
+    use this dataset in Ray, you are responsible for ensuring the dataset exists at the
+    specified path on all worker nodes.
+
+    In your study YAML file, specify this dataset as follows:
+
+        dataset:
+          xname: custom_dataset                             # Must use this exact string
+          qa_csv_path: "/path/to/dataset.csv"               # Must be an absolute path
+          grounding_data_dir: "/path/to/grounding/data/"    # Must be an absolute path
     """
 
-    xname: T.Literal["my_dataset"] = "my_dataset"  # type: ignore
+    xname: T.Literal["custom_dataset"] = "custom_dataset"  # type: ignore
 
-    qa_csv: str = "custom_qa_data.csv"
-    grounding_data_dir: str = "grounding_docs"
+    qa_csv_path: Path = Path("/tmp/custom_qa_data.csv")
+    grounding_data_dir: Path = Path("/tmp/grounding_docs")
 
     description: str = (
         "Custom local dataset for testing purposes."
         "This dataset loads QA pairs from a local CSV file and grounding data from a local directory."
     )
 
+    is_local: bool = True
+
+    @field_validator("qa_csv_path", "grounding_data_dir", mode="after")
+    @classmethod
+    def check_paths_are_absolute(cls, v: Path) -> Path:
+        if not v.is_absolute():
+            raise ValueError(
+                f"The provided dataset path `{v}` must be an absolute path"
+            )
+        return v
+
     @cached_property
     def data_root(self) -> Path:
         return Path(get_ray_temp_dir()) / "data" / "local_data"
 
-    def _get_qa_abspath(self) -> str:
+    def _get_qa_abspath(self) -> Path:
         """
         Ray worker-visible QA CSV path.
         """
-        path = self.data_root / self.qa_csv
-        if not path.exists():
-            raise FileNotFoundError(f"QA CSV not found: {path}")
-        return str(path)
+        return self.qa_csv_path.absolute()
 
-    def _get_grounding_dir_abspath(self) -> str:
+    def _get_grounding_dir_abspath(self) -> Path:
         """
         Ray worker-visible grounding directory path.
         """
-        path = self.data_root / self.grounding_data_dir
-        if not path.exists():
-            raise FileNotFoundError(f"Grounding dir not found: {path}")
-        return str(path)
+        return self.grounding_data_dir.absolute()
 
     def _load_qa_dataset(self, partition: str = "test") -> datasets.Dataset:
         """
@@ -1307,7 +1323,7 @@ class CustomDataset(SyftrQADataset):
                 ]
             )
         )
-        return datasets.DatasetDict({"train": dataset})
+        return datasets.DatasetDict({"test": dataset})
 
     def _row_to_qapair(self, row) -> QAPair:
         """Dataset-specific conversion of row to QAPair struct."""
@@ -1332,7 +1348,7 @@ class CustomDataset(SyftrQADataset):
     @overrides
     def iter_grounding_data(self, partition="test") -> T.Iterator[Document]:
         grounding_dataset = self._load_grounding_dataset()
-        for row in grounding_dataset["train"]:
+        for row in grounding_dataset["test"]:
             yield Document(
                 text=row["markdown"],
                 metadata={"file_name": row["filename"]},
