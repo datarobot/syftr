@@ -1248,17 +1248,17 @@ class CustomDataset(SyftrQADataset):
 
     In your study YAML file, specify this dataset by setting `xname: my_dataset`.
     """
-    
-    xname: T.Literal["my_dataset"] = "my_dataset"
-    
+
+    xname: T.Literal["my_dataset"] = "my_dataset"  # type: ignore
+
     qa_csv: str = "custom_qa_data.csv"
     grounding_data_dir: str = "grounding_docs"
-    
+
     description: str = (
         "Custom local dataset for testing purposes."
         "This dataset loads QA pairs from a local CSV file and grounding data from a local directory."
     )
-    
+
     @cached_property
     def data_root(self) -> Path:
         return Path(get_ray_temp_dir()) / "data" / "local_data"
@@ -1287,17 +1287,26 @@ class CustomDataset(SyftrQADataset):
         Other partitions ('sample', 'train', 'holdout') are not supported.
         """
         if partition != "test":
-            raise ValueError(f"Only 'test' partition is supported in CustomLocalDataset (got '{partition}')")
+            raise ValueError(
+                f"Only 'test' partition is supported in CustomLocalDataset (got '{partition}')"
+            )
         dataset = pd.read_csv(self._get_qa_abspath())
         return datasets.Dataset.from_pandas(dataset)
 
     def _load_grounding_dataset(self) -> datasets.DatasetDict:
         reader = SimpleDirectoryReader(input_dir=self._get_grounding_dir_abspath())
         docs = reader.load_data()
-        dataset = datasets.Dataset.from_pandas(pd.DataFrame([
-            {"markdown": doc.text, "filename": doc.metadata.get("file_name", "unknown")}
-            for doc in docs
-        ]))
+        dataset = datasets.Dataset.from_pandas(
+            pd.DataFrame(
+                [
+                    {
+                        "markdown": doc.text,
+                        "filename": doc.metadata.get("file_name", "unknown"),
+                    }
+                    for doc in docs
+                ]
+            )
+        )
         return datasets.DatasetDict({"train": dataset})
 
     def _row_to_qapair(self, row) -> QAPair:
