@@ -54,9 +54,6 @@ class SyftrQADataset(BaseModel, ABC):
     # criteria are being used.
     eval_user_template: str = DEFAULT_USER_TEMPLATE
 
-    # Whether the dataset is local and must be copied into the Ray runtime environment
-    is_local: bool = False
-
     @property
     def name(self) -> str:
         """Subclasses may dynamically construct name."""
@@ -1269,8 +1266,6 @@ class CustomDataset(SyftrQADataset):
         "Custom local dataset for testing purposes."
         "This dataset loads QA pairs from a local CSV file and grounding data from a local directory."
     )
-
-    is_local: bool = True
 
     @field_validator("qa_csv_path", "grounding_data_dir", mode="after")
     @classmethod
