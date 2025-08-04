@@ -1234,9 +1234,7 @@ class PhantomWikiV001HF(SyftrQADataset):
 
 class RiseInsightsHF(SyftrQADataset):
     xname: T.Literal["rise_insights_hf"] = "rise_insights_hf"  # type: ignore
-    description: str = (
-        """This dataset is a "Rise Insights report" titled "Making data count with AI". The report explores the evolving relationship between data and Artificial Intelligence (AI) in the financial services sector. It discusses how data has become valuable, the role of data commercialization, and various AI use cases in finance, including fighting financial crime, institutional investing, and improving customer experience. The report also addresses ethical considerations, bias, and trust in AI systems. It highlights the increasing adoption of AI by fintechs and emphasizes the importance of data strategy for banks to innovate and create new revenue streams. Additionally, it features updates from Rise global sites and their initiatives to support fintech startups."""
-    )
+    description: str = """This dataset is a "Rise Insights report" titled "Making data count with AI". The report explores the evolving relationship between data and Artificial Intelligence (AI) in the financial services sector. It discusses how data has become valuable, the role of data commercialization, and various AI use cases in finance, including fighting financial crime, institutional investing, and improving customer experience. The report also addresses ethical considerations, bias, and trust in AI systems. It highlights the increasing adoption of AI by fintechs and emphasizes the importance of data strategy for banks to innovate and create new revenue streams. Additionally, it features updates from Rise global sites and their initiatives to support fintech startups."""
 
     def _load_grounding_dataset(self) -> datasets.DatasetDict:
         with distributed_lock(
