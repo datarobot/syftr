@@ -10,6 +10,7 @@ from syftr.storage import (
     PartitionMap,
     PhantomWikiV001HF,
     PhantomWikiv050,
+    RiseInsightsHF,
     SyntheticCragTask3HF,
     SyntheticFinanceBenchHF,
     SyntheticHotPotQAHF,
@@ -918,3 +919,14 @@ def test_phantomwikiv001_hf():
 
             docs = list(bright_ds.iter_grounding_data())
             assert len(docs) > 0
+
+
+def test_riseinsights_hf():
+    for partition in ["train", "test", "sample", "holdout"]:
+        riseinsights_ds = RiseInsightsHF(partition_map=PartitionMap(test=partition))
+
+        examples = list(riseinsights_ds.iter_examples())
+        assert len(examples) > 0
+
+        docs = list(riseinsights_ds.iter_grounding_data())
+        assert len(docs) > 0

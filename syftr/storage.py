@@ -1230,3 +1230,69 @@ class PhantomWikiV001HF(SyftrQADataset):
         for i in partition_range:
             row = qa_examples[i]
             yield self._row_to_qapair(row)
+
+
+class RiseInsightsHF(SyftrQADataset):
+    xname: T.Literal["rise_insights_hf"] = "rise_insights_hf"  # type: ignore
+    description: str = """This dataset is a "Rise Insights report" titled "Making data count with AI". The report explores the evolving relationship between data and Artificial Intelligence (AI) in the financial services sector. It discusses how data has become valuable, the role of data commercialization, and various AI use cases in finance, including fighting financial crime, institutional investing, and improving customer experience. The report also addresses ethical considerations, bias, and trust in AI systems. It highlights the increasing adoption of AI by fintechs and emphasizes the importance of data strategy for banks to innovate and create new revenue streams. Additionally, it features updates from Rise global sites and their initiatives to support fintech startups."""
+
+    def _load_grounding_dataset(self) -> datasets.DatasetDict:
+        with distributed_lock(
+            self.name, timeout_s=self.load_examples_timeout_s, host_only=True
+        ):
+            dataset = datasets.load_dataset(
+                "DataRobot-Research/making-data-count-with-ai-2",
+                name="grounding",
+                cache_dir=cfg.paths.huggingface_cache.as_posix(),
+                token=cfg.hf_datasets.api_key.get_secret_value(),
+            )
+        assert isinstance(dataset, datasets.DatasetDict)
+        return dataset
+
+    def _load_qa_dataset(self) -> datasets.DatasetDict:
+        with distributed_lock(
+            self.name, timeout_s=self.load_examples_timeout_s, host_only=True
+        ):
+            dataset = datasets.load_dataset(
+                "DataRobot-Research/making-data-count-with-ai-2",
+                name="qa",
+                cache_dir=cfg.paths.huggingface_cache.as_posix(),
+                token=cfg.hf_datasets.api_key.get_secret_value(),
+            )
+        assert isinstance(dataset, datasets.DatasetDict)
+        return dataset
+
+    @overrides
+    def iter_grounding_data(self, partition="notused") -> T.Iterator[Document]:
+        # There is no partition. The grounding dataset is the same
+        # across all partitions of the qa pairs.
+        # This setting needs to fit the way the dataset is structured.
+        grounding_dataset = self._load_grounding_dataset()
+        for row in grounding_dataset["train"]:
+            yield Document(text=row["text"])
+
+    def _row_to_qapair(self, row, id: int):
+        """Dataset-specific conversion of row to QAPair struct.
+
+        Invoked by iter_examples.
+
+        Default implementation assumes row is already in QAPair format.
+        """
+        return QAPair(
+            question=row["question"],
+            answer=row["answer"],
+            id=str(id),
+            context={},
+            supporting_facts=[],
+            difficulty="default",
+            qtype=row.get("qtype", "default"),
+            gold_evidence=row.get("gold_evidence", []),
+        )
+
+    @overrides
+    def iter_examples(self, partition="test") -> T.Iterator[QAPair]:
+        assert partition in self.storage_partitions
+        partition = self._get_storage_partition(partition)
+        qa_examples = self._load_qa_dataset()
+        for id, row in enumerate(qa_examples[partition]):
+            yield self._row_to_qapair(row, id=id)

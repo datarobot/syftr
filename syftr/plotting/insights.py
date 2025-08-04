@@ -22,7 +22,7 @@ from slugify import slugify
 
 from syftr.configuration import cfg
 from syftr.helpers import is_numeric
-from syftr.llm import AZURE_GPT4O_STD
+from syftr.llm import AZURE_GPT4O_MINI
 from syftr.studies import get_response_synthesizer_llm, get_template_name
 
 SHOW_TITLE = False
@@ -560,7 +560,7 @@ def generate(prompt):
     cache_key = ("generate", prompt)
     if cache_key in CACHE:
         return CACHE[cache_key]
-    response = AZURE_GPT4O_STD.complete(prompt=prompt, temperature=0)
+    response = AZURE_GPT4O_MINI.complete(prompt=prompt, temperature=0)
     CACHE.set(cache_key, response.text, expire=60 * 60 * 24 * 7)
     return response.text
 
@@ -691,8 +691,9 @@ def generate_trial_description_table(df):
 
 @log_function_call
 def style_pareto_table(df_pareto_descriptions, is_cost):
+    obj2 = "Cost" if is_cost else "Latency"
     df_pareto_descriptions = df_pareto_descriptions[
-        ["Accuracy", "Latency", "Title", "Description"]
+        ["Accuracy", obj2, "Title", "Description"]
     ].copy()
 
     if is_cost:
@@ -1962,7 +1963,13 @@ def param_pareto_plot(df: pd.DataFrame, study_name, param_col, titles=None):
     else:
         df_pareto["Title"] = ""
     plot_pareto_plot(
-        df_pareto, study_name, is_cost, df_trials, ax=axes[1], show_title=SHOW_TITLE
+        df_pareto,
+        study_name,
+        is_cost,
+        df_trials,
+        ax=axes[1],
+        titles=titles,
+        show_title=SHOW_TITLE,
     )
 
     if SHOW_TITLE:

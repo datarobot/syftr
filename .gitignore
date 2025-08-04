@@ -209,6 +209,7 @@ studies/box*
 studies/*example1--small-study--drdocs_hf.yaml
 studies/silver*
 studies/test*
+studies/rise*
 
 notebooks/.nfs*
 
@@ -216,3 +217,5 @@ notebooks/.nfs*
 *private*
 /flowgen/data/nltk-data
 .nfs*
+data.*
+/datasets
