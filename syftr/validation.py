@@ -313,22 +313,13 @@ def has_valid_llm_params(
         return False
     else:
         llm_name_dist = dist[f"{prefix}llm_name"]
-        if hasattr(llm_name_dist, "choices"):
-            if tp[f"{prefix}llm_name"] not in llm_name_dist.choices:  # type: ignore
-                logger.warning(
-                    "The value %s is out-of-distribution for the parameter '%s'",
-                    str(tp[f"{prefix}llm_name"]),
-                    f"{prefix}llm_name",
-                )
-                return False
-        else:
-            if not llm_name_dist._contains(tp[f"{prefix}llm_name"]):
-                logger.warning(
-                    "The value %s is out-of-distribution for the parameter '%s'",
-                    str(tp[f"{prefix}llm_name"]),
-                    f"{prefix}llm_name",
-                )
-                return False
+        if tp[f"{prefix}llm_name"] not in llm_name_dist.choices:  # type: ignore
+            logger.warning(
+                "The value %s is out-of-distribution for the parameter '%s'",
+                str(tp[f"{prefix}llm_name"]),
+                f"{prefix}llm_name",
+            )
+            return False
 
     # all LLM parameters below are optional but need to be valid if provided
     if f"{prefix}llm_temperature" in tp:
@@ -352,9 +343,11 @@ def has_valid_llm_params(
             return False
 
     if f"{prefix}llm_use_reasoning" in tp:
-        if not dist[f"{prefix}llm_use_reasoning"]._contains(
-            tp[f"{prefix}llm_use_reasoning"]
-        ):
+        reasoning_dist = dist[f"{prefix}llm_use_reasoning"]
+        assert hasattr(reasoning_dist, "choices"), (
+            "Reasoning distribution is missing choices"
+        )
+        if tp[f"{prefix}llm_use_reasoning"] not in reasoning_dist.choices:  # type: ignore
             logger.warning(
                 "The value %s is out-of-distribution for the parameter '%s'",
                 str(tp[f"{prefix}llm_use_reasoning"]),
