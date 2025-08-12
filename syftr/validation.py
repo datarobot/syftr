@@ -344,9 +344,6 @@ def has_valid_llm_params(
 
     if f"{prefix}llm_use_reasoning" in tp:
         reasoning_dist = dist[f"{prefix}llm_use_reasoning"]
-        assert hasattr(reasoning_dist, "choices"), (
-            "Reasoning distribution is missing choices"
-        )
         if tp[f"{prefix}llm_use_reasoning"] not in reasoning_dist.choices:  # type: ignore
             logger.warning(
                 "The value %s is out-of-distribution for the parameter '%s'",
