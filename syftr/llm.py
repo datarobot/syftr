@@ -21,7 +21,6 @@ from llama_index.llms.openai_like import OpenAILike
 from llama_index.llms.vertex import Vertex
 from mypy_extensions import DefaultNamedArg
 
-from syftr.baselines import BASELINE_LLM
 from syftr.configuration import (
     NON_OPENAI_CONTEXT_WINDOW_FACTOR,
     AnthropicVertexLLM,
@@ -35,6 +34,9 @@ from syftr.configuration import (
 )
 from syftr.logger import logger
 from syftr.patches import _get_all_kwargs
+
+BASELINE_LLM = "gpt-4o-mini"
+BASELINE_RAG_EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 
 Anthropic._get_all_kwargs = _get_all_kwargs  # type: ignore
 
