@@ -74,12 +74,16 @@ class CorrectnessEvaluatorFactory:
             "AgentStudyConfig needs to provide dataset information."
         )
 
-        # self.llm_names = study_config.evaluation.llm_config.llm_names
-        # self.llm_temperatures = study_config.evaluation.llm_config.llm_temperatures
-        # self.llm_top_ps = study_config.evaluation.llm_config.top
         self.llm_config = study_config.evaluation.llm_config
         self.eval_type = study_config.evaluation.eval_type
-        self.eval_system_template = study_config.evaluation.eval_system_template
+
+        system_template = study_config.evaluation.eval_system_template
+        if self.llm_config.llm_use_reasoning is not None:
+            system_template += (
+                " /think" if self.llm_config.llm_use_reasoning else " /no_think"
+            )
+
+        self.eval_system_template = system_template
         self.eval_user_template = study_config.dataset.eval_user_template
         self.score_threshold = study_config.evaluation.score_threshold
 

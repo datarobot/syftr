@@ -114,9 +114,19 @@ class Flow:
         examples = self.get_examples(query)
         assert examples, "No examples found for few-shot prompting"
 
+        thinking = ""
+        use_reasoning = (
+            None
+            if self.params is None
+            else self.params.get("response_synthesizer_llm_use_reasoning", None)
+        )
+        if use_reasoning is not None:
+            thinking = "/think" if use_reasoning else "/no_think"
+
         return self.template.format(
             query_str=query,
             few_shot_examples=examples,
+            thinking=thinking,
         )
 
     def generate(
@@ -318,7 +328,7 @@ class RAGFlow(Flow):
         assert hasattr(self.query_engine, "aretrieve"), (
             f"{self.query_engine} does not have 'aretrieve' method"
         )
-        return await self.query_engine.aretrieve(QueryBundle(query))
+        return await self.query_engine.aretrieve(QueryBundle(query))  # type: ignore
 
     @dispatcher.span
     def _generate(

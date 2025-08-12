@@ -196,7 +196,9 @@ def _check_single_llm_worker(llm_name: str, results_queue: queue.Queue):
         llm_instance = get_llm(llm_name)
 
         # Perform a simple synchronous completion test.
-        response = llm_instance.complete("Just respond with the phrase `[OK]'")
+        response = llm_instance.complete(
+            "Just respond with the phrase `[OK]' /no_think"
+        )
 
         if response and hasattr(response, "text") and response.text:
             response_snippet = (

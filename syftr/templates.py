@@ -341,7 +341,7 @@ MAIN_LAYOUT = RichPromptTemplate("""
     {{instructions}}
     {% if with_context %} {{context}} {% endif %}
     {% if with_few_shot_prompt %} {{few_shot_examples}} {% endif %}
-    {{query_str}}
+    {{query_str}} {{thinking}}
 """)
 
 

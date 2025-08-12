@@ -350,8 +350,8 @@ class LLMConfig(BaseModel, SearchSpaceMixin):
     llm_top_p_min: float = Field(default=0.0, description="Minimum top_p for LLMs.")
     llm_top_p_max: float = Field(default=1.0, description="Maximum top_p for LLMs.")
     llm_top_p_step: float = Field(default=0.05, description="Step size for LLM top_p.")
-    llm_use_reasoning: T.List[bool] = Field(
-        default_factory=lambda: [True, False],
+    llm_use_reasoning: T.List[bool | None] = Field(
+        default_factory=lambda: [True, False, None],
         description="Whether to use reasoning for query decomposition.",
     )
 
@@ -1538,6 +1538,7 @@ class Evaluation(BaseModel):
             llm_temperature_max=0.0,
             llm_top_p_min=0.9,
             llm_top_p_max=0.9,
+            llm_use_reasoning=[None],
         ),
         description="LLM configuration for evaluation.",
     )
