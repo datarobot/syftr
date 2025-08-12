@@ -21,6 +21,7 @@ from llama_index.llms.openai_like import OpenAILike
 from llama_index.llms.vertex import Vertex
 from mypy_extensions import DefaultNamedArg
 
+from syftr.baselines import BASELINE_LLM
 from syftr.configuration import (
     NON_OPENAI_CONTEXT_WINDOW_FACTOR,
     AnthropicVertexLLM,
@@ -189,27 +190,18 @@ def _construct_openai_like_llm(name: str, llm_config: OpenAILikeLLM) -> OpenAILi
     )
 
 
-LLM_NAMES__LOCAL_MODELS = [
+LLM_NAMES__LOCAL_MODELS: T.List[str] = [
     model.model_name for model in cfg.local_models.generative or []
 ]
-LLM_NAMES__GENERATIVE_MODELS = [model for model in cfg.generative_models.keys()]
+LLM_NAMES__GENERATIVE_MODELS: T.List[str] = [
+    model for model in cfg.generative_models.keys()
+]
 
-# at least one model is required for testing
-if not LLM_NAMES__LOCAL_MODELS and not LLM_NAMES__GENERATIVE_MODELS:
-    LLM_NAMES__GENERATIVE_MODELS = ["gpt-4o-mini"]
-# AZURE_GPT4O_MINI = AzureOpenAI(
-#     model="gpt-4o-mini",
-#     deployment_name="gpt-4o-mini",
-#     api_key=cfg.azure_oai.api_key.get_secret_value(),
-#     azure_endpoint=str(cfg.azure_oai.api_url),
-#     api_version="2024-06-01",
-#     temperature=0,
-#     max_retries=0,
-#     additional_kwargs={"user": "syftr"},
-# )
+# we need the baseline model for unit testing
+if BASELINE_LLM not in LLM_NAMES__GENERATIVE_MODELS:
+    LLM_NAMES__GENERATIVE_MODELS.append(BASELINE_LLM)
 
-
-LLM_NAMES = LLM_NAMES__LOCAL_MODELS + LLM_NAMES__GENERATIVE_MODELS
+LLM_NAMES: T.List[str] = LLM_NAMES__LOCAL_MODELS + LLM_NAMES__GENERATIVE_MODELS
 assert len(LLM_NAMES) == len(set(LLM_NAMES)), (
     "Duplicate LLM names found in configuration. Please ensure all LLM names are unique."
 )
