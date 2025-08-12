@@ -15,7 +15,7 @@ from syftr.tuner.qa_tuner import objective, run_flow
 STORAGE = cfg.database.get_optuna_storage()
 
 
-def main():
+def main() -> None:
     """
     Example usage: fix issues in connection with study "bad1" and then rerun with
 

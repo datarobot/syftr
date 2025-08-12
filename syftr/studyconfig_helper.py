@@ -13,6 +13,7 @@ from syftr.studies import (
     FewShotRetriever,
     Hyde,
     LATSRagAgent,
+    LLMConfig,
     OptimizationConfig,
     QueryDecomposition,
     ReactRAGAgent,
@@ -184,35 +185,35 @@ def build_example_config(
             "CoT",
             # "finance-expert",
         ],
-        response_synthesizer_llms=llms,
+        response_synthesizer_llm_config=LLMConfig(llm_names=llms),
         rag_retriever=Retriever(
             embedding_models=embedding_models,
             methods=["dense", "sparse", "hybrid"],
             top_k=TopK(kmin=1, kmax=10, log=False),
             query_decomposition=QueryDecomposition(
-                llm_names=llms,
+                llm_config=LLMConfig(llm_names=llms),
                 num_queries_min=2,
                 num_queries_max=5,
                 num_queries_step=1,
             ),
         ),
         react_rag_agent=ReactRAGAgent(
-            subquestion_engine_llms=llms,
-            subquestion_response_synthesizer_llms=llms,
+            subquestion_engine_llm_config=LLMConfig(llm_names=llms),
+            subquestion_response_synthesizer_llm_config=LLMConfig(llm_names=llms),
         ),
         sub_question_rag=SubQuestionRAGAgent(
-            subquestion_engine_llms=llms,
-            subquestion_response_synthesizer_llms=llms,
+            subquestion_engine_llm_config=LLMConfig(llm_names=llms),
+            subquestion_response_synthesizer_llm_config=LLMConfig(llm_names=llms),
         ),
         critique_rag_agent=CritiqueRAGAgent(
-            subquestion_engine_llms=llms,
-            subquestion_response_synthesizer_llms=llms,
-            critique_agent_llms=llms,
-            reflection_agent_llms=llms,
+            subquestion_engine_llm_config=LLMConfig(llm_names=llms),
+            subquestion_response_synthesizer_llm_config=LLMConfig(llm_names=llms),
+            critique_agent_llm_config=LLMConfig(llm_names=llms),
+            reflection_agent_llm_config=LLMConfig(llm_names=llms),
         ),
         lats_rag_agent=LATSRagAgent(),
-        reranker=Reranker(llms=llms),
-        hyde=Hyde(llms=llms),
+        reranker=Reranker(llm_config=LLMConfig(llm_names=llms)),
+        hyde=Hyde(llm_config=LLMConfig(llm_names=llms)),
         few_shot_retriever=FewShotRetriever(
             embedding_models=embedding_models,
         ),
@@ -220,9 +221,9 @@ def build_example_config(
 
     evaluation = Evaluation(
         mode="random",
-        llms=llms,
         raise_on_exception=False,
     )
+    evaluation.llm_config.llm_names = llms
 
     configs, paths = build_configs(
         datasets=datasets,

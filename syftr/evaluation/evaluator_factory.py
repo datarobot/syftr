@@ -1,6 +1,7 @@
 import json
 import re
 import typing as T
+from itertools import product
 
 from llama_index.core.evaluation.base import BaseEvaluator
 from llama_index.core.evaluation.correctness import CorrectnessEvaluator
@@ -73,7 +74,10 @@ class CorrectnessEvaluatorFactory:
             "AgentStudyConfig needs to provide dataset information."
         )
 
-        self.llm_names = study_config.evaluation.llms
+        # self.llm_names = study_config.evaluation.llm_config.llm_names
+        # self.llm_temperatures = study_config.evaluation.llm_config.llm_temperatures
+        # self.llm_top_ps = study_config.evaluation.llm_config.top
+        self.llm_config = study_config.evaluation.llm_config
         self.eval_type = study_config.evaluation.eval_type
         self.eval_system_template = study_config.evaluation.eval_system_template
         self.eval_user_template = study_config.dataset.eval_user_template
@@ -85,7 +89,37 @@ class CorrectnessEvaluatorFactory:
         )
 
     def _get_correctness_evaluators(self) -> T.List[BaseEvaluator]:
-        eval_llms = [get_llm(name) for name in self.llm_names]
+        llm_names = self.llm_config.llm_names
+        llm_temperatures = [
+            self.llm_config.llm_temperature_min
+            + k * self.llm_config.llm_temperature_step
+            for k in range(
+                0,
+                int(
+                    (
+                        self.llm_config.llm_temperature_max
+                        - self.llm_config.llm_temperature_min
+                    )
+                    / self.llm_config.llm_temperature_step
+                )
+                + 1,
+            )
+        ]
+        llm_top_ps = [
+            self.llm_config.llm_top_p_min + k * self.llm_config.llm_top_p_step
+            for k in range(
+                0,
+                int(
+                    (self.llm_config.llm_top_p_max - self.llm_config.llm_top_p_min)
+                    / self.llm_config.llm_top_p_step
+                )
+                + 1,
+            )
+        ]
+        eval_llms = [
+            get_llm(name, temperature=float(temp), top_p=float(top_p))
+            for name, temp, top_p in product(llm_names, llm_temperatures, llm_top_ps)
+        ]
         eval_template = ChatPromptTemplate(
             message_templates=[
                 ChatMessage(role=MessageRole.SYSTEM, content=self.eval_system_template),

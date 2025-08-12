@@ -52,7 +52,7 @@ from numpy import ceil
 from syftr.configuration import cfg
 from syftr.instrumentation.arize import instrument_arize
 from syftr.instrumentation.tokens import LLMCallData, TokenTrackingEventHandler
-from syftr.llm import get_llm_name, get_tokenizer
+from syftr.llm import get_tokenizer
 from syftr.logger import logger
 from syftr.studies import get_critique_template, get_react_template
 
@@ -207,7 +207,7 @@ class RetrieverFlow(Flow):
 
     @property
     def tokenizer(self) -> T.Callable:
-        return get_tokenizer(get_llm_name(self.response_synthesizer_llm))
+        return get_tokenizer(self.response_synthesizer_llm.model)  # type: ignore
 
     def generate(self, query: str, *args, **kwargs):
         raise NotImplementedError("RetrieverFlow does not support generation.")

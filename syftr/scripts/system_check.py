@@ -11,9 +11,9 @@ from transformers import AutoConfig
 
 from syftr import __version__
 from syftr.configuration import SYFTR_CONFIG_FILE_ENV_NAME, cfg
-from syftr.llm import get_llm
+from syftr.llm import LLM_NAMES, get_llm
 from syftr.optuna_helper import get_study_names
-from syftr.studies import ALL_LLMS, DEFAULT_EMBEDDING_MODELS
+from syftr.studies import DEFAULT_EMBEDDING_MODELS
 from syftr.studyconfig_helper import build_example_config
 
 llms = []
@@ -235,13 +235,13 @@ def check_llms():
     console.print("Checking configured Large Language Models (LLMs)...")
 
     console.print(
-        f"Preparing to check {len(ALL_LLMS)} LLM(s) concurrently using threads: {', '.join(ALL_LLMS)}"
+        f"Preparing to check {len(LLM_NAMES)} LLM(s) concurrently using threads: {', '.join(LLM_NAMES)}"
     )
 
     results_queue = queue.Queue()
     threads = []
 
-    for llm_name in ALL_LLMS:
+    for llm_name in LLM_NAMES:
         thread = threading.Thread(
             target=_check_single_llm_worker, args=(llm_name, results_queue)
         )
@@ -288,7 +288,7 @@ def check_llms():
 
     # Print Summary Report
     console.print("\n[bold underline]LLM Accessibility Report[/bold underline]")
-    console.print(f"Total LLMs configured and checked: {len(ALL_LLMS)}")
+    console.print(f"Total LLMs configured and checked: {len(LLM_NAMES)}")
 
     if accessible_llms:
         console.print(f"\n[green]Accessible LLMs ({len(accessible_llms)}):[/green]")

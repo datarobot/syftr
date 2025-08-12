@@ -124,12 +124,22 @@ def evaluate(
 def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
     from syftr.llm import get_llm
 
-    response_synthesizer_llm = get_llm(params["response_synthesizer_llm"])
+    response_synthesizer_llm = get_llm(
+        name=params["response_synthesizer_llm_name"],
+        temperature=params.get("response_synthesizer_temperature"),
+        top_p=params.get("response_synthesizer_top_p"),
+    )
     enforce_full_evaluation = params.get("enforce_full_evaluation", False)
 
     if study_config.is_retriever_study:
         hyde_llm = (
-            get_llm(params["hyde_llm_name"]) if params.get("hyde_enabled") else None
+            get_llm(
+                name=params["hyde_llm_name"],
+                temperature=params.get("hyde_llm_temperature"),
+                top_p=params.get("hyde_llm_top_p"),
+            )
+            if params.get("hyde_enabled")
+            else None
         )
         retriever, docstore = build_rag_retriever(study_config, params)
         return RetrieverFlow(
@@ -175,9 +185,17 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
     else:
         hyde_llm = reranker_llm = reranker_top_k = None
         if params.get("hyde_enabled"):
-            hyde_llm = get_llm(params["hyde_llm_name"])
+            hyde_llm = get_llm(
+                name=params["hyde_llm_name"],
+                temperature=params.get("hyde_llm_temperature"),
+                top_p=params.get("hyde_llm_top_p"),
+            )
         if params.get("reranker_enabled"):
-            reranker_llm = get_llm(params["reranker_llm_name"])
+            reranker_llm = get_llm(
+                name=params["reranker_llm_name"],
+                temperature=params.get("reranker_llm_temperature"),
+                top_p=params.get("reranker_llm_top_p"),
+            )
             reranker_top_k = params["reranker_top_k"]
         if params.get("additional_context_enabled"):
             additional_context_num_nodes = params["additional_context_num_nodes"]
@@ -202,17 +220,23 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     params=params,
                 )
             case "react_rag_agent":
-                subquestion_engine_llm = get_llm(params["subquestion_engine_llm"])
-                subquestion_response_synthesizer_llm = get_llm(
-                    params["subquestion_response_synthesizer_llm"]
+                subquestion_engine_llm = get_llm(
+                    name=params["subquestion_engine_llm_name"],
+                    temperature=params.get("subquestion_engine_llm_temperature"),
+                    top_p=params.get("subquestion_engine_llm_top_p"),
                 )
-                max_iterations = params["max_iterations"]
+                subquestion_response_synthesizer_llm = get_llm(
+                    name=params["subquestion_response_synthesizer_llm_name"],
+                    temperature=params.get(
+                        "subquestion_response_synthesizer_llm_temperature"
+                    ),
+                    top_p=params.get("subquestion_response_synthesizer_llm_top_p"),
+                )
                 flow = ReActAgentFlow(
                     retriever=rag_retriever,
                     response_synthesizer_llm=response_synthesizer_llm,
                     subquestion_response_synthesizer_llm=subquestion_response_synthesizer_llm,
                     subquestion_engine_llm=subquestion_engine_llm,
-                    max_iterations=max_iterations,
                     docstore=rag_docstore,
                     template=template,
                     get_examples=get_qa_examples,
@@ -226,20 +250,34 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     params=params,
                 )
             case "critique_rag_agent":
-                subquestion_engine_llm = get_llm(params["subquestion_engine_llm"])
-                subquestion_response_synthesizer_llm = get_llm(
-                    params["subquestion_response_synthesizer_llm"]
+                subquestion_engine_llm = get_llm(
+                    name=params["subquestion_engine_llm_name"],
+                    temperature=params.get("subquestion_engine_llm_temperature"),
+                    top_p=params.get("subquestion_engine_llm_top_p"),
                 )
-                critique_agent_llm = get_llm(params["critique_agent_llm"])
-                reflection_agent_llm = get_llm(params["reflection_agent_llm"])
-                max_iterations = params["max_iterations"]
+                subquestion_response_synthesizer_llm = get_llm(
+                    name=params["subquestion_response_synthesizer_llm_name"],
+                    temperature=params.get(
+                        "subquestion_response_synthesizer_llm_temperature"
+                    ),
+                    top_p=params.get("subquestion_response_synthesizer_llm_top_p"),
+                )
+                critique_agent_llm = get_llm(
+                    name=params["critique_agent_llm_name"],
+                    temperature=params.get("critique_agent_llm_temperature"),
+                    top_p=params.get("critique_agent_llm_top_p"),
+                )
+                reflection_agent_llm = get_llm(
+                    name=params["reflection_agent_llm_name"],
+                    temperature=params.get("reflection_agent_llm_temperature"),
+                    top_p=params.get("reflection_agent_llm_top_p"),
+                )
                 flow = CritiqueAgentFlow(
                     response_synthesizer_llm=response_synthesizer_llm,
                     subquestion_engine_llm=subquestion_engine_llm,
                     subquestion_response_synthesizer_llm=subquestion_response_synthesizer_llm,
                     critique_agent_llm=critique_agent_llm,
                     reflection_agent_llm=reflection_agent_llm,
-                    max_iterations=max_iterations,
                     retriever=rag_retriever,
                     docstore=rag_docstore,
                     template=template,
@@ -254,9 +292,17 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     params=params,
                 )
             case "sub_question_rag":
-                subquestion_engine_llm = get_llm(params["subquestion_engine_llm"])
+                subquestion_engine_llm = get_llm(
+                    name=params["subquestion_engine_llm_name"],
+                    temperature=params.get("subquestion_engine_llm_temperature"),
+                    top_p=params.get("subquestion_engine_llm_top_p"),
+                )
                 subquestion_response_synthesizer_llm = get_llm(
-                    params["subquestion_response_synthesizer_llm"]
+                    name=params["subquestion_response_synthesizer_llm_name"],
+                    temperature=params.get(
+                        "subquestion_response_synthesizer_llm_temperature"
+                    ),
+                    top_p=params.get("subquestion_response_synthesizer_llm_top_p"),
                 )
                 flow = SubQuestionRAGFlow(
                     response_synthesizer_llm=response_synthesizer_llm,
@@ -386,7 +432,7 @@ def objective(
         )
         worker_state = state.get_worker(ray.get_runtime_context().get_worker_id())
         if worker_state is not None:
-            trial.set_user_attr("ray_worker_pid", worker_state.pid)
+            trial.set_user_attr("ray_worker_pid", worker_state.pid)  # type: ignore
         trial.set_user_attr("ray_worker_hostname", socket.gethostname())
     logger.debug("Optimizer finished trial with params: %s", trial.params)
     return obj1, obj2
@@ -452,7 +498,7 @@ def _run_flow(flow: T.Dict[str, T.Any], study_config: StudyConfig) -> None:
     set_trial(trial, study_config, params, True, metrics, flow_json)
     worker_state = state.get_worker(ray.get_runtime_context().get_worker_id())
     if worker_state is not None:
-        trial.set_user_attr("ray_worker_pid", worker_state.pid)
+        trial.set_user_attr("ray_worker_pid", worker_state.pid)  # type: ignore
     trial.set_user_attr("ray_worker_hostname", socket.gethostname())
     study.add_trial(trial)
     logger.debug("Seeding added trial with params: %s", trial.params)

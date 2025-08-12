@@ -4,6 +4,7 @@ import typing as T
 from syftr.studies import (
     FewShotRetriever,
     Hybrid,
+    LLMConfig,
     QueryDecomposition,
     Reranker,
     Retriever,
@@ -44,7 +45,14 @@ def test_topk_cardinality():
 
 def _get_minimal_qd() -> QueryDecomposition:
     return QueryDecomposition(
-        llm_names=MINIMAL_LLMS,
+        llm_config=LLMConfig(
+            llm_names=MINIMAL_LLMS,
+            llm_temperature_min=0,
+            llm_temperature_max=0,
+            llm_top_p_min=1.0,
+            llm_top_p_max=1.0,
+            llm_use_reasoning=[True],
+        ),
         num_queries_min=2,
         num_queries_max=4,
         num_queries_step=2,
@@ -100,7 +108,7 @@ def _get_minimal_few_shot_retriever() -> FewShotRetriever:
 def _get_minimal_reranker() -> Reranker:
     return Reranker(
         top_k=_get_minimal_topk(),
-        llms=MINIMAL_LLMS,
+        llm_names=MINIMAL_LLMS,
     )
 
 
@@ -110,7 +118,14 @@ def test_search_space_cardinality():
     ss = SearchSpace(
         rag_modes=["rag"],
         template_names=["templateA", "templateB"],
-        response_synthesizer_llms=MINIMAL_LLMS,
+        response_synthesizer_llm_config=LLMConfig(
+            llm_names=MINIMAL_LLMS,
+            llm_temperature_min=0,
+            llm_temperature_max=0,
+            llm_top_p_min=1.0,
+            llm_top_p_max=1.0,
+            llm_use_reasoning=[True],
+        ),
         few_shot_retriever=_get_minimal_few_shot_retriever(),
         splitter=_get_minimal_splitter(),
         reranker=_get_minimal_reranker(),
@@ -129,7 +144,7 @@ def test_search_space_cardinality():
     )
     expected_rag_card *= (
         len(ss.template_names)
-        * len(ss.response_synthesizer_llms)
+        * len(MINIMAL_LLMS)
         * len(ss.few_shot_enabled)
         * len(ss.hyde_enabled)
         * len(ss.additional_context_enabled)
@@ -140,7 +155,14 @@ def test_search_space_cardinality():
     ss = SearchSpace(
         rag_modes=["no_rag"],
         template_names=["templateA", "templateB"],
-        response_synthesizer_llms=MINIMAL_LLMS,
+        response_synthesizer_llm_config=LLMConfig(
+            llm_names=MINIMAL_LLMS,
+            llm_temperature_min=0,
+            llm_temperature_max=0,
+            llm_top_p_min=1.0,
+            llm_top_p_max=1.0,
+            llm_use_reasoning=[True],
+        ),
         few_shot_retriever=_get_minimal_few_shot_retriever(),
         splitter=_get_minimal_splitter(),
         reranker=_get_minimal_reranker(),
@@ -148,7 +170,7 @@ def test_search_space_cardinality():
     )
     expected_no_rag_card = (
         len(ss.template_names)
-        * len(ss.response_synthesizer_llms)
+        * len(MINIMAL_LLMS)
         * len(ss.few_shot_enabled)
         * len(ss.hyde_enabled)
         * len(ss.additional_context_enabled)
@@ -161,7 +183,14 @@ def test_search_space_cardinality():
     ss = SearchSpace(
         rag_modes=["no_rag", "rag"],
         template_names=["templateA", "templateB"],
-        response_synthesizer_llms=MINIMAL_LLMS,
+        response_synthesizer_llm_config=LLMConfig(
+            llm_names=MINIMAL_LLMS,
+            llm_temperature_min=0,
+            llm_temperature_max=0,
+            llm_top_p_min=1.0,
+            llm_top_p_max=1.0,
+            llm_use_reasoning=[True],
+        ),
         few_shot_retriever=_get_minimal_few_shot_retriever(),
         splitter=_get_minimal_splitter(),
         reranker=_get_minimal_reranker(),

@@ -2,6 +2,8 @@ import json
 import re
 import tempfile
 import textwrap
+import typing as T
+from copy import copy
 
 import altair as alt
 import dataframe_image as dfi
@@ -22,7 +24,7 @@ from slugify import slugify
 
 from syftr.configuration import cfg
 from syftr.helpers import is_numeric
-from syftr.llm import AZURE_GPT4O_STD
+from syftr.llm import get_llm
 from syftr.studies import get_response_synthesizer_llm, get_template_name
 
 SHOW_TITLE = False
@@ -66,7 +68,7 @@ def is_retriever_study(data: pd.DataFrame):
     return False
 
 
-def get_objective_2_name(data: pd.DataFrame = None, is_cost: bool | None = None):
+def get_objective_2_name(data: pd.DataFrame | None = None, is_cost: bool | None = None):
     if is_cost is None:
         if data is None or data.empty:
             return "Objective 2"
@@ -78,7 +80,7 @@ def get_objective_2_name(data: pd.DataFrame = None, is_cost: bool | None = None)
     return "Latency"
 
 
-def get_objective_2_unit(data: pd.DataFrame = None, is_cost: bool | None = None):
+def get_objective_2_unit(data: pd.DataFrame | None = None, is_cost: bool | None = None):
     if is_cost is None:
         if data is None:
             return "Unit"
@@ -183,11 +185,11 @@ def descriptive_name(param_col, is_cost=None):
         "params_use_reranker": "RAG Reranker Enabled",
         "params_agent_retriever": "Agent Retriever Type",
         # new names after search space restructuring
-        "params_critique_rag_agent_critique_agent_llm": "Critique Agent LLM",
-        "params_critique_rag_agent_reflection_agent_llm": "Reflection Agent LLM",
+        "params_critique_rag_agent_critique_agent_llm_name": "Critique Agent LLM",
+        "params_critique_rag_agent_reflection_agent_llm_name": "Reflection Agent LLM",
         "params_critique_rag_agent_response_synthesizer_llm": "Critique RAG Agent Response Synthesizer LLM",
-        "params_critique_rag_agent_subquestion_engine_llm": "Subquestion Engine LLM",
-        "params_critique_rag_agent_subquestion_response_synthesizer_llm": "Subquestion Response Synthesizer LLM",
+        "params_critique_rag_agent_subquestion_engine_llm_name": "Subquestion Engine LLM",
+        "params_critique_rag_agent_subquestion_response_synthesizer_llm_name": "Subquestion Response Synthesizer LLM",
         "params_critique_rag_agent_template_name": "Critique Agent Template",
         "params_lats_rag_agent_max_rollouts": "LATS Agent Max Rollouts",
         "params_lats_rag_agent_num_expansions": "LATS Agent Num Expansions",
@@ -198,12 +200,12 @@ def descriptive_name(param_col, is_cost=None):
         "params_rag_response_synthesizer_llm": "RAG Response Synthesizer LLM",
         "params_rag_template_name": "RAG Template",
         "params_react_rag_agent_response_synthesizer_llm": "ReAct RAG Agent Response Synthesizer LLM",
-        "params_react_rag_agent_subquestion_engine_llm": "ReAct RAG Agent Subquestion Engine LLM",
-        "params_react_rag_agent_subquestion_response_synthesizer_llm": "ReAct RAG Agent Subquestion Response Synthesizer LLM",
+        "params_react_rag_agent_subquestion_engine_llm_name": "ReAct RAG Agent Subquestion Engine LLM",
+        "params_react_rag_agent_subquestion_response_synthesizer_llm_name": "ReAct RAG Agent Subquestion Response Synthesizer LLM",
         "params_react_rag_agent_template_name": "ReAct RAG Agent Template",
         "params_sub_question_rag_response_synthesizer_llm": "Subquestion RAG Response Synthesizer LLM",
-        "params_sub_question_rag_subquestion_engine_llm": "Subquestion RAG Subquestion Engine LLM",
-        "params_sub_question_rag_subquestion_response_synthesizer_llm": "Subquestion RAG Subquestion Response Synthesizer LLM",
+        "params_sub_question_rag_subquestion_engine_llm_name": "Subquestion RAG Subquestion Engine LLM",
+        "params_sub_question_rag_subquestion_response_synthesizer_llm_name": "Subquestion RAG Subquestion Response Synthesizer LLM",
         "params_sub_question_rag_template_name": "Subquestion RAG Template",
         # recombined parameter colums
         "params_llm_name": "Response Synthesizer LLM",
@@ -222,7 +224,7 @@ def descriptive_name(param_col, is_cost=None):
         return " x ".join([descriptive_name(col, is_cost) for col in param_col])
 
 
-def get_name(study_name: str, titles=None) -> str:
+def get_name(study_name: str, titles: T.Dict[str, str] | None = None) -> str:
     if titles is not None:
         if study_name in titles:
             return titles[study_name]
@@ -560,7 +562,8 @@ def generate(prompt):
     cache_key = ("generate", prompt)
     if cache_key in CACHE:
         return CACHE[cache_key]
-    response = AZURE_GPT4O_STD.complete(prompt=prompt, temperature=0)
+    llm = get_llm(name="gpt-4o-mini")
+    response = llm.complete(prompt=prompt, temperature=0)
     CACHE.set(cache_key, response.text, expire=60 * 60 * 24 * 7)
     return response.text
 
@@ -823,7 +826,7 @@ def get_baselines(df):
             # perfer baselines that use gpt-* as the synthesizer
             # df_baseline = df_baseline.copy()
             # df_baseline['primary_llm'] = df_baseline.apply(
-            #     lambda row: row['params_llm_name'] if 'params_llm_name' in row.index else row["response_synthesizer_llm"],
+            #     lambda row: row['params_llm_name'] if 'params_llm_name' in row.index else row["response_synthesizer_llm_name"],
             #     axis=1,
             # )
             # df_baseline["preferred_llm"] = (
@@ -1564,17 +1567,22 @@ def insert_bin_col(df, param_col):
 
 
 @log_function_call
-def param_plot(df, study_name, param_cols, titles=None):
+def param_plot(
+    df: pd.DataFrame,
+    study_name: str,
+    param_cols: T.Union[str, T.List[str]],
+    titles: T.Dict[str, str] | None = None,
+):
     if isinstance(param_cols, str):
         param_cols = [param_cols]
 
     # add columns to group the parameter columns by and bin the numeric colums where necessary
-    df: pd.DataFrame = df[df["study_name"] == study_name].copy()
-    is_cost = is_cost_objective(df)
-    bin_cols = [insert_bin_col(df, param) for param in param_cols]
+    df_study: pd.DataFrame = df[df["study_name"] == study_name].copy()
+    is_cost = is_cost_objective(df_study)
+    bin_cols = [insert_bin_col(df_study, param) for param in param_cols]
 
     # calculate stats of the parameter groups to order their display by
-    stats = df.groupby(bin_cols, observed=False)[["values_0", "values_1"]].agg(
+    stats = df_study.groupby(bin_cols, observed=False)[["values_0", "values_1"]].agg(
         ["min", "max", "mean", "size"]
     )
     stats = stats[stats[("values_0", "size")] > 0]
@@ -1597,7 +1605,7 @@ def param_plot(df, study_name, param_cols, titles=None):
     for ax, value_col, color in zip(axes[:2], ["values_0", "values_1"], ["C0", "C1"]):
         for i, (param_bins, row) in enumerate(stats.tail(n_lines).iterrows()):
             p_bins = (
-                param_bins.copy() if isinstance(param_bins, tuple) else (param_bins,)
+                copy(param_bins) if isinstance(param_bins, tuple) else (param_bins,)
             )
 
             # plot range bar
@@ -1610,7 +1618,7 @@ def param_plot(df, study_name, param_cols, titles=None):
             )
 
             # filter trials to matching the current parameter
-            temp_i = df.copy()
+            temp_i = df_study.copy()
             for bin_col, param_bin in zip(bin_cols, p_bins):
                 temp_i = temp_i[temp_i[bin_col] == param_bin]
 
@@ -1651,13 +1659,13 @@ def param_plot(df, study_name, param_cols, titles=None):
     # create the total trial time plot
     ax = axes[2]
     for i, (param_bins, row) in enumerate(stats.tail(n_lines).iterrows()):
-        p_bins = param_bins.copy() if isinstance(param_bins, tuple) else (param_bins,)
-        temp_i = df
+        p_bins = copy(param_bins) if isinstance(param_bins, tuple) else (param_bins,)
+        temp_i = df_study.copy()
         for bin_col, param_bin in zip(bin_cols, p_bins):
             temp_i = temp_i[temp_i[bin_col] == param_bin]
         if len(temp_i) == 0:
             continue
-        log_durations = np.log10((temp_i["duration"] / pd.Timedelta(minutes=1)) + 1)
+        log_durations = np.log10((temp_i["duration"] / pd.Timedelta(minutes=1)) + 1)  # type: ignore
         parts = ax.violinplot(
             log_durations,
             [i],
@@ -2871,7 +2879,9 @@ def create_study_stats_table(df):
 
 
 @log_function_call
-def create_benchmark_plot_and_table(df, titles=None):
+def create_benchmark_plot_and_table(
+    df: pd.DataFrame, titles: T.Dict[str, str] | None = None
+):
     df = df.copy()
     is_cost = is_cost_objective(df)
     if is_cost is None:
@@ -3018,7 +3028,7 @@ def create_benchmark_plot_and_table(df, titles=None):
     ax.legend(loc="best", fontsize=8)
 
     # Creat the latency bar chart
-    ax: plt.Axes = axes[1]
+    ax = axes[1]
     results[latency_cols].plot(
         kind="bar",
         ax=ax,

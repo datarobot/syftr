@@ -3,7 +3,7 @@ import typing as T
 import optuna
 
 from syftr.logger import logger
-from syftr.studies import RetrieverSearchSpace, SearchSpace
+from syftr.studies import LLMConfig, RetrieverSearchSpace, SearchSpace
 
 
 def parameters_do_exist(trial_params: T.Dict[str, T.Any], parameters: T.List[str]):
@@ -109,9 +109,15 @@ def has_valid_base_rag_params(
                     "additional_context_enabled",
                     "additional_context_num_nodes",
                     "coa_enable_calculator",
-                    "critique_agent_llm",
+                    "critique_agent_llm_name",
+                    "critique_agent_llm_temperature",
+                    "critique_agent_llm_top_p",
+                    "critique_agent_llm_use_reasoning",
                     "hyde_enabled",
                     "hyde_llm_name",
+                    "hyde_llm_temperature",
+                    "hyde_llm_top_p",
+                    "hyde_llm_use_reasoning",
                     "lats_max_rollouts",
                     "lats_num_expansions",
                     "rag_embedding_model",
@@ -120,17 +126,32 @@ def has_valid_base_rag_params(
                     "rag_method",
                     "rag_query_decomposition_enabled",
                     "rag_query_decomposition_llm_name",
+                    "rag_query_decomposition_llm_temperature",
+                    "rag_query_decomposition_llm_top_p",
+                    "rag_query_decomposition_llm_use_reasoning",
                     "rag_query_decomposition_num_queries",
                     "rag_top_k",
-                    "reflection_agent_llm",
+                    "reflection_agent_llm_name",
+                    "reflection_agent_llm_temperature",
+                    "reflection_agent_llm_top_p",
+                    "reflection_agent_llm_use_reasoning",
                     "reranker_enabled",
                     "reranker_llm_name",
+                    "reranker_llm_temperature",
+                    "reranker_llm_top_p",
+                    "reranker_llm_use_reasoning",
                     "reranker_top_k",
                     "splitter_chunk_overlap_frac",
                     "splitter_chunk_exp",
                     "splitter_method",
-                    "subquestion_engine_llm",
-                    "subquestion_response_synthesizer_llm",
+                    "subquestion_engine_llm_name",
+                    "subquestion_engine_llm_temperature",
+                    "subquestion_engine_llm_top_p",
+                    "subquestion_engine_llm_use_reasoning",
+                    "subquestion_response_synthesizer_llm_name",
+                    "subquestion_response_synthesizer_llm_temperature",
+                    "subquestion_response_synthesizer_llm_top_p",
+                    "subquestion_response_synthesizer_llm_use_reasoning",
                 ]
             )
         ):
@@ -142,7 +163,10 @@ def has_valid_base_rag_params(
     else:
         for param in [
             "template_name",
-            "response_synthesizer_llm",
+            "response_synthesizer_llm_name",
+            # "response_synthesizer_llm_temperature",
+            # "response_synthesizer_llm_top_p",
+            # "response_synthesizer_llm_use_reasoning",
             "additional_context_enabled",
             "rag_method",
             "rag_top_k",
@@ -272,6 +296,75 @@ def has_valid_rag_hybrid_params(
     return True
 
 
+def has_valid_llm_params(
+    llm_config: LLMConfig,
+    trial_params: T.Dict[str, T.Any],
+    prefix: str | None = "",
+) -> bool:
+    assert llm_config, "LLM config is missing"
+    assert trial_params, "Trial parameters are missing"
+    assert prefix is not None, "Prefix cannot be None"
+
+    tp = trial_params
+    dist = llm_config.build_distributions(prefix=prefix)
+
+    if f"{prefix}llm_name" not in tp:
+        logger.warning(f'Parameter "{prefix}llm_name" is missing')
+        return False
+    else:
+        llm_name_dist = dist[f"{prefix}llm_name"]
+        if hasattr(llm_name_dist, "choices"):
+            if tp[f"{prefix}llm_name"] not in llm_name_dist.choices:  # type: ignore
+                logger.warning(
+                    "The value %s is out-of-distribution for the parameter '%s'",
+                    str(tp[f"{prefix}llm_name"]),
+                    f"{prefix}llm_name",
+                )
+                return False
+        else:
+            if not llm_name_dist._contains(tp[f"{prefix}llm_name"]):
+                logger.warning(
+                    "The value %s is out-of-distribution for the parameter '%s'",
+                    str(tp[f"{prefix}llm_name"]),
+                    f"{prefix}llm_name",
+                )
+                return False
+
+    # all LLM parameters below are optional but need to be valid if provided
+    if f"{prefix}llm_temperature" in tp:
+        if not dist[f"{prefix}llm_temperature"]._contains(
+            tp[f"{prefix}llm_temperature"]
+        ):
+            logger.warning(
+                "The value %s is out-of-distribution for the parameter '%s'",
+                str(tp[f"{prefix}llm_temperature"]),
+                f"{prefix}llm_temperature",
+            )
+            return False
+
+    if f"{prefix}llm_top_p" in tp:
+        if not dist[f"{prefix}llm_top_p"]._contains(tp[f"{prefix}llm_top_p"]):
+            logger.warning(
+                "The value %s is out-of-distribution for the parameter '%s'",
+                str(tp[f"{prefix}llm_top_p"]),
+                f"{prefix}llm_top_p",
+            )
+            return False
+
+    if f"{prefix}llm_use_reasoning" in tp:
+        if not dist[f"{prefix}llm_use_reasoning"]._contains(
+            tp[f"{prefix}llm_use_reasoning"]
+        ):
+            logger.warning(
+                "The value %s is out-of-distribution for the parameter '%s'",
+                str(tp[f"{prefix}llm_use_reasoning"]),
+                f"{prefix}llm_use_reasoning",
+            )
+            return False
+
+    return True
+
+
 def has_valid_rag_query_decomposition_params(
     search_space: SearchSpace,
     trial_params: T.Dict[str, T.Any],
@@ -296,24 +389,19 @@ def has_valid_rag_query_decomposition_params(
 
     query_decomposition_params = [
         "rag_query_decomposition_llm_name",
+        "rag_query_decomposition_llm_top_p",
+        "rag_query_decomposition_use_reasoning",
         "rag_query_decomposition_num_queries",
     ]
     if not tp["rag_query_decomposition_enabled"]:
         if not parameters_do_not_exist(tp, query_decomposition_params):
             return False
     else:
-        if not parameters_do_exist(tp, query_decomposition_params):
-            return False
-
-        if (
-            tp["rag_query_decomposition_llm_name"]
-            not in ss.rag_retriever.query_decomposition.llm_names
+        if not has_valid_llm_params(
+            llm_config=ss.rag_retriever.query_decomposition.llm_config,
+            trial_params=tp,
+            prefix="rag_query_decomposition_",
         ):
-            logger.warning(
-                "RAG query_decomposition LLM name '%s' is not in: %s",
-                tp["rag_query_decomposition_llm_name"],
-                ss.rag_retriever.query_decomposition.llm_names,
-            )
             return False
 
         distributions = ss.rag_retriever.query_decomposition.build_distributions(
@@ -402,16 +490,22 @@ def has_valid_rag_reranker_params(
         logger.debug("RAG mode is 'no_rag'")
         return True
 
-    reranker_params = ["reranker_llm_name", "reranker_top_k"]
+    reranker_params = [
+        "reranker_llm_name",
+        # "reranker_llm_temperature",
+        # "reranker_llm_top_p",
+        # "reranker_llm_use_reasoning",
+        "reranker_top_k",
+    ]
     if "reranker_enabled" in tp and tp["reranker_enabled"]:
         if not parameters_do_exist(tp, reranker_params):
             return False
 
-        if tp["reranker_llm_name"] not in ss.reranker.llms:
+        if tp["reranker_llm_name"] not in ss.reranker.llm_names:
             logger.warning(
                 "Reranker LLM name '%s' is not in: %s",
                 tp["reranker_llm_name"],
-                ss.reranker.llms,
+                ss.reranker.llm_names,
             )
             return False
 
@@ -424,6 +518,12 @@ def has_valid_rag_reranker_params(
             )
             return False
 
+        if not has_valid_llm_params(
+            llm_config=ss.reranker.llm_config,
+            trial_params=tp,
+            prefix="reranker_",
+        ):
+            return False
     else:
         if not parameters_do_not_exist(tp, reranker_params):
             return False
@@ -441,19 +541,20 @@ def has_valid_hyde_params(
     ss = search_space
     tp = trial_params
 
-    hyde_params = ["hyde_llm_name"]
-    if "hyde_enabled" in tp and tp["hyde_enabled"]:
-        if not parameters_do_exist(tp, hyde_params):
+    if tp.get("hyde_enabled"):
+        if not has_valid_llm_params(
+            llm_config=ss.hyde.llm_config,
+            trial_params=tp,
+            prefix="hyde_",
+        ):
             return False
-
-        if tp["hyde_llm_name"] not in ss.hyde.llms:
-            logger.warning(
-                "Hyde LLM name is not supported: %s",
-                tp["hyde_llm_name"],
-            )
-            return False
-
     else:
+        hyde_params = [
+            "hyde_llm_name",
+            "hyde_llm_temperature",
+            "hyde_llm_top_p",
+            "hyde_llm_use_reasoning",
+        ]
         if not parameters_do_not_exist(tp, hyde_params):
             return False
 
@@ -517,21 +618,22 @@ def has_valid_additional_context_params(
     search_space: SearchSpace,
     trial_params: T.Dict[str, T.Any],
 ) -> bool:
-    assert search_space, "Search space is missing"
     assert trial_params, "Trial parameters are missing"
 
-    if trial_params["rag_mode"] == "no_rag":
+    tp = trial_params
+
+    if tp["rag_mode"] == "no_rag":
         return parameters_do_not_exist(
-            trial_params, ["additional_context_enabled", "additional_context_num_nodes"]
+            tp, ["additional_context_enabled", "additional_context_num_nodes"]
         )
     else:
-        if not parameters_do_exist(trial_params, ["additional_context_enabled"]):
+        if not parameters_do_exist(tp, ["additional_context_enabled"]):
             return False
 
-        if trial_params["additional_context_enabled"]:
-            if not parameters_do_exist(trial_params, ["additional_context_num_nodes"]):
+        if tp["additional_context_enabled"]:
+            if not parameters_do_exist(tp, ["additional_context_num_nodes"]):
                 return False
-            num_nodes = trial_params.get("additional_context_num_nodes")
+            num_nodes = tp.get("additional_context_num_nodes")
             if num_nodes is None:
                 logger.warning("Additional context enabled but num nodes not set")
                 return False
@@ -542,9 +644,7 @@ def has_valid_additional_context_params(
                 return False
         else:
             # Feature disabled, no param set
-            return parameters_do_not_exist(
-                trial_params, ["additional_context_num_nodes"]
-            )
+            return parameters_do_not_exist(tp, ["additional_context_num_nodes"])
 
     return True
 
@@ -553,18 +653,36 @@ def has_valid_sub_question_params(
     search_space: SearchSpace,
     trial_params: T.Dict[str, T.Any],
 ) -> bool:
-    if trial_params["rag_mode"] != "sub_question_rag":
+    assert search_space, "Search space is missing"
+    assert trial_params, "Trial parameters are missing"
+
+    ss = search_space
+    tp = trial_params
+
+    if tp["rag_mode"] != "sub_question_rag":
         return True
 
     if not parameters_do_exist(
-        trial_params,
+        tp,
         [
-            "response_synthesizer_llm",
-            "subquestion_engine_llm",
             "template_name",
         ],
     ):
         logger.warning("Sub Question RAG parameters are missing")
+        return False
+
+    if not has_valid_llm_params(
+        llm_config=ss.sub_question_rag.subquestion_engine_llm_config,
+        trial_params=tp,
+        prefix="subquestion_engine_",
+    ):
+        return False
+
+    if not has_valid_llm_params(
+        llm_config=ss.sub_question_rag.subquestion_response_synthesizer_llm_config,
+        trial_params=tp,
+        prefix="subquestion_response_synthesizer_",
+    ):
         return False
 
     return True
@@ -658,19 +776,25 @@ def are_valid_parameters(
             has_valid_sub_question_params,
             has_valid_additional_context_params,
             lambda x, y: has_valid_unique_params(  # type: ignore
-                x,
-                y,
-                "critique_rag_agent",
-                [
-                    "critique_agent_llm",
-                    "reflection_agent_llm",
+                search_space=x,
+                trial_params=y,
+                rag_mode="critique_rag_agent",
+                unique_params=[
+                    "critique_agent_llm_name",
+                    "critique_agent_llm_temperature",
+                    "critique_agent_llm_top_p",
+                    "critique_agent_llm_use_reasoning",
+                    "reflection_agent_llm_name",
+                    "reflection_agent_llm_temperature",
+                    "reflection_agent_llm_top_p",
+                    "reflection_agent_llm_use_reasoning",
                 ],
             ),
             lambda x, y: has_valid_unique_params(  # type: ignore
-                x,
-                y,
-                "lats_rag_agent",
-                [
+                search_space=x,
+                trial_params=y,
+                rag_mode="lats_rag_agent",
+                unique_params=[
                     "lats_max_rollouts",
                     "lats_num_expansions",
                 ],
