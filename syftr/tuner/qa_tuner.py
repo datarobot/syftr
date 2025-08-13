@@ -130,6 +130,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
         top_p=params.get("response_synthesizer_top_p"),
     )
     enforce_full_evaluation = params.get("enforce_full_evaluation", False)
+    use_reasoning = params.get("use_reasoning")
 
     if study_config.is_retriever_study:
         hyde_llm = (
@@ -150,6 +151,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
             additional_context_num_nodes=params.get("additional_context_num_nodes", 0),
             params=params,
             enforce_full_evaluation=enforce_full_evaluation,
+            use_reasoning=use_reasoning,
         )
 
     get_qa_examples = None
@@ -181,6 +183,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
             get_examples=get_qa_examples,
             params=params,
             enforce_full_evaluation=enforce_full_evaluation,
+            use_reasoning=use_reasoning,
         )
     else:
         hyde_llm = reranker_llm = reranker_top_k = None
@@ -217,6 +220,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     reranker_top_k=reranker_top_k,
                     additional_context_num_nodes=additional_context_num_nodes,
                     enforce_full_evaluation=enforce_full_evaluation,
+                    use_reasoning=use_reasoning,
                     params=params,
                 )
             case "react_rag_agent":
@@ -247,6 +251,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     dataset_name=study_config.dataset.name,
                     dataset_description=study_config.dataset.description,
                     enforce_full_evaluation=enforce_full_evaluation,
+                    use_reasoning=use_reasoning,
                     params=params,
                 )
             case "critique_rag_agent":
@@ -289,6 +294,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     dataset_name=study_config.dataset.name,
                     dataset_description=study_config.dataset.description,
                     enforce_full_evaluation=enforce_full_evaluation,
+                    use_reasoning=use_reasoning,
                     params=params,
                 )
             case "sub_question_rag":
@@ -319,6 +325,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     dataset_name=study_config.dataset.name,
                     dataset_description=study_config.dataset.description,
                     enforce_full_evaluation=enforce_full_evaluation,
+                    use_reasoning=use_reasoning,
                     params=params,
                 )
             case "lats_rag_agent":
@@ -337,6 +344,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     num_expansions=params["lats_num_expansions"],
                     max_rollouts=params["lats_max_rollouts"],
                     enforce_full_evaluation=enforce_full_evaluation,
+                    use_reasoning=use_reasoning,
                     params=params,
                 )
             case "coa_rag_agent":
@@ -354,6 +362,7 @@ def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
                     dataset_description=study_config.dataset.description,
                     enable_calculator=params["coa_enable_calculator"],
                     enforce_full_evaluation=enforce_full_evaluation,
+                    use_reasoning=use_reasoning,
                     params=params,
                 )
             case _:
