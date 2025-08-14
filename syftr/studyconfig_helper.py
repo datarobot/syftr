@@ -223,7 +223,7 @@ def build_example_config(
         mode="random",
         raise_on_exception=False,
     )
-    evaluation.llm_config.llm_names = llms
+    evaluation.llm_names = llms
 
     configs, paths = build_configs(
         datasets=datasets,

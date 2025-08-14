@@ -1532,7 +1532,7 @@ class Evaluation(BaseModel):
     mode: T.Literal["single", "random", "consensus", "retriever"] = Field(
         default="single", description="Evaluation mode."
     )
-    llms: T.List[str] = Field(
+    llm_names: T.List[str] = Field(
         default_factory=lambda: ["gpt-4o-mini"],
         description="List of LLMs to use for evaluation. If 'single' mode is chosen, the first list item will be used.",
     )

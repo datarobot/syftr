@@ -73,7 +73,7 @@ class CorrectnessEvaluatorFactory:
             "AgentStudyConfig needs to provide dataset information."
         )
 
-        self.llm_names = study_config.evaluation.llms
+        self.llm_names = study_config.evaluation.llm_names
         self.eval_type = study_config.evaluation.eval_type
         self.eval_system_template = study_config.evaluation.eval_system_template
         self.eval_user_template = study_config.dataset.eval_user_template
