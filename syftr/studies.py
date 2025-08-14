@@ -2153,7 +2153,7 @@ def get_subspace(df_trials: pd.DataFrame, search_space: SearchSpace) -> SearchSp
                 llm_config=search_space.hyde.llm_config,
                 prefix="hyde_",
             )
-            params["hyde"] = Hyde(llm_config=llm_config)
+            params["hyde"] = Hyde(llm_config=llm_config)  # type: ignore
 
     if additional_context_enabled := get_unique_bools(
         df_trials, "additional_context_enabled"
