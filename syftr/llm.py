@@ -197,13 +197,23 @@ LLM_NAMES__LOCAL_MODELS: T.List[str] = [
 LLM_NAMES__GENERATIVE_MODELS: T.List[str] = [
     model for model in cfg.generative_models.keys()
 ]
+
+
+if LLM_NAMES__GENERATIVE_MODELS and "gpt-4o-mini" not in LLM_NAMES__GENERATIVE_MODELS:
+    BASELINE_LLM = LLM_NAMES__GENERATIVE_MODELS[0]
+
 LLM_NAMES: T.List[str] = LLM_NAMES__LOCAL_MODELS + LLM_NAMES__GENERATIVE_MODELS
 assert len(LLM_NAMES) == len(set(LLM_NAMES)), (
     "Duplicate LLM names found in configuration. Please ensure all LLM names are unique."
 )
+
+# at least one model is required for unit testing
 BASELINE_LLM = "gpt-4o-mini"
-if LLM_NAMES__GENERATIVE_MODELS and "gpt-4o-mini" not in LLM_NAMES__GENERATIVE_MODELS:
-    BASELINE_LLM = LLM_NAMES__GENERATIVE_MODELS[0]
+if BASELINE_LLM not in LLM_NAMES:
+    if LLM_NAMES:
+        BASELINE_LLM = LLM_NAMES[0]
+    else:
+        LLM_NAMES = LLM_NAMES__GENERATIVE_MODELS = [BASELINE_LLM]
 
 
 def get_generative_llm(
