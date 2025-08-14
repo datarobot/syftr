@@ -58,16 +58,6 @@ def basic_flow(gpt_4o_mini):
     return Flow(response_synthesizer_llm=llm, template=get_template("default"))
 
 
-@pytest.fixture(scope="session")
-def reasoning_flow(gpt_4o_mini):
-    llm, _ = gpt_4o_mini
-    return Flow(
-        response_synthesizer_llm=llm,
-        template=get_template("default"),
-        use_reasoning=True,
-    )
-
-
 @pytest.fixture(
     scope="session",
     params=[
