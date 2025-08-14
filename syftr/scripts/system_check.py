@@ -39,8 +39,10 @@ Running system check..."""
 
 
 def check_config():
+    assert "yaml_file" in cfg.model_config, "Missing 'yaml_file' in model_config"
     file_locations_str = [
-        str(location) for location in reversed(cfg.model_config["yaml_file"])
+        str(location)
+        for location in reversed(cfg.model_config["yaml_file"])  # type: ignore
     ]
 
     potential_paths = [Path(loc) for loc in file_locations_str if loc != "."]
@@ -103,13 +105,13 @@ def check_database():
         cfg.database
         and cfg.database.dsn
         and hasattr(cfg.database.dsn, "hosts")
-        and callable(cfg.database.dsn.hosts)
+        and callable(cfg.database.dsn.hosts)  # type: ignore
     ):
         try:
             # hosts() might return a list of dicts or a list of pydantic models
-            parsed_hosts = cfg.database.dsn.hosts()
+            parsed_hosts = cfg.database.dsn.hosts()  # type: ignore
             if parsed_hosts:
-                for host_info in parsed_hosts:
+                for host_info in parsed_hosts:  # type: ignore
                     if isinstance(host_info, dict):
                         host = host_info.get("host")
                         port = host_info.get("port")
