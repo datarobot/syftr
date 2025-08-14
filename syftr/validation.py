@@ -164,9 +164,6 @@ def has_valid_base_rag_params(
         for param in [
             "template_name",
             "response_synthesizer_llm_name",
-            # "response_synthesizer_llm_temperature",
-            # "response_synthesizer_llm_top_p",
-            # "response_synthesizer_llm_use_reasoning",
             "additional_context_enabled",
             "rag_method",
             "rag_top_k",
@@ -482,21 +479,17 @@ def has_valid_rag_reranker_params(
 
     reranker_params = [
         "reranker_llm_name",
-        # "reranker_llm_temperature",
-        # "reranker_llm_top_p",
-        # "reranker_llm_use_reasoning",
         "reranker_top_k",
     ]
     if "reranker_enabled" in tp and tp["reranker_enabled"]:
         if not parameters_do_exist(tp, reranker_params):
             return False
 
-        if tp["reranker_llm_name"] not in ss.reranker.llm_names:
-            logger.warning(
-                "Reranker LLM name '%s' is not in: %s",
-                tp["reranker_llm_name"],
-                ss.reranker.llm_names,
-            )
+        if not has_valid_llm_params(
+            llm_config=ss.reranker.llm_config,
+            trial_params=tp,
+            prefix="reranker_",
+        ):
             return False
 
         distributions = ss.reranker.top_k.build_distributions(prefix="reranker_")
@@ -506,13 +499,6 @@ def has_valid_rag_reranker_params(
                 str(tp["reranker_top_k"]),
                 "reranker_top_k",
             )
-            return False
-
-        if not has_valid_llm_params(
-            llm_config=ss.reranker.llm_config,
-            trial_params=tp,
-            prefix="reranker_",
-        ):
             return False
     else:
         if not parameters_do_not_exist(tp, reranker_params):

@@ -43,16 +43,20 @@ def test_topk_cardinality():
     assert _get_minimal_topk().get_cardinality() == 1
 
 
+def _get_minmal_llm_config() -> LLMConfig:
+    return LLMConfig(
+        llm_names=MINIMAL_LLMS,
+        llm_temperature_min=0,
+        llm_temperature_max=0,
+        llm_top_p_min=1.0,
+        llm_top_p_max=1.0,
+        llm_use_reasoning=[True],
+    )
+
+
 def _get_minimal_qd() -> QueryDecomposition:
     return QueryDecomposition(
-        llm_config=LLMConfig(
-            llm_names=MINIMAL_LLMS,
-            llm_temperature_min=0,
-            llm_temperature_max=0,
-            llm_top_p_min=1.0,
-            llm_top_p_max=1.0,
-            llm_use_reasoning=[True],
-        ),
+        llm_config=_get_minmal_llm_config(),
         num_queries_min=2,
         num_queries_max=4,
         num_queries_step=2,
@@ -107,8 +111,8 @@ def _get_minimal_few_shot_retriever() -> FewShotRetriever:
 
 def _get_minimal_reranker() -> Reranker:
     return Reranker(
+        llm_config=_get_minmal_llm_config(),
         top_k=_get_minimal_topk(),
-        llm_names=MINIMAL_LLMS,
     )
 
 
@@ -155,14 +159,7 @@ def test_search_space_cardinality():
     ss = SearchSpace(
         rag_modes=["no_rag"],
         template_names=["templateA", "templateB"],
-        response_synthesizer_llm_config=LLMConfig(
-            llm_names=MINIMAL_LLMS,
-            llm_temperature_min=0,
-            llm_temperature_max=0,
-            llm_top_p_min=1.0,
-            llm_top_p_max=1.0,
-            llm_use_reasoning=[True],
-        ),
+        response_synthesizer_llm_config=_get_minmal_llm_config(),
         few_shot_retriever=_get_minimal_few_shot_retriever(),
         splitter=_get_minimal_splitter(),
         reranker=_get_minimal_reranker(),
@@ -183,14 +180,7 @@ def test_search_space_cardinality():
     ss = SearchSpace(
         rag_modes=["no_rag", "rag"],
         template_names=["templateA", "templateB"],
-        response_synthesizer_llm_config=LLMConfig(
-            llm_names=MINIMAL_LLMS,
-            llm_temperature_min=0,
-            llm_temperature_max=0,
-            llm_top_p_min=1.0,
-            llm_top_p_max=1.0,
-            llm_use_reasoning=[True],
-        ),
+        response_synthesizer_llm_config=_get_minmal_llm_config(),
         few_shot_retriever=_get_minimal_few_shot_retriever(),
         splitter=_get_minimal_splitter(),
         reranker=_get_minimal_reranker(),

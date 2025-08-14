@@ -602,7 +602,7 @@ class FewShotRetriever(BaseModel, SearchSpaceMixin):
         return self.top_k.get_cardinality() * len(self.embedding_models)
 
 
-class Reranker(LLMConfig, BaseModel, SearchSpaceMixin):
+class Reranker(BaseModel, SearchSpaceMixin):
     llm_config: LLMConfig = Field(
         default_factory=LLMConfig,
         description="Configuration for the LLM used in reranking.",
@@ -1954,6 +1954,41 @@ def get_response_synthesizer_llm(params: T.Dict[str, T.Any], prefix="") -> str:
             raise ValueError(f"Invalid RAG mode: {rag_mode}")
 
 
+def get_llm_config(
+    df_trials: pd.DataFrame, llm_config: LLMConfig, prefix: str
+) -> LLMConfig:
+    return LLMConfig(
+        llm_names=get_unique_strings(df_trials, f"{prefix}llm_name"),
+        llm_temperature_min=get_min_float(
+            df_trials,
+            f"{prefix}llm_temperature",
+            llm_config.llm_temperature_min,
+            ndigits=NDIGITS,
+        ),
+        llm_temperature_max=get_max_float(
+            df_trials,
+            f"{prefix}llm_temperature",
+            llm_config.llm_temperature_max,
+            ndigits=NDIGITS,
+        ),
+        llm_temperature_step=llm_config.llm_temperature_step,
+        llm_top_p_min=get_min_float(
+            df_trials,
+            f"{prefix}llm_top_p",
+            llm_config.llm_top_p_min,
+            ndigits=NDIGITS,
+        ),
+        llm_top_p_max=get_max_float(
+            df_trials,
+            f"{prefix}llm_top_p",
+            llm_config.llm_top_p_max,
+            ndigits=NDIGITS,
+        ),
+        llm_top_p_step=llm_config.llm_top_p_step,
+        llm_use_reasoning=llm_config.llm_use_reasoning,
+    )
+
+
 def get_subspace(df_trials: pd.DataFrame, search_space: SearchSpace) -> SearchSpace:
     """
     Given a results dataframe, return a SearchSpace object that is
@@ -2037,37 +2072,10 @@ def get_subspace(df_trials: pd.DataFrame, search_space: SearchSpace) -> SearchSp
             )
             if True in query_decomposition_enabled:
                 retriever_params["rag_query_decomposition"] = QueryDecomposition(
-                    llm_config=LLMConfig(
-                        llm_names=get_unique_strings(
-                            df_trials, "rag_query_decomposition_llm_name"
-                        ),
-                        llm_temperature_min=get_min_float(
-                            df_trials,
-                            "rag_query_decomposition_llm_temperature",
-                            search_space.rag_retriever.query_decomposition.llm_config.llm_temperature_min,
-                            ndigits=NDIGITS,
-                        ),
-                        llm_temperature_max=get_max_float(
-                            df_trials,
-                            "rag_query_decomposition_llm_temperature",
-                            search_space.rag_retriever.query_decomposition.llm_config.llm_temperature_max,
-                            ndigits=NDIGITS,
-                        ),
-                        llm_temperature_step=search_space.rag_retriever.query_decomposition.llm_config.llm_temperature_step,
-                        llm_top_p_min=get_min_float(
-                            df_trials,
-                            "rag_query_decomposition_llm_top_p",
-                            search_space.rag_retriever.query_decomposition.llm_config.llm_top_p_min,
-                            ndigits=NDIGITS,
-                        ),
-                        llm_top_p_max=get_max_float(
-                            df_trials,
-                            "rag_query_decomposition_llm_top_p",
-                            search_space.rag_retriever.query_decomposition.llm_config.llm_top_p_max,
-                            ndigits=NDIGITS,
-                        ),
-                        llm_top_p_step=search_space.rag_retriever.query_decomposition.llm_config.llm_top_p_step,
-                        llm_use_reasoning=search_space.rag_retriever.query_decomposition.llm_config.llm_use_reasoning,
+                    llm_config=get_llm_config(
+                        df_trials=df_trials,
+                        llm_config=search_space.rag_retriever.query_decomposition.llm_config,
+                        prefix="rag_query_decomposition_",
                     ),
                     num_queries_min=get_min_int(
                         df_trials,
@@ -2113,8 +2121,14 @@ def get_subspace(df_trials: pd.DataFrame, search_space: SearchSpace) -> SearchSp
     if reranker_enabled := get_unique_bools(df_trials, "reranker_enabled"):
         params["reranker_enabled"] = reranker_enabled  # type: ignore
         if True in reranker_enabled:
-            if reranker_llm_name := get_unique_strings(df_trials, "reranker_llm_name"):
+            if get_unique_strings(df_trials, "reranker_llm_name"):
+                llm_config = get_llm_config(
+                    df_trials=df_trials,
+                    llm_config=search_space.reranker.llm_config,
+                    prefix="reranker_",
+                )
                 params["reranker"] = Reranker(  # type: ignore
+                    llm_config=llm_config,
                     top_k=TopK(
                         kmax=get_max_int(
                             df_trials,
@@ -2129,16 +2143,17 @@ def get_subspace(df_trials: pd.DataFrame, search_space: SearchSpace) -> SearchSp
                         log=search_space.reranker.top_k.log,
                         step=search_space.reranker.top_k.step,
                     ),
-                    llm_names=reranker_llm_name,
                 )
 
     if hyde_enabled := get_unique_bools(df_trials, "hyde_enabled"):
         params["hyde_enabled"] = hyde_enabled  # type: ignore
         if True in hyde_enabled:
-            if hyde_llm_name := get_unique_strings(df_trials, "hyde_llm_name"):
-                params["hyde"] = Hyde(  # type: ignore
-                    llm_names=hyde_llm_name,
-                )
+            llm_config = get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.hyde.llm_config,
+                prefix="hyde_",
+            )
+            params["hyde"] = Hyde(llm_config=llm_config)
 
     if additional_context_enabled := get_unique_bools(
         df_trials, "additional_context_enabled"
@@ -2160,37 +2175,53 @@ def get_subspace(df_trials: pd.DataFrame, search_space: SearchSpace) -> SearchSp
 
     if "react_rag_agent" in rag_modes:
         params["react_rag_agent"] = ReactRAGAgent(  # type: ignore
-            subquestion_engine_llm_names=get_unique_strings(
-                df_trials, "subquestion_engine_llm_name"
+            subquestion_engine_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.sub_question_rag.subquestion_engine_llm_config,
+                prefix="subquestion_engine_",
             ),
-            subquestion_response_synthesizer_llm_names=get_unique_strings(
-                df_trials, "subquestion_response_synthesizer_llm_name"
+            subquestion_response_synthesizer_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.sub_question_rag.subquestion_response_synthesizer_llm_config,
+                prefix="subquestion_response_synthesizer_",
             ),
         )
 
     if "critique_rag_agent" in rag_modes:
         params["critique_rag_agent"] = CritiqueRAGAgent(  # type: ignore
-            subquestion_engine_llm_names=get_unique_strings(
-                df_trials, "subquestion_engine_llm_name"
+            subquestion_engine_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.critique_rag_agent.subquestion_engine_llm_config,
+                prefix="subquestion_engine_",
             ),
-            subquestion_response_synthesizer_llm_names=get_unique_strings(
-                df_trials, "subquestion_response_synthesizer_llm_name"
+            subquestion_response_synthesizer_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.critique_rag_agent.subquestion_response_synthesizer_llm_config,
+                prefix="subquestion_response_synthesizer_",
             ),
-            critique_agent_llm_names=get_unique_strings(
-                df_trials, "critique_agent_llm_name"
+            critique_agent_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.critique_rag_agent.critique_agent_llm_config,
+                prefix="critique_agent_",
             ),
-            reflection_agent_llm_names=get_unique_strings(
-                df_trials, "reflection_agent_llm_name"
+            reflection_agent_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.critique_rag_agent.reflection_agent_llm_config,
+                prefix="reflection_agent_",
             ),
         )
 
     if "sub_question_rag" in rag_modes:
         params["sub_question_rag"] = SubQuestionRAGAgent(  # type: ignore
-            subquestion_engine_llms=get_unique_strings(
-                df_trials, "subquestion_engine_llm_name"
+            subquestion_engine_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.sub_question_rag.subquestion_engine_llm_config,
+                prefix="subquestion_engine_",
             ),
-            subquestion_response_synthesizer_llms=get_unique_strings(
-                df_trials, "subquestion_response_synthesizer_llm_name"
+            subquestion_response_synthesizer_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.sub_question_rag.subquestion_response_synthesizer_llm_config,
+                prefix="subquestion_response_synthesizer_",
             ),
         )
 
