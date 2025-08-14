@@ -35,7 +35,6 @@ from syftr.configuration import (
 from syftr.logger import logger
 from syftr.patches import _get_all_kwargs
 
-BASELINE_LLM = "gpt-4o-mini"
 BASELINE_RAG_EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 
 Anthropic._get_all_kwargs = _get_all_kwargs  # type: ignore
@@ -198,14 +197,14 @@ LLM_NAMES__LOCAL_MODELS: T.List[str] = [
 LLM_NAMES__GENERATIVE_MODELS: T.List[str] = [
     model for model in cfg.generative_models.keys()
 ]
-
-# we need the baseline model for unit testing
-if BASELINE_LLM not in LLM_NAMES__GENERATIVE_MODELS:
-    LLM_NAMES__GENERATIVE_MODELS.append(BASELINE_LLM)
-
 LLM_NAMES: T.List[str] = LLM_NAMES__LOCAL_MODELS + LLM_NAMES__GENERATIVE_MODELS
 assert len(LLM_NAMES) == len(set(LLM_NAMES)), (
     "Duplicate LLM names found in configuration. Please ensure all LLM names are unique."
+)
+BASELINE_LLM = (
+    "gpt-4o-mini"
+    if "gpt-4o-mini" in LLM_NAMES__GENERATIVE_MODELS
+    else LLM_NAMES__GENERATIVE_MODELS[0]
 )
 
 

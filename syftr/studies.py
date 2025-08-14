@@ -1532,15 +1532,9 @@ class Evaluation(BaseModel):
     mode: T.Literal["single", "random", "consensus", "retriever"] = Field(
         default="single", description="Evaluation mode."
     )
-    llm_config: LLMConfig = Field(
-        default_factory=lambda: LLMConfig(
-            llm_temperature_min=0.0,
-            llm_temperature_max=0.0,
-            llm_top_p_min=0.9,
-            llm_top_p_max=0.9,
-            llm_use_reasoning=[None],
-        ),
-        description="LLM configuration for evaluation.",
+    llms: T.List[str] = Field(
+        default_factory=lambda: ["gpt-4o-mini"],
+        description="List of LLMs to use for evaluation. If 'single' mode is chosen, the first list item will be used.",
     )
     raise_on_exception: bool = Field(
         default=False,
