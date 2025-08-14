@@ -45,7 +45,11 @@ def bge_small():
 
 @pytest.fixture(scope="session")
 def gpt_4o_mini() -> T.Tuple[AzureOpenAI, str]:
-    return get_llm("gpt-4o-mini"), "gpt-4o-mini"
+    llm = get_llm("gpt-4o-mini")
+    assert isinstance(llm, AzureOpenAI), (
+        "Expected AzureOpenAI instance for 'gpt-4o-mini'"
+    )
+    return llm, "gpt-4o-mini"
 
 
 @pytest.fixture(scope="session")
@@ -58,13 +62,6 @@ def basic_flow(gpt_4o_mini):
     scope="session",
     params=[
         (HotPotQAHF, "dev", "sample", "A collection of various trivia from Wikipedia"),
-        # (CragTask3HF, "music", "sample", "Various information related to music"),
-        # (
-        #     FinanceBenchHF,
-        #     None,
-        #     "sample",
-        #     "A collection of financial data and statements",
-        # ),
     ],
 )
 def real_dataset(request) -> SyftrQADataset:
@@ -199,7 +196,7 @@ def real_sparse_retriever(
     params: ParamDict = {
         "rag_llm_name": "gpt-4o-mini",
         "rag_mode": "rag",
-        "response_synthesizer_llm": "gpt-4o-mini",
+        "response_synthesizer_llm_name": "gpt-4o-mini",
         "rag_method": "sparse",
         "rag_top_k": 5,
         "rag_query_decomposition_enabled": True,
@@ -221,7 +218,7 @@ def real_dense_retriever(
     params: ParamDict = {
         "rag_llm_name": "gpt-4o-mini",
         "rag_mode": "rag",
-        "response_synthesizer_llm": "gpt-4o-mini",
+        "response_synthesizer_llm_name": "gpt-4o-mini",
         "rag_method": "dense",
         "rag_embedding_model": "BAAI/bge-small-en-v1.5",
         "rag_query_decomposition_enabled": False,
@@ -241,7 +238,7 @@ def tiny_sparse_retriever(
     params: ParamDict = {
         "rag_llm_name": "gpt-4o-mini",
         "rag_mode": "rag",
-        "response_synthesizer_llm": "gpt-4o-mini",
+        "response_synthesizer_llm_name": "gpt-4o-mini",
         "rag_method": "sparse",
         "rag_top_k": 5,
         "rag_query_decomposition_enabled": False,
@@ -259,7 +256,7 @@ def tiny_dense_retriever(
     params: ParamDict = {
         "rag_llm_name": "gpt-4o-mini",
         "rag_mode": "rag",
-        "response_synthesizer_llm": "gpt-4o-mini",
+        "response_synthesizer_llm_name": "gpt-4o-mini",
         "rag_method": "dense",
         "rag_embedding_model": "BAAI/bge-small-en-v1.5",
         "rag_query_decomposition_enabled": False,
@@ -279,7 +276,7 @@ def real_hybrid_retriever(
         "rag_llm_name": "gpt-4o-mini",
         "rag_mode": "rag",
         "rag_method": "hybrid",
-        "response_synthesizer_llm": "gpt-4o-mini",
+        "response_synthesizer_llm_name": "gpt-4o-mini",
         "rag_embedding_model": "BAAI/bge-small-en-v1.5",
         "rag_top_k": 5,
         "rag_query_decomposition_enabled": True,
@@ -383,7 +380,7 @@ def hotpot_dense_retriever(
     hotpot_toy_study_config,
 ) -> T.Tuple[BaseRetriever, BaseDocumentStore]:
     params: ParamDict = {
-        "response_synthesizer_llm": "gpt-4o-mini",
+        "response_synthesizer_llm_name": "gpt-4o-mini",
         "rag_mode": "rag",
         "rag_method": "dense",
         "rag_embedding_model": "BAAI/bge-small-en-v1.5",

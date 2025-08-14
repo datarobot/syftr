@@ -101,7 +101,7 @@ def test_separate_pareto_replace_llm_evaluation():
 
     # assert that all flows have the same llm name
     for flow in pareto_flows_holdout:
-        llm_name = flow["response_synthesizer_llm"]
+        llm_name = flow["response_synthesizer_llm_name"]
         assert llm_name == study_config.pareto.replacement_llm_name, (
             "Flow llm name does not match the replacement llm name"
         )

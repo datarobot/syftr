@@ -13,7 +13,7 @@ from syftr.tuner.qa_tuner import objective, run_flow
 PARAM_LIST = ["llm_name", "template_name", "rag_mode"]
 
 
-def test_eval_pruning():
+def test_eval_pruning() -> None:
     study_config_file = Path(cfg.paths.test_studies_dir / "test-eval-pruning.yaml")
     study_config = StudyConfig.from_file(study_config_file)
     study_config.optimization.use_hf_embedding_models = False

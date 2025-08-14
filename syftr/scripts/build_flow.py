@@ -59,7 +59,7 @@ def main(
         study_config.optimization.rate_limiter_max_coros,
         study_config.optimization.rate_limiter_period,
     )
-    llm_name = study_config.evaluation.llms[0]
+    llm_name = study_config.evaluation.llm_names[0]
     llm = get_llm(llm_name)
     evaluator = CorrectnessEvaluator(llm=llm)
 

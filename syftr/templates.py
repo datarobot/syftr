@@ -352,7 +352,7 @@ def get_template(
     components = PROMPT_TEMPLATES[template_name]
     components["with_context"] = with_context  # type: ignore
     components["with_few_shot_prompt"] = with_few_shot_prompt  # type: ignore
-    return MAIN_LAYOUT.format(**components)
+    return MAIN_LAYOUT.format(**components)  # type: ignore
 
 
 def get_template_names() -> T.List[str]:

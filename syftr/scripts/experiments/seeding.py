@@ -7,6 +7,7 @@ import typing as T
 from syftr.configuration import cfg
 from syftr.experiments import iter_all_job_logs
 from syftr.helpers import get_flows_from_trials
+from syftr.llm import LLM_NAMES__LOCAL_MODELS
 from syftr.logger import logger
 from syftr.optimization import user_confirm_delete
 from syftr.optuna_helper import (
@@ -29,15 +30,14 @@ from syftr.storage import (  # noqa
     SyntheticHotPotQAHF,
 )
 from syftr.studies import (  # noqa
-    DEFAULT_LLMS,
     LOCAL_EMBEDDING_MODELS,
-    LOCAL_LLMS,
     Block,
     CritiqueRAGAgent,
     Evaluation,
     FewShotRetriever,
     Hyde,
     LATSRagAgent,
+    LLMConfig,
     OptimizationConfig,
     QueryDecomposition,
     ReactRAGAgent,
@@ -99,7 +99,7 @@ BLOCKS = [
             "react_rag_agent",
             "rag_mode",
             "reranker",
-            "response_synthesizer_llm",
+            "response_synthesizer_llm_name",
             "sub_question_rag",
             "template_name",
         ],
@@ -122,7 +122,7 @@ BLOCKS = [
     #         "react_rag_agent",
     #         "rag_mode",
     #         "reranker",
-    #         "response_synthesizer_llm",
+    #         "response_synthesizer_llm_name",
     #         "sub_question_rag",
     #         "template_name",
     #     ],
@@ -158,7 +158,7 @@ else:
     logger.info("No custom baselines provided")
 
 
-LLMS: T.List[str] = LOCAL_LLMS
+LLMS: T.List[str] = LLM_NAMES__LOCAL_MODELS
 
 EMBEDDING_MODELS = [
     "BAAI/bge-small-en-v1.5",
@@ -205,35 +205,35 @@ SEARCH_SPACE = SearchSpace(
         "CoT",
         # "finance-expert",
     ],
-    response_synthesizer_llms=LLMS,
+    response_synthesizer_llm_config=LLMConfig(llm_names=LLMS),
     rag_retriever=Retriever(
         embedding_models=EMBEDDING_MODELS,
         methods=["dense", "sparse", "hybrid"],
         top_k=TopK(kmin=1, kmax=10, log=False),
         query_decomposition=QueryDecomposition(
-            llm_names=LLMS,
+            llm_config=LLMConfig(llm_names=LLMS),
             num_queries_min=2,
             num_queries_max=5,
             num_queries_step=1,
         ),
     ),
     react_rag_agent=ReactRAGAgent(
-        subquestion_engine_llms=LLMS,
-        subquestion_response_synthesizer_llms=LLMS,
+        subquestion_engine_llm_config=LLMConfig(llm_names=LLMS),
+        subquestion_response_synthesizer_llm_config=LLMConfig(llm_names=LLMS),
     ),
     sub_question_rag=SubQuestionRAGAgent(
-        subquestion_engine_llms=LLMS,
-        subquestion_response_synthesizer_llms=LLMS,
+        subquestion_engine_llm_config=LLMConfig(llm_names=LLMS),
+        subquestion_response_synthesizer_llm_config=LLMConfig(llm_names=LLMS),
     ),
     critique_rag_agent=CritiqueRAGAgent(
-        subquestion_engine_llms=LLMS,
-        subquestion_response_synthesizer_llms=LLMS,
-        critique_agent_llms=LLMS,
-        reflection_agent_llms=LLMS,
+        subquestion_engine_llm_config=LLMConfig(llm_names=LLMS),
+        subquestion_response_synthesizer_llm_config=LLMConfig(llm_names=LLMS),
+        critique_agent_llm_config=LLMConfig(llm_names=LLMS),
+        reflection_agent_llm_config=LLMConfig(llm_names=LLMS),
     ),
     lats_rag_agent=LATSRagAgent(),
-    reranker=Reranker(llms=LLMS),
-    hyde=Hyde(llms=LLMS),
+    reranker=Reranker(llm_config=LLMConfig(llm_names=LLMS)),
+    hyde=Hyde(llm_config=LLMConfig(llm_names=LLMS)),
     few_shot_retriever=FewShotRetriever(
         embedding_models=EMBEDDING_MODELS,
     ),
@@ -241,9 +241,9 @@ SEARCH_SPACE = SearchSpace(
 
 EVALUATION = Evaluation(
     mode=EVAL_MODE,
-    llms=["gpt-4o-mini"],
     raise_on_exception=False,
 )
+EVALUATION.llm_names = ["gpt-4o-mini"]
 
 DATASETS: T.List[SyftrQADataset] = [
     # CragTask3HF(subset="music"),
@@ -370,13 +370,15 @@ def main():
             logger.info("Started job %s", job_id)
             # This might help the checkpointing bug
             sleep_time = 60 * MINUTES_BEFORE_NEXT_SUBMISSION
-            logger.info(f"Sleeping for {sleep_time} seconds before the next submission")
+            logger.info(
+                f"Sleeping for {MINUTES_BEFORE_NEXT_SUBMISSION} minutes before the next submission"
+            )
             time.sleep(int(sleep_time))
 
     # monitor benchmarks
     log_tailers = [client.tail_job_logs(job) for job in job_ids]
 
-    asyncio.run(iter_all_job_logs(log_tailers))
+    asyncio.run(iter_all_job_logs(log_tailers))  # type: ignore
 
 
 if __name__ == "__main__":

@@ -41,7 +41,7 @@ def get_flow_name(rag_mode: str):
 def build_splitter(study_config: StudyConfig, params: T.Dict[str, T.Any]) -> NodeParser:
     chunk_size = 2 ** int(params["splitter_chunk_exp"])
     overlap = int(params["splitter_chunk_overlap_frac"] * chunk_size)
-    llm_name = params["response_synthesizer_llm"]
+    llm_name = params["response_synthesizer_llm_name"]
     match params["splitter_method"]:
         case "html":
             return CodeSplitter(

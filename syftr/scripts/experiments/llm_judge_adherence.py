@@ -8,6 +8,7 @@ from slugify import slugify
 
 from syftr.configuration import cfg
 from syftr.experiments import iter_all_job_logs
+from syftr.llm import LLM_NAMES__LOCAL_MODELS
 from syftr.logger import logger
 from syftr.optimization import user_confirm_delete
 from syftr.optuna_helper import get_completed_flows, get_pareto_flows
@@ -27,15 +28,14 @@ from syftr.storage import (  # noqa
     SyntheticHotPotQAHF,
 )
 from syftr.studies import (  # noqa
-    DEFAULT_LLMS,
     LOCAL_EMBEDDING_MODELS,
-    LOCAL_LLMS,
     Block,
     CritiqueRAGAgent,
     Evaluation,
     FewShotRetriever,
     Hyde,
     LATSRagAgent,
+    LLMConfig,
     OptimizationConfig,
     QueryDecomposition,
     ReactRAGAgent,
@@ -83,7 +83,7 @@ BLOCKS = [
             "react_rag_agent",
             "rag_mode",
             "reranker",
-            "response_synthesizer_llm",
+            "response_synthesizer_llm_name",
             "sub_question_rag",
             "template_name",
         ],
@@ -106,7 +106,7 @@ BLOCKS = [
     #         "react_rag_agent",
     #         "rag_mode",
     #         "reranker",
-    #         "response_synthesizer_llm",
+    #         "response_synthesizer_llm_name",
     #         "sub_question_rag",
     #         "template_name",
     #     ],
@@ -144,7 +144,7 @@ else:
 #     embedding_model="BAAI/bge-large-en-v1.5",
 # )
 
-LLMS: T.List[str] = LOCAL_LLMS
+LLMS: T.List[str] = LLM_NAMES__LOCAL_MODELS
 
 EMBEDDING_MODELS = [
     "BAAI/bge-small-en-v1.5",
@@ -191,35 +191,35 @@ SEARCH_SPACE = SearchSpace(
         "CoT",
         # "finance-expert",
     ],
-    response_synthesizer_llms=LLMS,
+    response_synthesizer_llm_config=LLMConfig(llm_names=LLMS),
     rag_retriever=Retriever(
         embedding_models=EMBEDDING_MODELS,
         methods=["dense", "sparse", "hybrid"],
         top_k=TopK(kmin=1, kmax=10, log=False),
         query_decomposition=QueryDecomposition(
-            llm_names=LLMS,
+            llm_config=LLMConfig(llm_names=LLMS),
             num_queries_min=2,
             num_queries_max=5,
             num_queries_step=1,
         ),
     ),
     react_rag_agent=ReactRAGAgent(
-        subquestion_engine_llms=LLMS,
-        subquestion_response_synthesizer_llms=LLMS,
+        subquestion_engine_llm_config=LLMConfig(llm_names=LLMS),
+        subquestion_response_synthesizer_llm_config=LLMConfig(llm_names=LLMS),
     ),
     sub_question_rag=SubQuestionRAGAgent(
-        subquestion_engine_llms=LLMS,
-        subquestion_response_synthesizer_llms=LLMS,
+        subquestion_engine_llm_config=LLMConfig(llm_names=LLMS),
+        subquestion_response_synthesizer_llm_config=LLMConfig(llm_names=LLMS),
     ),
     critique_rag_agent=CritiqueRAGAgent(
-        subquestion_engine_llms=LLMS,
-        subquestion_response_synthesizer_llms=LLMS,
-        critique_agent_llms=LLMS,
-        reflection_agent_llms=LLMS,
+        subquestion_engine_llm_config=LLMConfig(llm_names=LLMS),
+        subquestion_response_synthesizer_llm_config=LLMConfig(llm_names=LLMS),
+        critique_agent_llm_config=LLMConfig(llm_names=LLMS),
+        reflection_agent_llm_config=LLMConfig(llm_names=LLMS),
     ),
     lats_rag_agent=LATSRagAgent(),
-    reranker=Reranker(llms=LLMS),
-    hyde=Hyde(llms=LLMS),
+    reranker=Reranker(llm_config=LLMConfig(llm_names=LLMS)),
+    hyde=Hyde(llm_config=LLMConfig(llm_names=LLMS)),
     few_shot_retriever=FewShotRetriever(
         embedding_models=EMBEDDING_MODELS,
     ),
@@ -287,9 +287,9 @@ def get_optimization_parameters():
     for llm in LLMS:
         evaluation = Evaluation(
             mode=EVAL_MODE,
-            llms=[llm],
             raise_on_exception=False,
         )
+        evaluation.llm_names = [llm]
         yield DATASETS, SEARCH_SPACE, optimization_config, evaluation
 
 
@@ -318,7 +318,7 @@ def main():
         optimization_config,
         evaluation,
     ) in get_optimization_parameters():
-        run_name = slugify(evaluation.llms[0])
+        run_name = slugify(evaluation.llm_names[0])
         configs, paths = build_configs(
             datasets=datasets,
             search_space=search_space,
@@ -357,7 +357,7 @@ def main():
     # monitor benchmarks
     log_tailers = [client.tail_job_logs(job) for job in job_ids]
 
-    asyncio.run(iter_all_job_logs(log_tailers))
+    asyncio.run(iter_all_job_logs(log_tailers))  # type: ignore
 
 
 if __name__ == "__main__":

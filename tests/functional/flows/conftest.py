@@ -16,13 +16,15 @@ from syftr.flows import (
     ReActAgentFlow,
     SubQuestionRAGFlow,
 )
-from syftr.llm import LLMs, get_llm, is_function_calling
+from syftr.llm import LLM_NAMES, get_llm, is_function_calling
 from syftr.retrievers.build import _build_dense_index, _build_sparse_index
 from syftr.storage import SyftrQADataset
 from syftr.studies import StudyConfig
 from syftr.templates import get_agent_template, get_template
 from syftr.tuner.core import build_splitter
 from syftr.tuner.qa_tuner import _get_example_retriever
+
+LLMs = {name: get_llm(name) for name in LLM_NAMES}
 
 
 @pytest.fixture
@@ -423,7 +425,7 @@ def react_agent_rag_flow(
         llm=llm,
         template=get_template("default", with_context=True),
         verbose=True,
-    )
+    )  # type: ignore
 
 
 @pytest.fixture
@@ -447,4 +449,4 @@ def react_agent_rag_flow_system_prompt(
         system_prompt=PromptTemplate(prompt),
         template=get_template("default", with_context=True),
         verbose=True,
-    )
+    )  # type: ignore

@@ -11,6 +11,7 @@ import ray
 from aiolimiter import AsyncLimiter
 from llama_index.core.evaluation import CorrectnessEvaluator
 from llama_index.core.llms.function_calling import FunctionCallingLLM
+from openai import AzureOpenAI
 from opto.optimizers import OptoPrime
 from opto.trace.bundle import bundle
 from opto.trace.nodes import ParameterNode
@@ -104,14 +105,17 @@ def optimize_prompt(
     Uses Trace library with an optimizer LLM to get better prompts using train and test datasets.
     """
     llm = get_llm(optimizer_llm)
+    assert isinstance(llm, AzureOpenAI), (
+        "Prompt optimization only supports Azure OpenAI"
+    )
     evaluator_llm = get_llm(eval_llm)
     logger.info("Evaluating pareto flow on test dataset before optimization...")
     pre_test_acc, _ = asyncio.run(quick_eval(flow, evaluator_llm, test, rate_limiter))
     logger.info("Pre-optimization accuracy on test: %f", pre_test_acc)
     os.environ["AZURE_API_KEY"] = llm.api_key
-    os.environ["AZURE_API_BASE"] = llm.azure_endpoint
-    os.environ["AZURE_API_VERSION"] = llm.api_version
-    litellm_model = f"azure/{llm.model}"
+    os.environ["AZURE_API_BASE"] = llm.azure_endpoint  # type: ignore
+    os.environ["AZURE_API_VERSION"] = llm.api_version  # type: ignore
+    litellm_model = f"azure/{llm.model}"  # type: ignore
     os.environ["TRACE_LITELLM_MODEL"] = litellm_model
 
     @bundle()

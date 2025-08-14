@@ -11,9 +11,9 @@ from transformers import AutoConfig
 
 from syftr import __version__
 from syftr.configuration import SYFTR_CONFIG_FILE_ENV_NAME, cfg
-from syftr.llm import get_llm
+from syftr.llm import LLM_NAMES, get_llm
 from syftr.optuna_helper import get_study_names
-from syftr.studies import ALL_LLMS, DEFAULT_EMBEDDING_MODELS
+from syftr.studies import DEFAULT_EMBEDDING_MODELS
 from syftr.studyconfig_helper import build_example_config
 
 llms = []
@@ -39,8 +39,10 @@ Running system check..."""
 
 
 def check_config():
+    assert "yaml_file" in cfg.model_config, "Missing 'yaml_file' in model_config"
     file_locations_str = [
-        str(location) for location in reversed(cfg.model_config["yaml_file"])
+        str(location)
+        for location in reversed(cfg.model_config["yaml_file"])  # type: ignore
     ]
 
     potential_paths = [Path(loc) for loc in file_locations_str if loc != "."]
@@ -103,13 +105,13 @@ def check_database():
         cfg.database
         and cfg.database.dsn
         and hasattr(cfg.database.dsn, "hosts")
-        and callable(cfg.database.dsn.hosts)
+        and callable(cfg.database.dsn.hosts)  # type: ignore
     ):
         try:
             # hosts() might return a list of dicts or a list of pydantic models
-            parsed_hosts = cfg.database.dsn.hosts()
+            parsed_hosts = cfg.database.dsn.hosts()  # type: ignore
             if parsed_hosts:
-                for host_info in parsed_hosts:
+                for host_info in parsed_hosts:  # type: ignore
                     if isinstance(host_info, dict):
                         host = host_info.get("host")
                         port = host_info.get("port")
@@ -196,7 +198,9 @@ def _check_single_llm_worker(llm_name: str, results_queue: queue.Queue):
         llm_instance = get_llm(llm_name)
 
         # Perform a simple synchronous completion test.
-        response = llm_instance.complete("Just respond with the phrase `[OK]'")
+        response = llm_instance.complete(
+            "Just respond with the phrase `[OK]' /no_think"
+        )
 
         if response and hasattr(response, "text") and response.text:
             response_snippet = (
@@ -235,13 +239,13 @@ def check_llms():
     console.print("Checking configured Large Language Models (LLMs)...")
 
     console.print(
-        f"Preparing to check {len(ALL_LLMS)} LLM(s) concurrently using threads: {', '.join(ALL_LLMS)}"
+        f"Preparing to check {len(LLM_NAMES)} LLM(s) concurrently using threads: {', '.join(LLM_NAMES)}"
     )
 
     results_queue = queue.Queue()
     threads = []
 
-    for llm_name in ALL_LLMS:
+    for llm_name in LLM_NAMES:
         thread = threading.Thread(
             target=_check_single_llm_worker, args=(llm_name, results_queue)
         )
@@ -288,7 +292,7 @@ def check_llms():
 
     # Print Summary Report
     console.print("\n[bold underline]LLM Accessibility Report[/bold underline]")
-    console.print(f"Total LLMs configured and checked: {len(ALL_LLMS)}")
+    console.print(f"Total LLMs configured and checked: {len(LLM_NAMES)}")
 
     if accessible_llms:
         console.print(f"\n[green]Accessible LLMs ({len(accessible_llms)}):[/green]")

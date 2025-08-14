@@ -128,12 +128,12 @@ def _get_kwargs(params: T.Dict):
     kwargs.pop("prompt_name", None)
     kwargs.pop("rag_mode", None)
     kwargs["llm_name"] = kwargs.pop("llm")
-    reranker_llm = get_llm(kwargs.pop("reranker_llm", None))
+    reranker_llm = get_llm(kwargs.pop("reranker_llm_name", None))
     if reranker_llm:
-        kwargs["reranker_llm"] = reranker_llm
-    hyde_llm = get_llm(kwargs.pop("hyde_llm", None))
+        kwargs["reranker_llm_name"] = reranker_llm
+    hyde_llm = get_llm(kwargs.pop("hyde_llm_name", None))
     if hyde_llm:
-        kwargs["hyde_llm"] = hyde_llm
+        kwargs["hyde_llm_name"] = hyde_llm
     return kwargs
 
 
