@@ -289,7 +289,7 @@ def get_optimization_parameters():
             mode=EVAL_MODE,
             raise_on_exception=False,
         )
-        evaluation.llm_config.llm_names = [llm]
+        evaluation.llm_names = [llm]
         yield DATASETS, SEARCH_SPACE, optimization_config, evaluation
 
 

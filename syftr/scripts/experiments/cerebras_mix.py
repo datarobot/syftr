@@ -248,7 +248,7 @@ EVALUATION = Evaluation(
     mode=EVAL_MODE,
     raise_on_exception=False,
 )
-EVALUATION.llm_config.llm_names = [
+EVALUATION.llm_names = [
     "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
     "Qwen/Qwen2.5",
     "google/gemma-3-27b-it",

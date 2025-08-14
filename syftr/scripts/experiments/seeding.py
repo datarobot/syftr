@@ -243,7 +243,7 @@ EVALUATION = Evaluation(
     mode=EVAL_MODE,
     raise_on_exception=False,
 )
-EVALUATION.llm_config.llm_names = ["gpt-4o-mini"]
+EVALUATION.llm_names = ["gpt-4o-mini"]
 
 DATASETS: T.List[SyftrQADataset] = [
     # CragTask3HF(subset="music"),
