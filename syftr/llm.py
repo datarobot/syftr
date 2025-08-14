@@ -201,11 +201,9 @@ LLM_NAMES: T.List[str] = LLM_NAMES__LOCAL_MODELS + LLM_NAMES__GENERATIVE_MODELS
 assert len(LLM_NAMES) == len(set(LLM_NAMES)), (
     "Duplicate LLM names found in configuration. Please ensure all LLM names are unique."
 )
-BASELINE_LLM = (
-    "gpt-4o-mini"
-    if "gpt-4o-mini" in LLM_NAMES__GENERATIVE_MODELS
-    else LLM_NAMES__GENERATIVE_MODELS[0]
-)
+BASELINE_LLM = "gpt-4o-mini"
+if LLM_NAMES__GENERATIVE_MODELS and "gpt-4o-mini" not in LLM_NAMES__GENERATIVE_MODELS:
+    BASELINE_LLM = LLM_NAMES__GENERATIVE_MODELS[0]
 
 
 def get_generative_llm(
