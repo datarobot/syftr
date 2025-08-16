@@ -30,7 +30,7 @@ JUDGE_LLMS: T.List[str] = [
 
 def main():
     # name = "judge-eval-consensus"
-    name = "judge-eval-study-14-simplefix"
+    name = "judge-eval-study-16-simplefix"
     study_config = StudyConfig(
         name=name,
         reuse_study=False,
@@ -38,7 +38,6 @@ def main():
         dataset=JudgeEvalHF(),
         evaluation=Evaluation(mode="judge"),
         search_space=JudgeSearchSpace(
-            judge_prompts=["detailed", "comparison"],
             single_correctness_evaluator=SingleCorrectnessEvaluator(
                 response_synthesizer_llms=JUDGE_LLMS
             ),
@@ -56,13 +55,13 @@ def main():
             ),
         ),
         optimization=OptimizationConfig(
-            num_trials=150,
+            num_trials=500,
             baselines=[],
-            num_random_trials=8,
+            num_random_trials=50,
             use_individual_baselines=False,
             use_agent_baselines=False,
             use_variations_of_baselines=False,
-            max_concurrent_trials=10,
+            max_concurrent_trials=50,
             num_eval_batch=10,
             max_eval_failure_rate=0.05,
         ),
