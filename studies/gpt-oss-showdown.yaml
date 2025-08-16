@@ -26,9 +26,8 @@ optimization:
   use_pareto_pruner: true
   use_runtime_pruner: true
 
-recreate_study: false
-
-reuse_study: true
+recreate_study: true
+reuse_study: false
 
 search_space:
   coa_rag_agent:

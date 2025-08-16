@@ -370,7 +370,7 @@ class LLMCostHourly(BaseModel):
     )
 
 
-class LLMConfig(BaseModel):
+class LLMConfig(BaseModel, APIKeySerializationMixin):
     model_name: str = Field(description="Name of the LLM to use")
     temperature: float = Field(default=0.0, description="LLM temperature setting")
     max_tokens: int = Field(default=2048, description="Max output tokens")
