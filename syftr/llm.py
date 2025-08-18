@@ -21,17 +21,10 @@ from llama_index.llms.openai_like import OpenAILike
 from llama_index.llms.vertex import Vertex
 from mypy_extensions import DefaultNamedArg
 
-from syftr.configuration import (
-    NON_OPENAI_CONTEXT_WINDOW_FACTOR,
-    AnthropicVertexLLM,
-    AzureAICompletionsLLM,
-    AzureOpenAILLM,
-    CerebrasLLM,
-    OpenAILikeLLM,
-    Settings,
-    VertexAILLM,
-    cfg,
-)
+from syftr.configuration import (NON_OPENAI_CONTEXT_WINDOW_FACTOR,
+                                 AnthropicVertexLLM, AzureAICompletionsLLM,
+                                 AzureOpenAILLM, CerebrasLLM, OpenAILikeLLM,
+                                 Settings, VertexAILLM, cfg)
 from syftr.logger import logger
 from syftr.patches import _get_all_kwargs
 
@@ -356,6 +349,7 @@ def get_tokenizer(
     ],
     list[int],
 ]:
+    return tiktoken.encoding_for_model("gpt-4o-mini").encode
     if name in [
         "o1",
         "o3-mini",
