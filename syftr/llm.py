@@ -21,10 +21,17 @@ from llama_index.llms.openai_like import OpenAILike
 from llama_index.llms.vertex import Vertex
 from mypy_extensions import DefaultNamedArg
 
-from syftr.configuration import (NON_OPENAI_CONTEXT_WINDOW_FACTOR,
-                                 AnthropicVertexLLM, AzureAICompletionsLLM,
-                                 AzureOpenAILLM, CerebrasLLM, OpenAILikeLLM,
-                                 Settings, VertexAILLM, cfg)
+from syftr.configuration import (
+    NON_OPENAI_CONTEXT_WINDOW_FACTOR,
+    AnthropicVertexLLM,
+    AzureAICompletionsLLM,
+    AzureOpenAILLM,
+    CerebrasLLM,
+    OpenAILikeLLM,
+    Settings,
+    VertexAILLM,
+    cfg,
+)
 from syftr.logger import logger
 from syftr.patches import _get_all_kwargs
 
@@ -349,50 +356,4 @@ def get_tokenizer(
     ],
     list[int],
 ]:
-    return tiktoken.encoding_for_model("gpt-4o-mini").encode
-    if name in [
-        "o1",
-        "o3-mini",
-        "gpt-4o-mini",
-        "gpt-4o-std",
-        "gpt-4o",
-        "anthropic-sonnet-35",
-        "anthropic-haiku-35",
-        "llama-33-70B",
-        "mistral-large",
-        "gemini-pro",
-        "gemini-flash",
-        "gemini-flash2",
-        "gemini-pro-exp",
-        "gemini-flash-exp",
-        "gemini-flash-think-exp",
-        "cerebras-llama33-70B",
-        "cerebras-qwen-3",
-        "cerebras-scout",
-        "cerebras-llama31-8B",
-        "cerebras-deepseek",
-        "phi-4",
-        "azure-llama-33-70b",
-        "azure-mistral-large",
-        "azure-phi-4",
-        "azure-r1",
-        "together-r1",
-        "together-v3",
-        "together-V3",
-        "datarobot-deployed",
-        # ----------------------
-        "qwen3-235b-a22b-thinking-2507",
-        "glm-4.5-air",
-        "gpt-oss-120b",
-        "gpt-oss-20b",
-        "nemotron-super-49b",
-        "qwen3-30b-a3b",
-        "gemma3-27b-it",
-        "phi-4-multimodal-instruct",
-    ]:
-        return tiktoken.encoding_for_model("gpt-4o-mini").encode  # type: ignore
-    if name == "gpt-35-turbo":
-        return tiktoken.encoding_for_model("gpt-35-turbo").encode  # type: ignore
-    if name in LLM_NAMES__LOCAL_MODELS:
-        return tiktoken.encoding_for_model("gpt-4o-mini").encode  # type: ignore
-    raise ValueError("No tokenizer for specified model: %s" % name)
+    return tiktoken.encoding_for_model("gpt-4o-mini").encode  # type: ignore

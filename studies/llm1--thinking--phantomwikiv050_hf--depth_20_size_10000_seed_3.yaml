@@ -57,14 +57,7 @@ evaluation:
     \ is not as concise.\"\n  \"score\": 4.0,\n}\n"
   eval_type: correctness
   llm_names:
-  - qwen3-235b-a22b-thinking-2507
-  - glm-4.5-air
-  - gpt-oss-120b
-  - gpt-oss-20b
-  - nemotron-super-49b
-  - qwen3-30b-a3b
-  - gemma3-27b-it
-  - phi-4-multimodal-instruct
+  - gpt-4o-mini
   min_reporting_success_rate: 0.5
   mode: random
   raise_on_exception: false
@@ -133,7 +126,7 @@ optimization:
   use_variations_of_baselines: false
 pareto: null
 recreate_study: true
-reuse_study: true
+reuse_study: false
 search_space:
   additional_context:
     num_nodes_max: 20
@@ -150,8 +143,12 @@ search_space:
       llm_names:
       - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
-      - gpt-oss-120b
-      - gpt-oss-20b
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
       - nemotron-super-49b
       - qwen3-30b-a3b
       - gemma3-27b-it
@@ -170,8 +167,12 @@ search_space:
       llm_names:
       - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
-      - gpt-oss-120b
-      - gpt-oss-20b
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
       - nemotron-super-49b
       - qwen3-30b-a3b
       - gemma3-27b-it
@@ -190,8 +191,12 @@ search_space:
       llm_names:
       - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
-      - gpt-oss-120b
-      - gpt-oss-20b
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
       - nemotron-super-49b
       - qwen3-30b-a3b
       - gemma3-27b-it
@@ -210,8 +215,12 @@ search_space:
       llm_names:
       - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
-      - gpt-oss-120b
-      - gpt-oss-20b
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
       - nemotron-super-49b
       - qwen3-30b-a3b
       - gemma3-27b-it
@@ -258,8 +267,12 @@ search_space:
       llm_names:
       - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
-      - gpt-oss-120b
-      - gpt-oss-20b
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
       - nemotron-super-49b
       - qwen3-30b-a3b
       - gemma3-27b-it
@@ -331,8 +344,12 @@ search_space:
         llm_names:
         - qwen3-235b-a22b-thinking-2507
         - glm-4.5-air
-        - gpt-oss-120b
-        - gpt-oss-20b
+        - gpt-oss-120b-low
+        - gpt-oss-120b-medium
+        - gpt-oss-120b-high
+        - gpt-oss-20b-low
+        - gpt-oss-20b-medium
+        - gpt-oss-20b-high
         - nemotron-super-49b
         - qwen3-30b-a3b
         - gemma3-27b-it
@@ -363,8 +380,12 @@ search_space:
       llm_names:
       - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
-      - gpt-oss-120b
-      - gpt-oss-20b
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
       - nemotron-super-49b
       - qwen3-30b-a3b
       - gemma3-27b-it
@@ -383,8 +404,12 @@ search_space:
       llm_names:
       - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
-      - gpt-oss-120b
-      - gpt-oss-20b
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
       - nemotron-super-49b
       - qwen3-30b-a3b
       - gemma3-27b-it
@@ -404,8 +429,12 @@ search_space:
       llm_names:
       - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
-      - gpt-oss-120b
-      - gpt-oss-20b
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
       - nemotron-super-49b
       - qwen3-30b-a3b
       - gemma3-27b-it
@@ -432,8 +461,12 @@ search_space:
     llm_names:
     - qwen3-235b-a22b-thinking-2507
     - glm-4.5-air
-    - gpt-oss-120b
-    - gpt-oss-20b
+    - gpt-oss-120b-low
+    - gpt-oss-120b-medium
+    - gpt-oss-120b-high
+    - gpt-oss-20b-low
+    - gpt-oss-20b-medium
+    - gpt-oss-20b-high
     - nemotron-super-49b
     - qwen3-30b-a3b
     - gemma3-27b-it
@@ -463,8 +496,12 @@ search_space:
       llm_names:
       - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
-      - gpt-oss-120b
-      - gpt-oss-20b
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
       - nemotron-super-49b
       - qwen3-30b-a3b
       - gemma3-27b-it
@@ -483,8 +520,12 @@ search_space:
       llm_names:
       - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
-      - gpt-oss-120b
-      - gpt-oss-20b
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
       - nemotron-super-49b
       - qwen3-30b-a3b
       - gemma3-27b-it

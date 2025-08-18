@@ -57,7 +57,7 @@ PREFIX = "llm"  # this three parameters
 BENCH_NUM = 1  # are used to name
 RUN_NAME = "thinking"
 # -------------------------------------------------------
-NUM_TRIALS = 10  # total number of optimization trials per submission
+NUM_TRIALS = 1000  # total number of optimization trials per submission
 NUM_RANDOM_TRIALS = 50
 MAX_CONCURRENT_TRIALS = 50
 NUM_EVAL_SAMPLES = 50
@@ -160,8 +160,12 @@ else:
 LLMS: T.List[str] = [
     "qwen3-235b-a22b-thinking-2507",
     "glm-4.5-air",
-    "gpt-oss-120b",
-    "gpt-oss-20b",
+    "gpt-oss-120b-low",
+    "gpt-oss-120b-medium",
+    "gpt-oss-120b-high",
+    "gpt-oss-20b-low",
+    "gpt-oss-20b-medium",
+    "gpt-oss-20b-high",
     "nemotron-super-49b",
     "qwen3-30b-a3b",
     "gemma3-27b-it",
@@ -270,7 +274,7 @@ DATASETS: T.List[SyftrQADataset] = [
     # BrightHF(subset="biology"),
     # DRDocsHF(),
     # InfiniteBenchHF(),
-    # PhantomWikiv050(),
+    PhantomWikiv050(),
     # ###############################################
     # BrightHF(subset="earth_science"),
     # BrightHF(subset="economics"),
