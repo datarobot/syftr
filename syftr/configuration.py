@@ -338,7 +338,7 @@ class AzureOAI(BaseModel, APIKeySerializationMixin):
     default_deployment: str = "gpt-4o-mini"
     api_url: HttpUrl = HttpUrl("http://NOT.SET")
 
-    api_version: str = "2024-07-18"
+    api_version: str = "2025-01-01-preview"
     api_type: str = "azure"
 
 

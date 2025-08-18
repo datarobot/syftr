@@ -57,7 +57,7 @@ evaluation:
   llm_names:
   - gpt-4o-mini
   min_reporting_success_rate: 0.5
-  mode: single
+  mode: random
   raise_on_exception: false
   score_threshold: 4.0
   use_tracing_metrics: false
@@ -77,11 +77,11 @@ optimization:
     - react_rag_agent
     - rag_mode
     - reranker
-    - response_synthesizer_llm_name
+    - response_synthesizer
     - sub_question_rag
     - template_name
     name: global
-    num_trials: 1000
+    num_trials: 10
   cpus_per_trial: 1
   embedding_device: null
   gpus_per_trial: 0.0
@@ -94,14 +94,14 @@ optimization:
   num_prompt_optimization_batch: 50
   num_random_trials: 50
   num_retries_unique_params: 100
-  num_trials: 1000
+  num_trials: 10
   num_warmup_steps_costout: 2
   num_warmup_steps_pareto: 30
   num_warmup_steps_timeout: 3
   obj1_zscore: 1.645
   obj2_zscore: 1.645
   objective_1_name: accuracy
-  objective_2_name: llm_cost_mean
+  objective_2_name: p80_time
   pareto_eval_success_rate: 0.9
   pareto_pruner_success_rate: 0.9
   raise_on_failed_trial: false
@@ -124,7 +124,7 @@ optimization:
   use_variations_of_baselines: false
 pareto: null
 recreate_study: true
-reuse_study: true
+reuse_study: false
 search_space:
   additional_context:
     num_nodes_max: 20
@@ -139,7 +139,7 @@ search_space:
   critique_rag_agent:
     critique_agent_llm_config:
       llm_names:
-      - Qwen/Qwen3-235B-A22B-Thinking-2507
+      - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
       - gpt-oss-120b
       - gpt-oss-20b
@@ -159,7 +159,7 @@ search_space:
       - null
     reflection_agent_llm_config:
       llm_names:
-      - Qwen/Qwen3-235B-A22B-Thinking-2507
+      - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
       - gpt-oss-120b
       - gpt-oss-20b
@@ -179,7 +179,7 @@ search_space:
       - null
     subquestion_engine_llm_config:
       llm_names:
-      - Qwen/Qwen3-235B-A22B-Thinking-2507
+      - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
       - gpt-oss-120b
       - gpt-oss-20b
@@ -199,7 +199,7 @@ search_space:
       - null
     subquestion_response_synthesizer_llm_config:
       llm_names:
-      - Qwen/Qwen3-235B-A22B-Thinking-2507
+      - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
       - gpt-oss-120b
       - gpt-oss-20b
@@ -225,14 +225,20 @@ search_space:
     - BAAI/bge-small-en-v1.5
     - thenlper/gte-large
     - mixedbread-ai/mxbai-embed-large-v1
+    - WhereIsAI/UAE-Large-V1
+    - avsolatorio/GIST-large-Embedding-v0
+    - w601sxs/b1ade-embed
+    - Labib11/MUG-B-1.6
     - sentence-transformers/all-MiniLM-L12-v2
     - sentence-transformers/paraphrase-multilingual-mpnet-base-v2
     - BAAI/bge-base-en-v1.5
+    - baconnier/Finance2_embedding_small_en-V1.5
+    - FinLang/finance-embeddings-investopedia
     - BAAI/bge-large-en-v1.5
-    - TencentBAC/Conan-embedding-v1
-    - Linq-AI-Research/Linq-Embed-Mistral
-    - Snowflake/snowflake-arctic-embed-l-v2.0
     - BAAI/bge-multilingual-gemma2
+    - Snowflake/snowflake-arctic-embed-l-v2.0
+    - TencentBAC/Conan-embedding-v1
+    - amentaphd/snowflake-artic-embed-l
     top_k:
       kmax: 20
       kmin: 2
@@ -241,7 +247,7 @@ search_space:
   hyde:
     llm_config:
       llm_names:
-      - Qwen/Qwen3-235B-A22B-Thinking-2507
+      - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
       - gpt-oss-120b
       - gpt-oss-20b
@@ -283,14 +289,20 @@ search_space:
     - BAAI/bge-small-en-v1.5
     - thenlper/gte-large
     - mixedbread-ai/mxbai-embed-large-v1
+    - WhereIsAI/UAE-Large-V1
+    - avsolatorio/GIST-large-Embedding-v0
+    - w601sxs/b1ade-embed
+    - Labib11/MUG-B-1.6
     - sentence-transformers/all-MiniLM-L12-v2
     - sentence-transformers/paraphrase-multilingual-mpnet-base-v2
     - BAAI/bge-base-en-v1.5
+    - baconnier/Finance2_embedding_small_en-V1.5
+    - FinLang/finance-embeddings-investopedia
     - BAAI/bge-large-en-v1.5
-    - TencentBAC/Conan-embedding-v1
-    - Linq-AI-Research/Linq-Embed-Mistral
-    - Snowflake/snowflake-arctic-embed-l-v2.0
     - BAAI/bge-multilingual-gemma2
+    - Snowflake/snowflake-arctic-embed-l-v2.0
+    - TencentBAC/Conan-embedding-v1
+    - amentaphd/snowflake-artic-embed-l
     fusion:
       fusion_modes:
       - simple
@@ -308,7 +320,7 @@ search_space:
     query_decomposition:
       llm_config:
         llm_names:
-        - Qwen/Qwen3-235B-A22B-Thinking-2507
+        - qwen3-235b-a22b-thinking-2507
         - glm-4.5-air
         - gpt-oss-120b
         - gpt-oss-20b
@@ -340,7 +352,7 @@ search_space:
   react_rag_agent:
     subquestion_engine_llm_config:
       llm_names:
-      - Qwen/Qwen3-235B-A22B-Thinking-2507
+      - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
       - gpt-oss-120b
       - gpt-oss-20b
@@ -360,7 +372,7 @@ search_space:
       - null
     subquestion_response_synthesizer_llm_config:
       llm_names:
-      - Qwen/Qwen3-235B-A22B-Thinking-2507
+      - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
       - gpt-oss-120b
       - gpt-oss-20b
@@ -381,7 +393,7 @@ search_space:
   reranker:
     llm_config:
       llm_names:
-      - Qwen/Qwen3-235B-A22B-Thinking-2507
+      - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
       - gpt-oss-120b
       - gpt-oss-20b
@@ -409,7 +421,7 @@ search_space:
   - true
   response_synthesizer_llm_config:
     llm_names:
-    - Qwen/Qwen3-235B-A22B-Thinking-2507
+    - qwen3-235b-a22b-thinking-2507
     - glm-4.5-air
     - gpt-oss-120b
     - gpt-oss-20b
@@ -440,7 +452,7 @@ search_space:
   sub_question_rag:
     subquestion_engine_llm_config:
       llm_names:
-      - Qwen/Qwen3-235B-A22B-Thinking-2507
+      - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
       - gpt-oss-120b
       - gpt-oss-20b
@@ -460,7 +472,7 @@ search_space:
       - null
     subquestion_response_synthesizer_llm_config:
       llm_names:
-      - Qwen/Qwen3-235B-A22B-Thinking-2507
+      - qwen3-235b-a22b-thinking-2507
       - glm-4.5-air
       - gpt-oss-120b
       - gpt-oss-20b

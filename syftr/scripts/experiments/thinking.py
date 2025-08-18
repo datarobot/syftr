@@ -57,19 +57,19 @@ PREFIX = "llm"  # this three parameters
 BENCH_NUM = 1  # are used to name
 RUN_NAME = "thinking"
 # -------------------------------------------------------
-NUM_TRIALS = 1000  # total number of optimization trials per submission
+NUM_TRIALS = 10  # total number of optimization trials per submission
 NUM_RANDOM_TRIALS = 50
 MAX_CONCURRENT_TRIALS = 50
 NUM_EVAL_SAMPLES = 50
-REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
+REUSE_STUDY = False  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
     True  # WARNING: do not use with simultaneous runs using the same study!
 )
-EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
+EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 MINUTES_BEFORE_NEXT_SUBMISSION = 2
-OBJ2_NAME = "llm_cost_mean"  # "p80_time", "llm_cost_mean", "retriever_context_length"
+OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
 # To seed with silver bullets, you first create the input file using silver_bullets.ipynb notebook
 CUSTOM_BASELINES = None  # valid values are: "pareto", "all", "silver", "transfer", None  # valid values are: "pareto", "all", "silver", "tansfer", None
@@ -98,7 +98,7 @@ BLOCKS = [
             "react_rag_agent",
             "rag_mode",
             "reranker",
-            "response_synthesizer_llm_name",
+            "response_synthesizer",
             "sub_question_rag",
             "template_name",
         ],
@@ -121,7 +121,7 @@ BLOCKS = [
     #         "react_rag_agent",
     #         "rag_mode",
     #         "reranker",
-    #         "response_synthesizer_llm_name",
+    #         "response_synthesizer",
     #         "sub_question_rag",
     #         "template_name",
     #     ],
@@ -158,7 +158,7 @@ else:
 
 
 LLMS: T.List[str] = [
-    "Qwen/Qwen3-235B-A22B-Thinking-2507",
+    "qwen3-235b-a22b-thinking-2507",
     "glm-4.5-air",
     "gpt-oss-120b",
     "gpt-oss-20b",
@@ -168,18 +168,25 @@ LLMS: T.List[str] = [
     "phi-4-multimodal-instruct",
 ]
 
+
 EMBEDDING_MODELS = [
     "BAAI/bge-small-en-v1.5",
     "thenlper/gte-large",
     "mixedbread-ai/mxbai-embed-large-v1",
+    "WhereIsAI/UAE-Large-V1",
+    "avsolatorio/GIST-large-Embedding-v0",
+    "w601sxs/b1ade-embed",
+    "Labib11/MUG-B-1.6",
     "sentence-transformers/all-MiniLM-L12-v2",
     "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
     "BAAI/bge-base-en-v1.5",
+    "baconnier/Finance2_embedding_small_en-V1.5",
+    "FinLang/finance-embeddings-investopedia",
     "BAAI/bge-large-en-v1.5",
-    "TencentBAC/Conan-embedding-v1",
-    "Linq-AI-Research/Linq-Embed-Mistral",
-    "Snowflake/snowflake-arctic-embed-l-v2.0",
     "BAAI/bge-multilingual-gemma2",
+    "Snowflake/snowflake-arctic-embed-l-v2.0",
+    "TencentBAC/Conan-embedding-v1",
+    "amentaphd/snowflake-artic-embed-l",
 ]
 
 SEARCH_SPACE = SearchSpace(
@@ -251,6 +258,7 @@ EVALUATION = Evaluation(
     mode=EVAL_MODE,
     raise_on_exception=False,
 )
+# EVALUATION.llm_names = LLMS
 EVALUATION.llm_names = ["gpt-4o-mini"]
 
 DATASETS: T.List[SyftrQADataset] = [
@@ -262,7 +270,7 @@ DATASETS: T.List[SyftrQADataset] = [
     # BrightHF(subset="biology"),
     # DRDocsHF(),
     # InfiniteBenchHF(),
-    PhantomWikiv050(),
+    # PhantomWikiv050(),
     # ###############################################
     # BrightHF(subset="earth_science"),
     # BrightHF(subset="economics"),

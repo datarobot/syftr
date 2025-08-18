@@ -386,6 +386,15 @@ def get_tokenizer(
         "together-v3",
         "together-V3",
         "datarobot-deployed",
+        # ----------------------
+        "qwen3-235b-a22b-thinking-2507",
+        "glm-4.5-air",
+        "gpt-oss-120b",
+        "gpt-oss-20b",
+        "nemotron-super-49b",
+        "qwen3-30b-a3b",
+        "gemma3-27b-it",
+        "phi-4-multimodal-instruct",
     ]:
         return tiktoken.encoding_for_model("gpt-4o-mini").encode  # type: ignore
     if name == "gpt-35-turbo":
