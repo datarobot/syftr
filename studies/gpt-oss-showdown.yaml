@@ -4,7 +4,7 @@ evaluation:
   eval_type: correctness
   llms:
   - gpt-4o-mini
-name: gpt-oss-showdown.yaml
+name: gpt-oss-showdown-financebench-lowmedhigh
 optimization:
   baselines: []
   cpus_per_trial: 1
@@ -38,36 +38,52 @@ search_space:
     critique_agent_llms:
     - phi-4-multimodal-instruct
     - glm-4.5-air
-    - gpt-oss-20b
+    - gpt-oss-20b-low
+    - gpt-oss-20b-medium
+    - gpt-oss-20b-high
     - gemma3-27b-it
-    - gpt-oss-120b
+    - gpt-oss-120b-low
+    - gpt-oss-120b-medium
+    - gpt-oss-120b-high
     - qwen-235b-a22b-thinking-2507
     - qwen3-30b-a3b
     - nemotron-super-49b
     reflection_agent_llms:
     - phi-4-multimodal-instruct
     - glm-4.5-air
-    - gpt-oss-20b
+    - gpt-oss-20b-low
+    - gpt-oss-20b-medium
+    - gpt-oss-20b-high
     - gemma3-27b-it
-    - gpt-oss-120b
+    - gpt-oss-120b-low
+    - gpt-oss-120b-medium
+    - gpt-oss-120b-high
     - qwen-235b-a22b-thinking-2507
     - qwen3-30b-a3b
     - nemotron-super-49b
     subquestion_engine_llms:
     - phi-4-multimodal-instruct
     - glm-4.5-air
-    - gpt-oss-20b
+    - gpt-oss-20b-low
+    - gpt-oss-20b-medium
+    - gpt-oss-20b-high
     - gemma3-27b-it
-    - gpt-oss-120b
+    - gpt-oss-120b-low
+    - gpt-oss-120b-medium
+    - gpt-oss-120b-high
     - qwen-235b-a22b-thinking-2507
     - qwen3-30b-a3b
     - nemotron-super-49b
     subquestion_response_synthesizer_llms:
     - phi-4-multimodal-instruct
     - glm-4.5-air
-    - gpt-oss-20b
+    - gpt-oss-20b-low
+    - gpt-oss-20b-medium
+    - gpt-oss-20b-high
     - gemma3-27b-it
-    - gpt-oss-120b
+    - gpt-oss-120b-low
+    - gpt-oss-120b-medium
+    - gpt-oss-120b-high
     - qwen-235b-a22b-thinking-2507
     - qwen3-30b-a3b
     - nemotron-super-49b
@@ -94,9 +110,13 @@ search_space:
     llms:
     - phi-4-multimodal-instruct
     - glm-4.5-air
-    - gpt-oss-20b
+    - gpt-oss-20b-low
+    - gpt-oss-20b-medium
+    - gpt-oss-20b-high
     - gemma3-27b-it
-    - gpt-oss-120b
+    - gpt-oss-120b-low
+    - gpt-oss-120b-medium
+    - gpt-oss-120b-high
     - qwen-235b-a22b-thinking-2507
     - qwen3-30b-a3b
     - nemotron-super-49b
@@ -130,9 +150,13 @@ search_space:
       llm_names:
       - phi-4-multimodal-instruct
       - glm-4.5-air
-      - gpt-oss-20b
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
       - gemma3-27b-it
-      - gpt-oss-120b
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
       - qwen-235b-a22b-thinking-2507
       - qwen3-30b-a3b
       - nemotron-super-49b
@@ -145,18 +169,26 @@ search_space:
     subquestion_engine_llms:
     - phi-4-multimodal-instruct
     - glm-4.5-air
-    - gpt-oss-20b
+    - gpt-oss-20b-low
+    - gpt-oss-20b-medium
+    - gpt-oss-20b-high
     - gemma3-27b-it
-    - gpt-oss-120b
+    - gpt-oss-120b-low
+    - gpt-oss-120b-medium
+    - gpt-oss-120b-high
     - qwen-235b-a22b-thinking-2507
     - qwen3-30b-a3b
     - nemotron-super-49b
     subquestion_response_synthesizer_llms:
     - phi-4-multimodal-instruct
     - glm-4.5-air
-    - gpt-oss-20b
+    - gpt-oss-20b-low
+    - gpt-oss-20b-medium
+    - gpt-oss-20b-high
     - gemma3-27b-it
-    - gpt-oss-120b
+    - gpt-oss-120b-low
+    - gpt-oss-120b-medium
+    - gpt-oss-120b-high
     - qwen-235b-a22b-thinking-2507
     - qwen3-30b-a3b
     - nemotron-super-49b
@@ -164,9 +196,13 @@ search_space:
     llms:
     - phi-4-multimodal-instruct
     - glm-4.5-air
-    - gpt-oss-20b
+    - gpt-oss-20b-low
+    - gpt-oss-20b-medium
+    - gpt-oss-20b-high
     - gemma3-27b-it
-    - gpt-oss-120b
+    - gpt-oss-120b-low
+    - gpt-oss-120b-medium
+    - gpt-oss-120b-high
     - qwen-235b-a22b-thinking-2507
     - qwen3-30b-a3b
     - nemotron-super-49b
@@ -178,9 +214,13 @@ search_space:
   response_synthesizer_llms:
   - phi-4-multimodal-instruct
   - glm-4.5-air
-  - gpt-oss-20b
+  - gpt-oss-20b-low
+  - gpt-oss-20b-medium
+  - gpt-oss-20b-high
   - gemma3-27b-it
-  - gpt-oss-120b
+  - gpt-oss-120b-low
+  - gpt-oss-120b-medium
+  - gpt-oss-120b-high
   - qwen-235b-a22b-thinking-2507
   - qwen3-30b-a3b
   - nemotron-super-49b
@@ -188,18 +228,26 @@ search_space:
     subquestion_engine_llms:
     - phi-4-multimodal-instruct
     - glm-4.5-air
-    - gpt-oss-20b
+    - gpt-oss-20b-low
+    - gpt-oss-20b-medium
+    - gpt-oss-20b-high
     - gemma3-27b-it
-    - gpt-oss-120b
+    - gpt-oss-120b-low
+    - gpt-oss-120b-medium
+    - gpt-oss-120b-high
     - qwen-235b-a22b-thinking-2507
     - qwen3-30b-a3b
     - nemotron-super-49b
     subquestion_response_synthesizer_llms:
     - phi-4-multimodal-instruct
     - glm-4.5-air
-    - gpt-oss-20b
+    - gpt-oss-20b-low
+    - gpt-oss-20b-medium
+    - gpt-oss-20b-high
     - gemma3-27b-it
-    - gpt-oss-120b
+    - gpt-oss-120b-low
+    - gpt-oss-120b-medium
+    - gpt-oss-120b-high
     - qwen-235b-a22b-thinking-2507
     - qwen3-30b-a3b
     - nemotron-super-49b
