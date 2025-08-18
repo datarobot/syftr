@@ -10,7 +10,7 @@ from syftr.storage import FinanceBenchHF, PartitionMap
 from syftr.studies import StudyConfig
 
 
-def test_embedding_models():
+def test_embedding_models() -> None:
     study_config = StudyConfig(
         name="test-embedding-models",
         dataset=FinanceBenchHF(
@@ -28,20 +28,23 @@ def test_embedding_models():
             use_hf_endpoint_models=False,
         )
         assert is_onnx in [True, False], "Bad is_onnx response"
+        assert model is not None, f"Model for '{name}' is None"
         out: T.List[float] = model.get_query_embedding("Do you function?")
         assert out, f"Cannot generate embeddings with '{name}'"
 
 
-def test_embedding_model_timeout(build_index_that_will_time_out):
+def test_embedding_model_timeout(build_index_that_will_time_out) -> None:
     with pytest.raises(EmbeddingPreemptiveTimeoutError):
         build_index_that_will_time_out()
 
 
-def test_embedding_model_no_timeout(build_index_that_will_not_time_out):
+def test_embedding_model_no_timeout(build_index_that_will_not_time_out) -> None:
     build_index_that_will_not_time_out()
 
 
-def test_embedding_model_skip_timeout(caplog, build_index_that_will_skip_time_out):
+def test_embedding_model_skip_timeout(
+    caplog, build_index_that_will_skip_time_out
+) -> None:
     with caplog.at_level(logging.WARNING):
         index, _ = build_index_that_will_skip_time_out()
         assert "Not raising embedding timeout because it is deactivated" in caplog.text

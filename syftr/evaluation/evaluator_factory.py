@@ -73,7 +73,7 @@ class CorrectnessEvaluatorFactory:
             "AgentStudyConfig needs to provide dataset information."
         )
 
-        self.llm_names = study_config.evaluation.llms
+        self.llm_names = study_config.evaluation.llm_names
         self.eval_type = study_config.evaluation.eval_type
         self.eval_system_template = study_config.evaluation.eval_system_template
         self.eval_user_template = study_config.dataset.eval_user_template
@@ -92,15 +92,15 @@ class CorrectnessEvaluatorFactory:
                 ChatMessage(role=MessageRole.USER, content=self.eval_user_template),
             ]
         )
-        evaluators: T.List[BaseEvaluator] = [
+        return [
             CorrectnessEvaluator(
-                llm=eval_llms[0],
+                llm=llm,
                 eval_template=eval_template,
                 score_threshold=self.score_threshold,
                 parser_function=json_parser_function,
             )
+            for llm in eval_llms
         ]
-        return evaluators
 
     def get_evaluators(self) -> T.List[BaseEvaluator]:
         match self.eval_type:

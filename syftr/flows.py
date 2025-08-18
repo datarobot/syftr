@@ -52,7 +52,7 @@ from numpy import ceil
 from syftr.configuration import cfg
 from syftr.instrumentation.arize import instrument_arize
 from syftr.instrumentation.tokens import LLMCallData, TokenTrackingEventHandler
-from syftr.llm import get_llm_name, get_tokenizer
+from syftr.llm import get_tokenizer
 from syftr.logger import logger
 from syftr.studies import get_critique_template, get_react_template
 
@@ -73,6 +73,7 @@ class Flow:
     name: str = "Generator Flow"
     params: dict | None = None
     enforce_full_evaluation: bool = False
+    use_reasoning: bool | None = None
 
     _llm_call_data: T.Dict[str, T.List[LLMCallData]] = field(default_factory=dict)
 
@@ -119,6 +120,12 @@ class Flow:
             few_shot_examples=examples,
         )
 
+    def set_thinking(self, query: str) -> str:
+        if self.use_reasoning is None:
+            return query
+        thinking = "/think" if self.use_reasoning else "/no_think"
+        return f"{thinking} {query}"
+
     def generate(
         self, query: str
     ) -> T.Tuple[CompletionResponse, float, T.List[LLMCallData]]:
@@ -136,6 +143,7 @@ class Flow:
             "Response synthesizer LLM is not set. Cannot generate."
         )
         start_time = time.perf_counter()
+        query = self.set_thinking(query)
         prompt = self.get_prompt(query)
         response: CompletionResponse = self.response_synthesizer_llm.complete(prompt)
         duration = time.perf_counter() - start_time
@@ -158,6 +166,7 @@ class Flow:
             "Response synthesizer LLM is not set. Cannot generate."
         )
         start_time = time.perf_counter()
+        query = self.set_thinking(query)
         prompt = self.get_prompt(query)
         response: CompletionResponse = await self.response_synthesizer_llm.acomplete(
             prompt
@@ -207,7 +216,7 @@ class RetrieverFlow(Flow):
 
     @property
     def tokenizer(self) -> T.Callable:
-        return get_tokenizer(get_llm_name(self.response_synthesizer_llm))
+        return get_tokenizer(self.response_synthesizer_llm.model)  # type: ignore
 
     def generate(self, query: str, *args, **kwargs):
         raise NotImplementedError("RetrieverFlow does not support generation.")
@@ -218,6 +227,7 @@ class RetrieverFlow(Flow):
     @dispatcher.span
     def retrieve(self, query: str) -> T.Tuple[T.List[NodeWithScore], float]:
         start_time = time.perf_counter()
+        query = self.set_thinking(query)
         qb = QueryBundle(query)
         if isinstance(self.query_engine, TransformQueryEngine):
             response = self.query_engine.query(qb)
@@ -233,6 +243,7 @@ class RetrieverFlow(Flow):
     @dispatcher.span
     async def aretrieve(self, query: str) -> T.Tuple[T.List[NodeWithScore], float]:
         start_time = time.perf_counter()
+        query = self.set_thinking(query)
         qb = QueryBundle(query)
         if isinstance(self.query_engine, TransformQueryEngine):
             response = await self.query_engine.aquery(qb)
@@ -296,21 +307,6 @@ class RAGFlow(Flow):
             retriever = TransformQueryEngine(retriever, query_transform=hyde)  # type: ignore
         return retriever
 
-    def get_prompt(self, query) -> str:
-        if self.template is None:
-            return query
-
-        if self.get_examples is None:
-            return self.template.format(query_str=query)
-
-        examples = self.get_examples(query)
-        assert examples, "No examples found for few-shot prompting"
-
-        return self.template.format(
-            query_str=query,
-            few_shot_examples=examples,
-        )
-
     def retrieve(self, query: str) -> T.List[NodeWithScore]:
         return self.query_engine.retrieve(QueryBundle(query))
 
@@ -318,13 +314,14 @@ class RAGFlow(Flow):
         assert hasattr(self.query_engine, "aretrieve"), (
             f"{self.query_engine} does not have 'aretrieve' method"
         )
-        return await self.query_engine.aretrieve(QueryBundle(query))
+        return await self.query_engine.aretrieve(QueryBundle(query))  # type: ignore
 
     @dispatcher.span
     def _generate(
         self, query: str, invocation_id: str
     ) -> T.Tuple[CompletionResponse, float]:
         start_time = time.perf_counter()
+        query = self.set_thinking(query)
         response = self.query_engine.query(query)
         assert isinstance(response, Response), (
             f"Expected Response, got {type(response)=}"
@@ -344,6 +341,7 @@ class RAGFlow(Flow):
         self, query: str, invocation_id: str
     ) -> T.Tuple[CompletionResponse, float]:
         start_time = time.perf_counter()
+        query = self.set_thinking(query)
         response = await self.query_engine.aquery(query)
         assert isinstance(response, Response), (
             f"Expected Response, got {type(response)=}"
@@ -467,6 +465,7 @@ class AgenticRAGFlow(RAGFlow):
         invocation_id: str,
     ) -> T.Tuple[CompletionResponse, float]:
         start_time = time.perf_counter()
+        query = self.set_thinking(query)
         response: AgentChatResponse = self.agent.chat(query)
         try:
             completion_response = CompletionResponse(text=response.response)
@@ -483,6 +482,7 @@ class AgenticRAGFlow(RAGFlow):
         invocation_id: str,
     ) -> T.Tuple[CompletionResponse, float]:
         start_time = time.perf_counter()
+        query = self.set_thinking(query)
         response: AgentChatResponse = await self.agent.achat(query)
         try:
             completion_response = CompletionResponse(text=response.response)
