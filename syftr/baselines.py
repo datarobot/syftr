@@ -8,34 +8,32 @@ from optuna.distributions import (
 )
 
 from syftr.configuration import UNSUPPORTED_PARAMS
+from syftr.llm import BASELINE_LLM, BASELINE_RAG_EMBEDDING_MODEL
 from syftr.logger import logger
 from syftr.studies import SearchSpace, StudyConfig
 from syftr.transfer_learning import get_examples
 from syftr.validation import are_valid_parameters
 
-BASELINE_LLM = "anthropic-haiku-35"
-BASELINE_RAG_EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
-
 SIMPLE_FLOW_TEMPLATE: T.Dict[str, T.Any] = {
-    "response_synthesizer_llm": BASELINE_LLM,
+    "response_synthesizer_llm_name": BASELINE_LLM,
     "rag_mode": "no_rag",
     "template_name": "default",
 }
 
 SIMPLE_COT_TEMPLATE: T.Dict[str, T.Any] = {
-    "response_synthesizer_llm": BASELINE_LLM,
+    "response_synthesizer_llm_name": BASELINE_LLM,
     "rag_mode": "no_rag",
     "template_name": "CoT",
 }
 
 SIMPLE_CONCISE_TEMPLATE: T.Dict[str, T.Any] = {
-    "response_synthesizer_llm": BASELINE_LLM,
+    "response_synthesizer_llm_name": BASELINE_LLM,
     "rag_mode": "no_rag",
     "template_name": "concise",
 }
 
 SIMPLE_FEW_SHOT_TEMPLATE: T.Dict[str, T.Any] = {
-    "response_synthesizer_llm": BASELINE_LLM,
+    "response_synthesizer_llm_name": BASELINE_LLM,
     "rag_mode": "no_rag",
     "template_name": "default",
     "few_shot_enabled": True,
@@ -44,7 +42,7 @@ SIMPLE_FEW_SHOT_TEMPLATE: T.Dict[str, T.Any] = {
 }
 
 DENSE_RAG_TEMPLATE: T.Dict[str, T.Any] = {
-    "response_synthesizer_llm": BASELINE_LLM,
+    "response_synthesizer_llm_name": BASELINE_LLM,
     "rag_mode": "rag",
     "rag_method": "dense",
     "rag_embedding_model": BASELINE_RAG_EMBEDDING_MODEL,
@@ -61,7 +59,7 @@ DENSE_RAG_TEMPLATE: T.Dict[str, T.Any] = {
 }
 
 RERANKER_RAG_TEMPLATE: T.Dict[str, T.Any] = {
-    "response_synthesizer_llm": BASELINE_LLM,
+    "response_synthesizer_llm_name": BASELINE_LLM,
     "rag_mode": "rag",
     "rag_method": "dense",
     "template_name": "default",
@@ -79,7 +77,7 @@ RERANKER_RAG_TEMPLATE: T.Dict[str, T.Any] = {
 }
 
 SPARSE_RAG_TEMPLATE: T.Dict[str, T.Any] = {
-    "response_synthesizer_llm": BASELINE_LLM,
+    "response_synthesizer_llm_name": BASELINE_LLM,
     "rag_mode": "rag",
     "rag_method": "sparse",
     "template_name": "default",
@@ -94,7 +92,7 @@ SPARSE_RAG_TEMPLATE: T.Dict[str, T.Any] = {
 }
 
 HYBRID_RAG_TEMPLATE: T.Dict[str, T.Any] = {
-    "response_synthesizer_llm": BASELINE_LLM,
+    "response_synthesizer_llm_name": BASELINE_LLM,
     "rag_mode": "rag",
     "rag_method": "hybrid",
     "rag_top_k": 32,
@@ -114,7 +112,7 @@ HYBRID_RAG_TEMPLATE: T.Dict[str, T.Any] = {
 }
 
 RAG_W_FEW_SHOT_TEMPLATE: T.Dict[str, T.Any] = {
-    "response_synthesizer_llm": BASELINE_LLM,
+    "response_synthesizer_llm_name": BASELINE_LLM,
     "rag_mode": "rag",
     "rag_method": "dense",
     "rag_embedding_model": BASELINE_RAG_EMBEDDING_MODEL,
@@ -135,7 +133,7 @@ RAG_W_FEW_SHOT_TEMPLATE: T.Dict[str, T.Any] = {
 
 TOY_BASELINES: T.List[T.Dict[str, T.Any]] = [
     {
-        "response_synthesizer_llm": BASELINE_LLM,
+        "response_synthesizer_llm_name": BASELINE_LLM,
         "rag_mode": "no_rag",
         "template_name": "default",
         "enforce_full_evaluation": True,
@@ -145,13 +143,19 @@ TOY_BASELINES: T.List[T.Dict[str, T.Any]] = [
 
 INDIVIDUAL_BASELINES: T.List[T.Dict[str, T.Any]] = [
     {
-        "response_synthesizer_llm": BASELINE_LLM,
+        "response_synthesizer_llm_name": BASELINE_LLM,
+        "response_synthesizer_llm_temperature": 0.1,
+        "response_synthesizer_llm_top_p": 0.9,
+        "response_synthesizer_llm_use_reasoning": True,
         "rag_mode": "no_rag",
         "template_name": "default",
         "enforce_full_evaluation": True,
     },
     {
-        "response_synthesizer_llm": BASELINE_LLM,
+        "response_synthesizer_llm_name": BASELINE_LLM,
+        "response_synthesizer_llm_temperature": 0.1,
+        "response_synthesizer_llm_top_p": 0.9,
+        "response_synthesizer_llm_use_reasoning": True,
         "rag_mode": "rag",
         "template_name": "default",
         "splitter_method": "recursive",
@@ -167,7 +171,10 @@ INDIVIDUAL_BASELINES: T.List[T.Dict[str, T.Any]] = [
         "additional_context_enabled": False,
     },
     {
-        "response_synthesizer_llm": BASELINE_LLM,
+        "response_synthesizer_llm_name": BASELINE_LLM,
+        # "response_synthesizer_llm_temperature": 0.1,
+        "response_synthesizer_llm_top_p": 0.9,
+        "response_synthesizer_llm_use_reasoning": True,
         "rag_mode": "rag",
         "template_name": "default",
         "splitter_method": "token",
@@ -183,7 +190,10 @@ INDIVIDUAL_BASELINES: T.List[T.Dict[str, T.Any]] = [
         "additional_context_enabled": False,
     },
     {
-        "response_synthesizer_llm": BASELINE_LLM,
+        "response_synthesizer_llm_name": BASELINE_LLM,
+        "response_synthesizer_llm_temperature": 0.1,
+        # "response_synthesizer_llm_top_p": 0.9,
+        "response_synthesizer_llm_use_reasoning": True,
         "rag_mode": "rag",
         "template_name": "default",
         "splitter_method": "sentence",
@@ -199,7 +209,10 @@ INDIVIDUAL_BASELINES: T.List[T.Dict[str, T.Any]] = [
         "additional_context_enabled": False,
     },
     {
-        "response_synthesizer_llm": BASELINE_LLM,
+        "response_synthesizer_llm_name": BASELINE_LLM,
+        "response_synthesizer_llm_temperature": 0.1,
+        "response_synthesizer_llm_top_p": 0.9,
+        # "response_synthesizer_llm_use_reasoning": True,
         "rag_mode": "rag",
         "template_name": "default",
         "splitter_method": "sentence",
@@ -218,7 +231,10 @@ INDIVIDUAL_BASELINES: T.List[T.Dict[str, T.Any]] = [
         "additional_context_enabled": False,
     },
     {
-        "response_synthesizer_llm": BASELINE_LLM,
+        "response_synthesizer_llm_name": BASELINE_LLM,
+        "response_synthesizer_llm_temperature": 0.1,
+        "response_synthesizer_llm_top_p": 0.9,
+        "response_synthesizer_llm_use_reasoning": True,
         "rag_mode": "rag",
         "template_name": "default",
         "splitter_method": "sentence",
@@ -239,9 +255,12 @@ AGENT_BASELINES: T.List[T.Dict[str, T.Any]] = [
     {
         "rag_mode": "react_rag_agent",
         "template_name": "concise",
-        "response_synthesizer_llm": BASELINE_LLM,
-        "subquestion_engine_llm": BASELINE_LLM,
-        "subquestion_response_synthesizer_llm": BASELINE_LLM,
+        "response_synthesizer_llm_name": BASELINE_LLM,
+        "response_synthesizer_llm_temperature": 0.1,
+        "response_synthesizer_llm_top_p": 0.9,
+        "response_synthesizer_llm_use_reasoning": True,
+        "subquestion_engine_llm_name": BASELINE_LLM,
+        "subquestion_response_synthesizer_llm_name": BASELINE_LLM,
         "rag_method": "dense",
         "rag_embedding_model": "BAAI/bge-base-en-v1.5",
         "rag_query_decomposition_enabled": False,
@@ -258,11 +277,14 @@ AGENT_BASELINES: T.List[T.Dict[str, T.Any]] = [
     {
         "rag_mode": "critique_rag_agent",
         "template_name": "concise",
-        "response_synthesizer_llm": BASELINE_LLM,
-        "subquestion_engine_llm": BASELINE_LLM,
-        "subquestion_response_synthesizer_llm": BASELINE_LLM,
-        "critique_agent_llm": BASELINE_LLM,
-        "reflection_agent_llm": BASELINE_LLM,
+        "response_synthesizer_llm_name": BASELINE_LLM,
+        "response_synthesizer_llm_temperature": 0.1,
+        "response_synthesizer_llm_top_p": 0.9,
+        "response_synthesizer_llm_use_reasoning": True,
+        "subquestion_engine_llm_name": BASELINE_LLM,
+        "subquestion_response_synthesizer_llm_name": BASELINE_LLM,
+        "critique_agent_llm_name": BASELINE_LLM,
+        "reflection_agent_llm_name": BASELINE_LLM,
         "rag_method": "dense",
         "rag_embedding_model": "BAAI/bge-base-en-v1.5",
         "rag_query_decomposition_enabled": False,
@@ -279,7 +301,10 @@ AGENT_BASELINES: T.List[T.Dict[str, T.Any]] = [
     {
         "rag_mode": "lats_rag_agent",
         "template_name": "concise",
-        "response_synthesizer_llm": BASELINE_LLM,
+        "response_synthesizer_llm_name": BASELINE_LLM,
+        "response_synthesizer_llm_temperature": 0.1,
+        "response_synthesizer_llm_top_p": 0.9,
+        "response_synthesizer_llm_use_reasoning": True,
         "lats_max_rollouts": 2,
         "lats_num_expansions": 2,
         "rag_method": "dense",
@@ -297,7 +322,10 @@ AGENT_BASELINES: T.List[T.Dict[str, T.Any]] = [
     {
         "rag_mode": "coa_rag_agent",
         "template_name": "concise",
-        "response_synthesizer_llm": BASELINE_LLM,
+        "response_synthesizer_llm_name": BASELINE_LLM,
+        "response_synthesizer_llm_temperature": 0.1,
+        "response_synthesizer_llm_top_p": 0.9,
+        "response_synthesizer_llm_use_reasoning": True,
         "coa_enable_calculator": True,
         "rag_method": "dense",
         "rag_embedding_model": "BAAI/bge-base-en-v1.5",
@@ -400,44 +428,44 @@ def add_variations_of_baselines(study_config: StudyConfig):
     _add_variations(
         study_config=study_config,
         template=SIMPLE_FLOW_TEMPLATE,
-        field_name="response_synthesizer_llm",
-        options=study_config.search_space.response_synthesizer_llms,
+        field_name="response_synthesizer_llm_name",
+        options=study_config.search_space.response_synthesizer_llm_config.llm_names,
     )
     _add_variations(
         study_config=study_config,
         template=SIMPLE_CONCISE_TEMPLATE,
-        field_name="response_synthesizer_llm",
-        options=study_config.search_space.response_synthesizer_llms,
+        field_name="response_synthesizer_llm_name",
+        options=study_config.search_space.response_synthesizer_llm_config.llm_names,
     )
     _add_variations(
         study_config=study_config,
         template=SIMPLE_COT_TEMPLATE,
-        field_name="response_synthesizer_llm",
-        options=study_config.search_space.response_synthesizer_llms,
+        field_name="response_synthesizer_llm_name",
+        options=study_config.search_space.response_synthesizer_llm_config.llm_names,
     )
     _add_variations(
         study_config=study_config,
         template=SPARSE_RAG_TEMPLATE,
-        field_name="response_synthesizer_llm",
-        options=study_config.search_space.response_synthesizer_llms,
+        field_name="response_synthesizer_llm_name",
+        options=study_config.search_space.response_synthesizer_llm_config.llm_names,
     )
     _add_variations(
         study_config=study_config,
         template=SIMPLE_FEW_SHOT_TEMPLATE,
-        field_name="response_synthesizer_llm",
-        options=study_config.search_space.response_synthesizer_llms,
+        field_name="response_synthesizer_llm_name",
+        options=study_config.search_space.response_synthesizer_llm_config.llm_names,
     )
     _add_variations(
         study_config=study_config,
         template=RAG_W_FEW_SHOT_TEMPLATE,
-        field_name="response_synthesizer_llm",
-        options=study_config.search_space.response_synthesizer_llms,
+        field_name="response_synthesizer_llm_name",
+        options=study_config.search_space.response_synthesizer_llm_config.llm_names,
     )
     _add_variations(
         study_config=study_config,
         template=RERANKER_RAG_TEMPLATE,
         field_name="reranker_llm_name",
-        options=study_config.search_space.reranker.llms,
+        options=study_config.search_space.reranker.llm_config.llm_names,
     )
     _add_variations(
         study_config=study_config,
