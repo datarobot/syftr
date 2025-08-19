@@ -54,10 +54,10 @@ from syftr.studyconfig_helper import build_configs
 
 # -------------------------------------------------------
 PREFIX = "llm"  # this three parameters
-BENCH_NUM = 1  # are used to name
+BENCH_NUM = 2  # are used to name
 RUN_NAME = "thinking"
 # -------------------------------------------------------
-NUM_TRIALS = 1000  # total number of optimization trials per submission
+NUM_TRIALS = 3000  # total number of optimization trials per submission
 NUM_RANDOM_TRIALS = 50
 MAX_CONCURRENT_TRIALS = 50
 NUM_EVAL_SAMPLES = 50
@@ -187,7 +187,7 @@ EMBEDDING_MODELS = [
     "baconnier/Finance2_embedding_small_en-V1.5",
     "FinLang/finance-embeddings-investopedia",
     "BAAI/bge-large-en-v1.5",
-    "BAAI/bge-multilingual-gemma2",
+    # "BAAI/bge-multilingual-gemma2",
     "Snowflake/snowflake-arctic-embed-l-v2.0",
     "TencentBAC/Conan-embedding-v1",
     "amentaphd/snowflake-artic-embed-l",
@@ -213,7 +213,7 @@ SEARCH_SPACE = SearchSpace(
     rag_modes=[
         # "no_rag",
         "rag",
-        "lats_rag_agent",
+        # "lats_rag_agent",
         "react_rag_agent",
         "critique_rag_agent",
         "sub_question_rag",
@@ -250,7 +250,7 @@ SEARCH_SPACE = SearchSpace(
         critique_agent_llm_config=LLMConfig(llm_names=LLMS),
         reflection_agent_llm_config=LLMConfig(llm_names=LLMS),
     ),
-    lats_rag_agent=LATSRagAgent(),
+    # lats_rag_agent=LATSRagAgent(),
     reranker=Reranker(llm_config=LLMConfig(llm_names=LLMS)),
     hyde=Hyde(llm_config=LLMConfig(llm_names=LLMS)),
     few_shot_retriever=FewShotRetriever(
@@ -269,11 +269,11 @@ DATASETS: T.List[SyftrQADataset] = [
     # CragTask3HF(subset="music"),
     FinanceBenchHF(),
     # HotPotQAHF(subset="train_hard"),
-    # MultiHopRAGHF(),
+    MultiHopRAGHF(),
     # -----------------------------------------------
     # BrightHF(subset="biology"),
     # DRDocsHF(),
-    # InfiniteBenchHF(),
+    InfiniteBenchHF(),
     PhantomWikiv050(),
     # ###############################################
     # BrightHF(subset="earth_science"),
@@ -300,7 +300,7 @@ def get_optimization_parameters():
         max_concurrent_trials=MAX_CONCURRENT_TRIALS,
         num_eval_samples=NUM_EVAL_SAMPLES,
         num_eval_batch=5,
-        rate_limiter_max_coros=30,  # control the number of concurrent evals ...
+        rate_limiter_max_coros=20,  # control the number of concurrent evals ...
         rate_limiter_period=60,  # ... per given time unit
         max_trial_cost=40.0,
         cpus_per_trial=1,

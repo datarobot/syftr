@@ -1,13 +1,5 @@
 dataset:
-  description: This dataset contains data from PhantomWiki, which is a framework for
-    generating unique, factuallyand consistent document corpora with diverse question-answer
-    pairs.Unlike prior work, PhantomWiki is neither a fixed dataset, nor is itbased
-    on any existing data. Instead, a new PhantomWiki instance is generated on demand
-    for each evaluation. PhantomWiki generates a fictional universe of characters
-    along with a set of facts. We reflect these facts in a large-scale corpus, mimicking
-    the style of fan-wiki websites. Then we generate question-answer pairs with tunable
-    difficulties, encapsulating the types of multi-hop questions commonly considered
-    in the question-answering (QA) literature.
+  description: The dataset contains a large number of books.
   eval_user_template: '
 
     ## User Query
@@ -37,8 +29,8 @@ dataset:
   - train
   - test
   - holdout
-  subset: depth_20_size_10000_seed_3
-  xname: phantomwikiv050_hf
+  subset: longbook_qa_eng
+  xname: infinitebench_hf
 evaluation:
   eval_system_template: "\nYou are an expert evaluation system for a question answering\
     \ chatbot.\n\nYou are given the following information:\n- a user query, and\n\
@@ -63,7 +55,7 @@ evaluation:
   raise_on_exception: false
   score_threshold: 4.0
   use_tracing_metrics: false
-name: llm1--thinking--phantomwikiv050_hf--depth_20_size_10000_seed_3
+name: llm2--thinking--infinitebench_hf--longbook_qa_eng
 optimization:
   baselines: []
   baselines_cycle_llms: true
@@ -83,7 +75,7 @@ optimization:
     - sub_question_rag
     - template_name
     name: global
-    num_trials: 1000
+    num_trials: 3000
   cpus_per_trial: 1
   embedding_device: null
   gpus_per_trial: 0.0
@@ -96,7 +88,7 @@ optimization:
   num_prompt_optimization_batch: 50
   num_random_trials: 50
   num_retries_unique_params: 100
-  num_trials: 1000
+  num_trials: 3000
   num_warmup_steps_costout: 2
   num_warmup_steps_pareto: 30
   num_warmup_steps_timeout: 3
@@ -108,7 +100,7 @@ optimization:
   pareto_pruner_success_rate: 0.9
   raise_on_failed_trial: false
   raise_on_invalid_baseline: false
-  rate_limiter_max_coros: 30
+  rate_limiter_max_coros: 20
   rate_limiter_period: 60
   sampler: tpe
   seeder_timeout: null
@@ -153,7 +145,7 @@ search_space:
       - qwen3-30b-a3b
       - gemma3-27b-it
       - phi-4-multimodal-instruct
-      llm_temperature_max: 2.0
+      llm_temperature_max: 1.0
       llm_temperature_min: 0.0
       llm_temperature_step: 0.05
       llm_top_p_max: 1.0
@@ -177,7 +169,7 @@ search_space:
       - qwen3-30b-a3b
       - gemma3-27b-it
       - phi-4-multimodal-instruct
-      llm_temperature_max: 2.0
+      llm_temperature_max: 1.0
       llm_temperature_min: 0.0
       llm_temperature_step: 0.05
       llm_top_p_max: 1.0
@@ -201,7 +193,7 @@ search_space:
       - qwen3-30b-a3b
       - gemma3-27b-it
       - phi-4-multimodal-instruct
-      llm_temperature_max: 2.0
+      llm_temperature_max: 1.0
       llm_temperature_min: 0.0
       llm_temperature_step: 0.05
       llm_top_p_max: 1.0
@@ -225,7 +217,7 @@ search_space:
       - qwen3-30b-a3b
       - gemma3-27b-it
       - phi-4-multimodal-instruct
-      llm_temperature_max: 2.0
+      llm_temperature_max: 1.0
       llm_temperature_min: 0.0
       llm_temperature_step: 0.05
       llm_top_p_max: 1.0
@@ -253,7 +245,6 @@ search_space:
     - baconnier/Finance2_embedding_small_en-V1.5
     - FinLang/finance-embeddings-investopedia
     - BAAI/bge-large-en-v1.5
-    - BAAI/bge-multilingual-gemma2
     - Snowflake/snowflake-arctic-embed-l-v2.0
     - TencentBAC/Conan-embedding-v1
     - amentaphd/snowflake-artic-embed-l
@@ -277,7 +268,7 @@ search_space:
       - qwen3-30b-a3b
       - gemma3-27b-it
       - phi-4-multimodal-instruct
-      llm_temperature_max: 2.0
+      llm_temperature_max: 1.0
       llm_temperature_min: 0.0
       llm_temperature_step: 0.05
       llm_top_p_max: 1.0
@@ -302,7 +293,6 @@ search_space:
   - retrievers
   rag_modes:
   - rag
-  - lats_rag_agent
   - react_rag_agent
   - critique_rag_agent
   - sub_question_rag
@@ -321,7 +311,6 @@ search_space:
     - baconnier/Finance2_embedding_small_en-V1.5
     - FinLang/finance-embeddings-investopedia
     - BAAI/bge-large-en-v1.5
-    - BAAI/bge-multilingual-gemma2
     - Snowflake/snowflake-arctic-embed-l-v2.0
     - TencentBAC/Conan-embedding-v1
     - amentaphd/snowflake-artic-embed-l
@@ -354,7 +343,7 @@ search_space:
         - qwen3-30b-a3b
         - gemma3-27b-it
         - phi-4-multimodal-instruct
-        llm_temperature_max: 2.0
+        llm_temperature_max: 1.0
         llm_temperature_min: 0.0
         llm_temperature_step: 0.05
         llm_top_p_max: 1.0
@@ -390,7 +379,7 @@ search_space:
       - qwen3-30b-a3b
       - gemma3-27b-it
       - phi-4-multimodal-instruct
-      llm_temperature_max: 2.0
+      llm_temperature_max: 1.0
       llm_temperature_min: 0.0
       llm_temperature_step: 0.05
       llm_top_p_max: 1.0
@@ -414,7 +403,7 @@ search_space:
       - qwen3-30b-a3b
       - gemma3-27b-it
       - phi-4-multimodal-instruct
-      llm_temperature_max: 2.0
+      llm_temperature_max: 1.0
       llm_temperature_min: 0.0
       llm_temperature_step: 0.05
       llm_top_p_max: 1.0
@@ -439,7 +428,7 @@ search_space:
       - qwen3-30b-a3b
       - gemma3-27b-it
       - phi-4-multimodal-instruct
-      llm_temperature_max: 2.0
+      llm_temperature_max: 1.0
       llm_temperature_min: 0.0
       llm_temperature_step: 0.05
       llm_top_p_max: 1.0
@@ -471,7 +460,7 @@ search_space:
     - qwen3-30b-a3b
     - gemma3-27b-it
     - phi-4-multimodal-instruct
-    llm_temperature_max: 2.0
+    llm_temperature_max: 1.0
     llm_temperature_min: 0.0
     llm_temperature_step: 0.05
     llm_top_p_max: 1.0
@@ -506,7 +495,7 @@ search_space:
       - qwen3-30b-a3b
       - gemma3-27b-it
       - phi-4-multimodal-instruct
-      llm_temperature_max: 2.0
+      llm_temperature_max: 1.0
       llm_temperature_min: 0.0
       llm_temperature_step: 0.05
       llm_top_p_max: 1.0
@@ -530,7 +519,7 @@ search_space:
       - qwen3-30b-a3b
       - gemma3-27b-it
       - phi-4-multimodal-instruct
-      llm_temperature_max: 2.0
+      llm_temperature_max: 1.0
       llm_temperature_min: 0.0
       llm_temperature_step: 0.05
       llm_top_p_max: 1.0

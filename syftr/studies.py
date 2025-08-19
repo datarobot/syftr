@@ -342,7 +342,7 @@ class LLMConfig(BaseModel, SearchSpaceMixin):
         default=0.0, description="Minimum temperature for LLMs."
     )
     llm_temperature_max: float = Field(
-        default=2.0, description="Maximum temperature for LLMs."
+        default=1.0, description="Maximum temperature for LLMs."
     )
     llm_temperature_step: float = Field(
         default=0.05, description="Step size for LLM temperature."

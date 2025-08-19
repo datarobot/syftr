@@ -472,6 +472,11 @@ class AgenticRAGFlow(RAGFlow):
         except TypeError:
             logger.error("Incorrect response from an agent: %s", response)
             raise
+        except Exception:
+            logger.error(
+                f"Agent {type(super()).__name__} failed to generate a response using parameters: {self.params}."
+            )
+            raise
         duration = time.perf_counter() - start_time
         return completion_response, duration
 
@@ -488,6 +493,11 @@ class AgenticRAGFlow(RAGFlow):
             completion_response = CompletionResponse(text=response.response)
         except TypeError:
             logger.error("Incorrect response from an agent: %s", response)
+            raise
+        except Exception:
+            logger.error(
+                f"Agent {type(super()).__name__} failed to generate a response using parameters: {self.params}."
+            )
             raise
         duration = time.perf_counter() - start_time
         return completion_response, duration
