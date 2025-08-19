@@ -85,14 +85,14 @@ optimization:
   cpus_per_trial: 1
   embedding_device: null
   gpus_per_trial: 0.0
-  max_concurrent_trials: 50
+  max_concurrent_trials: 20
   max_eval_failure_rate: 0.5
   max_trial_cost: 40.0
   method: expanding
   num_eval_batch: 5
   num_eval_samples: 50
   num_prompt_optimization_batch: 50
-  num_random_trials: 50
+  num_random_trials: 100
   num_retries_unique_params: 100
   num_trials: 3000
   num_warmup_steps_costout: 2
@@ -106,7 +106,7 @@ optimization:
   pareto_pruner_success_rate: 0.9
   raise_on_failed_trial: false
   raise_on_invalid_baseline: false
-  rate_limiter_max_coros: 20
+  rate_limiter_max_coros: 10
   rate_limiter_period: 60
   sampler: tpe
   seeder_timeout: null
@@ -478,7 +478,7 @@ search_space:
     - null
   splitter:
     chunk_max_exp: 10
-    chunk_min_exp: 7
+    chunk_min_exp: 8
     chunk_overlap_frac_max: 0.5
     chunk_overlap_frac_min: 0.0
     chunk_overlap_frac_step: 0.05

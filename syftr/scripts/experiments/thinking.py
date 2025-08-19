@@ -58,8 +58,8 @@ BENCH_NUM = 2  # are used to name
 RUN_NAME = "thinking"
 # -------------------------------------------------------
 NUM_TRIALS = 3000  # total number of optimization trials per submission
-NUM_RANDOM_TRIALS = 50
-MAX_CONCURRENT_TRIALS = 50
+NUM_RANDOM_TRIALS = 100
+MAX_CONCURRENT_TRIALS = 20
 NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = False  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
@@ -204,7 +204,7 @@ SEARCH_SPACE = SearchSpace(
             "sentence",
             "token",
         ],
-        chunk_min_exp=7,
+        chunk_min_exp=8,
         chunk_max_exp=10,
         chunk_overlap_frac_min=0.0,
         chunk_overlap_frac_max=0.5,
@@ -300,7 +300,7 @@ def get_optimization_parameters():
         max_concurrent_trials=MAX_CONCURRENT_TRIALS,
         num_eval_samples=NUM_EVAL_SAMPLES,
         num_eval_batch=5,
-        rate_limiter_max_coros=20,  # control the number of concurrent evals ...
+        rate_limiter_max_coros=10,  # control the number of concurrent evals ...
         rate_limiter_period=60,  # ... per given time unit
         max_trial_cost=40.0,
         cpus_per_trial=1,
