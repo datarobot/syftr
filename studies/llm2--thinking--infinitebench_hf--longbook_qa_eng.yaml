@@ -118,7 +118,7 @@ optimization:
   use_variations_of_baselines: false
 pareto: null
 recreate_study: true
-reuse_study: false
+reuse_study: true
 search_space:
   additional_context:
     num_nodes_max: 20

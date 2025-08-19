@@ -61,7 +61,7 @@ NUM_TRIALS = 3000  # total number of optimization trials per submission
 NUM_RANDOM_TRIALS = 100
 MAX_CONCURRENT_TRIALS = 20
 NUM_EVAL_SAMPLES = 50
-REUSE_STUDY = False  # WARNING: if set to False, exsting studies will be deleted!
+REUSE_STUDY = True  # WARNING: if set to False, existing studies will be deleted!
 RECREATE_STUDY = (
     True  # WARNING: do not use with simultaneous runs using the same study!
 )
