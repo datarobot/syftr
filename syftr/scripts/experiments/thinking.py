@@ -55,11 +55,12 @@ from syftr.studyconfig_helper import build_configs
 # -------------------------------------------------------
 PREFIX = "llm"  # this three parameters
 BENCH_NUM = 2  # are used to name
-RUN_NAME = "thinking"
+# RUN_NAME = "thinking"
+RUN_NAME = "test"
 # -------------------------------------------------------
 NUM_TRIALS = 3000  # total number of optimization trials per submission
 NUM_RANDOM_TRIALS = 100
-MAX_CONCURRENT_TRIALS = 20
+MAX_CONCURRENT_TRIALS = 100
 NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, existing studies will be deleted!
 RECREATE_STUDY = (
@@ -158,18 +159,18 @@ else:
 
 
 LLMS: T.List[str] = [
-    "qwen3-235b-a22b-thinking-2507",
-    "glm-4.5-air",
+    # "qwen3-235b-a22b-thinking-2507",
+    # "glm-4.5-air",
     "gpt-oss-120b-low",
     "gpt-oss-120b-medium",
     "gpt-oss-120b-high",
     "gpt-oss-20b-low",
     "gpt-oss-20b-medium",
     "gpt-oss-20b-high",
-    "nemotron-super-49b",
-    "qwen3-30b-a3b",
-    "gemma3-27b-it",
-    "phi-4-multimodal-instruct",
+    # "nemotron-super-49b",
+    # "qwen3-30b-a3b",
+    # "gemma3-27b-it",
+    # "phi-4-multimodal-instruct",
 ]
 
 
@@ -212,7 +213,7 @@ SEARCH_SPACE = SearchSpace(
     ),
     rag_modes=[
         # "no_rag",
-        "rag",
+        # "rag",
         # "lats_rag_agent",
         "react_rag_agent",
         "critique_rag_agent",
@@ -267,14 +268,14 @@ EVALUATION.llm_names = ["gpt-4o-mini"]
 
 DATASETS: T.List[SyftrQADataset] = [
     # CragTask3HF(subset="music"),
-    FinanceBenchHF(),
+    # FinanceBenchHF(),
     # HotPotQAHF(subset="train_hard"),
-    MultiHopRAGHF(),
+    # MultiHopRAGHF(),
     # -----------------------------------------------
     # BrightHF(subset="biology"),
-    # DRDocsHF(),
-    InfiniteBenchHF(),
-    PhantomWikiv050(),
+    DRDocsHF(),
+    # InfiniteBenchHF(),
+    # PhantomWikiv050(),
     # ###############################################
     # BrightHF(subset="earth_science"),
     # BrightHF(subset="economics"),
