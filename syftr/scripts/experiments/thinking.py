@@ -58,7 +58,7 @@ BENCH_NUM = 2  # are used to name
 # RUN_NAME = "thinking"
 RUN_NAME = "test"
 # -------------------------------------------------------
-NUM_TRIALS = 3000  # total number of optimization trials per submission
+NUM_TRIALS = 30  # total number of optimization trials per submission
 NUM_RANDOM_TRIALS = 100
 MAX_CONCURRENT_TRIALS = 100
 NUM_EVAL_SAMPLES = 50
