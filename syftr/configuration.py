@@ -497,6 +497,27 @@ class OpenAILikeLLM(LLMConfig):
     is_function_calling_model: bool = False
 
 
+class OllamaLLM(LLMConfig):
+    provider: T.Literal["ollama"] = Field(
+        "ollama", description="Provider identifier for Ollama APIs."
+    )
+    api_base: HttpUrl = Field(description="API base URL for the Ollama model.")
+    api_key: SecretStr = Field(description="API key for this endpoint")
+    api_version: T.Optional[str] = Field(
+        default=None, description="API version to use for this endpoint"
+    )
+    timeout: int = Field(
+        default=120, description="Timeout in seconds for API requests."
+    )
+    context_window: int = Field(default=3900, description="Max input tokens")
+    additional_kwargs: T.Dict[str, T.Any] = Field(
+        default_factory=dict,
+        description="Additional keyword arguments for the Ollama-like model.",
+    )
+    is_chat_model: bool = True
+    is_function_calling_model: bool = False
+
+
 # Update LLMConfigUnion by adding the new classes
 LLMConfigUnion = Annotated[
     T.Union[
@@ -506,6 +527,7 @@ LLMConfigUnion = Annotated[
         AzureAICompletionsLLM,
         CerebrasLLM,
         OpenAILikeLLM,
+        OllamaLLM,
     ],
     Field(discriminator="provider"),
 ]

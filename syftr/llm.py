@@ -17,6 +17,7 @@ from llama_index.llms.anthropic import Anthropic
 from llama_index.llms.azure_inference import AzureAICompletionsModel
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.cerebras import Cerebras
+from llama_index.llms.ollama import Ollama
 from llama_index.llms.openai_like import OpenAILike
 from llama_index.llms.vertex import Vertex
 from mypy_extensions import DefaultNamedArg
@@ -27,6 +28,7 @@ from syftr.configuration import (
     AzureAICompletionsLLM,
     AzureOpenAILLM,
     CerebrasLLM,
+    OllamaLLM,
     OpenAILikeLLM,
     Settings,
     VertexAILLM,
@@ -191,6 +193,24 @@ def _construct_openai_like_llm(name: str, llm_config: OpenAILikeLLM) -> OpenAILi
     )
 
 
+def _construct_ollama_llm(name: str, llm_config: OllamaLLM) -> Ollama:
+    return Ollama(
+        model=llm_config.model_name,
+        # base_url=str(llm_config.api_base),
+        temperature=llm_config.temperature,
+        context_window=llm_config.context_window,
+        additional_kwargs=llm_config.additional_kwargs or {},
+        is_function_calling_model=llm_config.is_function_calling_model,
+        thinking=None,
+        # max_tokens=llm_config.max_tokens,
+        # max_retries=0,
+        system_prompt=llm_config.system_prompt,
+        api_base=str(llm_config.api_base),
+        api_key=llm_config.api_key.get_secret_value(),
+        # is_chat_model=llm_config.is_chat_model,
+    )
+
+
 LLM_NAMES__LOCAL_MODELS: T.List[str] = [
     model.model_name for model in cfg.local_models.generative or []
 ]
@@ -252,6 +272,8 @@ def get_generative_llm(
         llm_instance = _construct_cerebras_llm(name, llm_config_instance)
     elif provider == "openai_like" and isinstance(llm_config_instance, OpenAILikeLLM):
         llm_instance = _construct_openai_like_llm(name, llm_config_instance)
+    elif provider == "ollama" and isinstance(llm_config_instance, OllamaLLM):
+        llm_instance = _construct_ollama_llm(name, llm_config_instance)
     else:
         raise ValueError(
             f"Unsupported provider type '{provider}' or "
