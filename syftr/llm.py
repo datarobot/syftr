@@ -35,7 +35,7 @@ from syftr.configuration import (
     cfg,
 )
 from syftr.logger import logger
-from syftr.patches import _get_all_kwargs
+from syftr.patches import _get_all_kwargs, _get_model_kwargs_responses
 
 BASELINE_RAG_EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 
@@ -196,6 +196,7 @@ def _construct_openai_like_llm(name: str, llm_config: OpenAILikeLLM) -> OpenAILi
 def _construct_openai_responses_llm(
     name: str, llm_config: OpenAIResponsesLLM
 ) -> OpenAIResponses:
+    OpenAIResponses._get_model_kwargs = _get_model_kwargs_responses
     return OpenAIResponses(
         model=llm_config.model_name,
         temperature=llm_config.temperature,

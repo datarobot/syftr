@@ -46,7 +46,6 @@ from llama_index.core.retrievers import BaseRetriever
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.storage.docstore.types import BaseDocumentStore
 from llama_index.core.tools import BaseTool, FunctionTool, QueryEngineTool, ToolMetadata
-from llama_index.llms.openai import OpenAIResponses
 from llama_index.packs.agents_coa import CoAAgentPack
 from numpy import ceil
 
@@ -616,16 +615,10 @@ class CritiqueAgentFlow(AgenticRAGFlow):
             )
         ]
 
-        # Responses API only allows 'any'
-        default_tool_choice = (
-            "auto"
-            if isinstance(self.subquestion_engine_llm, OpenAIResponses)
-            else "any"
-        )
         return introspective_agent_worker.as_agent(
             verbose=self.verbose,
             chat_history=chat_history,
-            default_tool_choice=default_tool_choice,
+            default_tool_choice="any",
         )
 
 
