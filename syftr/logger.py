@@ -64,7 +64,7 @@ def add_default_handler(logger_instance: logging.Logger):
 
 
 add_default_handler(logger)
-add_file_handler(logger)
+# add_file_handler(logger)
 logger.setLevel(cfg.logging.level)
 
 

@@ -1,0 +1,269 @@
+dataset:
+  xname: financebench_hf
+evaluation:
+  eval_type: correctness
+  llms:
+  - gpt-4o-mini
+name: gpt-oss-showdown-financebench-lowmedhigh
+optimization:
+  baselines: []
+  cpus_per_trial: 1
+  gpus_per_trial: 0.0
+  embedding_device: null
+  max_concurrent_trials: 100
+  max_eval_failure_rate: 0.5
+  max_trial_cost: 1000
+  num_eval_batch: 10
+  num_eval_samples: 50
+  num_random_trials: 100
+  num_retries_unique_params: 100
+  num_trials: 2000
+  objective_1_name: accuracy
+  objective_2_name: llm_cost_mean
+  rate_limiter_max_coros: 30
+  rate_limiter_period: 60
+  use_hf_embedding_models: false
+  use_pareto_pruner: true
+  use_runtime_pruner: true
+
+recreate_study: true
+reuse_study: false
+
+search_space:
+  coa_rag_agent:
+    enable_calculator:
+    - false
+    - true
+  critique_rag_agent:
+    critique_agent_llm_config:
+      llm_names:
+      - phi-4-multimodal-instruct
+      - glm-4.5-air
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
+      - gemma3-27b-it
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - qwen-235b-a22b-thinking-2507
+      - qwen3-30b-a3b
+      - nemotron-super-49b
+    reflection_agent_llm_config:
+      llm_names:
+      - phi-4-multimodal-instruct
+      - glm-4.5-air
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
+      - gemma3-27b-it
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - qwen-235b-a22b-thinking-2507
+      - qwen3-30b-a3b
+      - nemotron-super-49b
+    subquestion_engine_llm_config:
+      llm_names:
+      - phi-4-multimodal-instruct
+      - glm-4.5-air
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
+      - gemma3-27b-it
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - qwen-235b-a22b-thinking-2507
+      - qwen3-30b-a3b
+      - nemotron-super-49b
+    subquestion_response_synthesizer_llm_config:
+      llm_names:
+      - phi-4-multimodal-instruct
+      - glm-4.5-air
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
+      - gemma3-27b-it
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - qwen-235b-a22b-thinking-2507
+      - qwen3-30b-a3b
+      - nemotron-super-49b
+  few_shot_retriever:
+    embedding_models:
+    - "BAAI/bge-small-en-v1.5"
+    - "thenlper/gte-large"
+    - "mixedbread-ai/mxbai-embed-large-v1"
+    - "WhereIsAI/UAE-Large-V1"
+    - "avsolatorio/GIST-large-Embedding-v0"
+    - "w601sxs/b1ade-embed"
+    - "Labib11/MUG-B-1.6"
+    - "sentence-transformers/all-MiniLM-L12-v2"
+    - "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+    - "BAAI/bge-base-en-v1.5"
+    - "baconnier/Finance2_embedding_small_en-V1.5"
+    - "FinLang/finance-embeddings-investopedia"
+    - "BAAI/bge-large-en-v1.5"
+    - "BAAI/bge-multilingual-gemma2"
+    - "Snowflake/snowflake-arctic-embed-l-v2.0"
+    - "TencentBAC/Conan-embedding-v1"
+    - "amentaphd/snowflake-artic-embed-l"
+  hyde:
+    llm_config:
+      llm_names:
+      - phi-4-multimodal-instruct
+      - glm-4.5-air
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
+      - gemma3-27b-it
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - qwen-235b-a22b-thinking-2507
+      - qwen3-30b-a3b
+      - nemotron-super-49b
+  rag_modes:
+  - rag
+  - lats_rag_agent
+  - react_rag_agent
+  - critique_rag_agent
+  - sub_question_rag
+  - coa_rag_agent
+  rag_retriever:
+    embedding_models:
+    - "BAAI/bge-small-en-v1.5"
+    - "thenlper/gte-large"
+    - "mixedbread-ai/mxbai-embed-large-v1"
+    - "WhereIsAI/UAE-Large-V1"
+    - "avsolatorio/GIST-large-Embedding-v0"
+    - "w601sxs/b1ade-embed"
+    - "Labib11/MUG-B-1.6"
+    - "sentence-transformers/all-MiniLM-L12-v2"
+    - "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+    - "BAAI/bge-base-en-v1.5"
+    - "baconnier/Finance2_embedding_small_en-V1.5"
+    - "FinLang/finance-embeddings-investopedia"
+    - "BAAI/bge-large-en-v1.5"
+    - "BAAI/bge-multilingual-gemma2"
+    - "Snowflake/snowflake-arctic-embed-l-v2.0"
+    - "TencentBAC/Conan-embedding-v1"
+    - "amentaphd/snowflake-artic-embed-l"
+    query_decomposition:
+      llm_config:
+        llm_names:
+        - phi-4-multimodal-instruct
+        - glm-4.5-air
+        - gpt-oss-20b-low
+        - gpt-oss-20b-medium
+        - gpt-oss-20b-high
+        - gemma3-27b-it
+        - gpt-oss-120b-low
+        - gpt-oss-120b-medium
+        - gpt-oss-120b-high
+        - qwen-235b-a22b-thinking-2507
+        - qwen3-30b-a3b
+        - nemotron-super-49b
+    top_k:
+      kmax: 64
+      kmin: 1
+      log: false
+      step: 1
+  react_rag_agent:
+    subquestion_engine_llm_config:
+      llm_names:
+      - phi-4-multimodal-instruct
+      - glm-4.5-air
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
+      - gemma3-27b-it
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - qwen-235b-a22b-thinking-2507
+      - qwen3-30b-a3b
+      - nemotron-super-49b
+    subquestion_response_synthesizer_llm_config:
+      llm_names:
+      - phi-4-multimodal-instruct
+      - glm-4.5-air
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
+      - gemma3-27b-it
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - qwen-235b-a22b-thinking-2507
+      - qwen3-30b-a3b
+      - nemotron-super-49b
+  reranker:
+    llm_config:
+      llm_names:
+      - phi-4-multimodal-instruct
+      - glm-4.5-air
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
+      - gemma3-27b-it
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - qwen-235b-a22b-thinking-2507
+      - qwen3-30b-a3b
+      - nemotron-super-49b
+    top_k:
+      kmax: 64
+      kmin: 2
+      log: true
+      step: 1
+  response_synthesizer_llm_config:
+    llm_names:
+    - phi-4-multimodal-instruct
+    - glm-4.5-air
+    - gpt-oss-20b-low
+    - gpt-oss-20b-medium
+    - gpt-oss-20b-high
+    - gemma3-27b-it
+    - gpt-oss-120b-low
+    - gpt-oss-120b-medium
+    - gpt-oss-120b-high
+    - qwen-235b-a22b-thinking-2507
+    - qwen3-30b-a3b
+    - nemotron-super-49b
+  sub_question_rag:
+    subquestion_engine_llm_config:
+      llm_names:
+      - phi-4-multimodal-instruct
+      - glm-4.5-air
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
+      - gemma3-27b-it
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - qwen-235b-a22b-thinking-2507
+      - qwen3-30b-a3b
+      - nemotron-super-49b
+    subquestion_response_synthesizer_llm_config:
+      llm_names:
+      - phi-4-multimodal-instruct
+      - glm-4.5-air
+      - gpt-oss-20b-low
+      - gpt-oss-20b-medium
+      - gpt-oss-20b-high
+      - gemma3-27b-it
+      - gpt-oss-120b-low
+      - gpt-oss-120b-medium
+      - gpt-oss-120b-high
+      - qwen-235b-a22b-thinking-2507
+      - qwen3-30b-a3b
+      - nemotron-super-49b
+  template_names:
+  - default
+  - concise
+  - CoT
