@@ -84,6 +84,44 @@ generative_models:
       output: 7.00
 ```
 
+### Provider: openai_responses
+
+This is similar to `openai_like`, but for models using the `openai_responses` API.
+
+There are no global settings for `openai_responses` models, which each have their own endpoints and credentials.
+
+They are configured as follows:
+
+* **`provider`**: (String, Literal) Must be `openai_responses` (for OpenAI Responses-compatible APIs, including self-hosted models via vLLM, TGI, etc.).
+* **`api_base`**: (String, HttpUrl, Required) The base URL of the OpenAI-compatible API endpoint (e.g., "http://localhost:8000/v1").
+* **`api_key`**: (String, SecretStr, Required) The API key for authenticating with the model's endpoint. Can be placed in a file in `runtime-secrets/generative_models__{your_model_key}__api_key`.
+* **`api_version`**: (String, Optional) The API version string, if required by the compatible API. Defaults to `None`.
+* **`context_window`**: (Integer, Optional) The maximum number of input tokens. Defaults to `3900`.
+* **`timeout`**: (Integer, Optional) Timeout in seconds for API requests. Defaults to `120`.
+* **`additional_kwargs`**: (Object, Optional) A dictionary of additional keyword arguments to pass to the client. Defaults to an empty dictionary (`{}`).
+* **`is_chat_model`**: (Boolean, Optional) Whether the model supports multi-turn chat in addition to single completion requests. Defaults to `True`.
+* **`is_function_calling_model`**: (Boolean, Optional) Whether the model supports function calling. Defaults to `False`.
+
+Here is an example using a self-hosted instance of `gpt-oss-120b`:
+
+```yaml
+generative_models:
+  gpt-oss-120b-low:
+    provider: openai_responses
+    model_name: openai/gpt-oss-120b
+    api_base: "http://gpt-oss-host:8000/v1"
+    api_key: asdf
+    max_tokens: 2000
+    context_window: 126000
+    additional_kwargs:
+      reasoning:
+        effort: low
+    cost:
+      type: tokens
+      input: 1.80
+      output: 1.80
+```
+
 ---
 ### Provider: azure_openai
 The top-level `azure_oai` config object is used to set the `api_url` and `api_key`:
