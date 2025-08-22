@@ -706,6 +706,10 @@ def style_pareto_table(df_pareto_descriptions, is_cost):
 
     objective_2_name = get_objective_2_name(is_cost=is_cost)
 
+    df_pareto_descriptions = df_pareto_descriptions[
+        ["Accuracy", objective_2_name, "Title", "Description"]
+    ].copy()
+
     df_desc_styled = (
         df_pareto_descriptions.style.set_table_styles(
             [

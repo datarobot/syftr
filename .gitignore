@@ -218,3 +218,4 @@ notebooks/.nfs*
 .nfs*
 data.*
 /datasets
+*grounding_docs*
