@@ -202,7 +202,7 @@ index 9ff67ee..2775faa 100644
              "additional_context_enabled",
              "additional_context_num_nodes",
 +            "coa_enable_calculator",
-             "critique_agent_llm",
+             "critique_agent_llm_name",
              "few_shot_embedding_model",
              "few_shot_enabled",
 ```
