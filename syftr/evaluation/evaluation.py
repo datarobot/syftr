@@ -27,6 +27,8 @@ from llama_index.core.prompts.mixin import PromptDictType
 from llama_index.core.schema import MetadataMode, NodeWithScore
 from optuna import TrialPruned
 from rapidfuzz.fuzz import partial_ratio
+from scipy import stats
+from sklearn import metrics
 from tenacity import (
     before_sleep_log,
     retry,
@@ -39,7 +41,7 @@ from tenacity import (
 
 from syftr import core, custom_metrics
 from syftr.configuration import EVAL__RAISE_ON_EXCEPTION
-from syftr.flows import Flow, RetrieverFlow
+from syftr.flows import Flow, JudgeFlow, RetrieverFlow
 from syftr.helpers import get_exception_report
 from syftr.instrumentation.tokens import LLMCallData
 from syftr.pruning import CostPruner, ParetoPruner, RuntimePruner
@@ -199,6 +201,64 @@ class FuzzyRecallEvaluator(BaseEvaluator):
         pass
 
 
+class JudgeEvaluator(BaseEvaluator):
+    """
+    Evaluator that checks if the evaluation result (passing or not) matches the labeled value
+    """
+
+    async def aevaluate(
+        self,
+        query: str = "",
+        evaluation_result: T.Optional[EvaluationResult] = None,
+        label: bool | None = None,
+        **kwargs: T.Any,
+    ) -> EvaluationResult:
+        assert evaluation_result is not None, (
+            "JudgeEvaluator needs an evaluation_result"
+        )
+        assert label is not None, "JudgeEvaluator needs a label"
+
+        passing = evaluation_result.passing == label
+
+        return EvaluationResult(
+            query=query,
+            passing=passing,
+            response=str(evaluation_result),
+        )
+
+    def evaluate(
+        self,
+        query: str = "",
+        evaluation_result: T.Optional[EvaluationResult] = None,
+        label: str | int | None = None,
+        **kwargs: T.Any,
+    ) -> EvaluationResult:
+        """
+        Synchronous version of the evaluation method for compatibility with base class.
+        """
+        assert evaluation_result is not None, (
+            "JudgeEvaluator needs an evaluation_result"
+        )
+        assert label is not None, "JudgeEvaluator needs a label"
+
+        label = bool(int(label))
+        passing = evaluation_result.passing == label
+
+        return EvaluationResult(
+            query=query,
+            passing=passing,
+            response=str(evaluation_result),
+        )
+
+    def _get_prompts(self) -> PromptDictType:
+        """Get prompts."""
+        return {}
+
+    def _update_prompts(self, prompts_dict: PromptDictType) -> None:
+        """Update prompts."""
+        pass
+
+
 class SyftrEvaluationResult(EvaluationResult):
     class Config:
         arbitrary_types_allowed = True
@@ -222,6 +282,9 @@ class SyftrEvaluationResult(EvaluationResult):
     )
     retriever_recall: T.Optional[float] = Field(
         default=None, description="Retriever recall score in [0, 1]"
+    )
+    response_text: T.Optional[str] = Field(
+        default=None, description="Text of generated response."
     )
 
 
@@ -349,6 +412,7 @@ async def _aeval_pair(
         generation_exception=generation_exception,
         evaluation_exception=evaluation_exception,
         llm_call_data=call_data,
+        response_text=response.text,
         **(eval_result.model_dump() if eval_result else {}),
     )
 
@@ -419,6 +483,73 @@ async def _aeval_retriever_pair(
     )
 
 
+@retry(
+    stop=stop_after_attempt(RETRY_ATTEMPTS),
+    wait=wait_exponential_jitter(
+        initial=RETRY_MIN_SLEEP, max=RETRY_MAX_SLEEP, exp_base=2, jitter=RETRY_MAX_SLEEP
+    ),
+    reraise=True,
+    retry=(
+        retry_if_exception_type(RETRIABLE_EXCEPTIONS)
+        | retry_if_exception_cause_type(RETRIABLE_EXCEPTIONS)
+    )
+    & retry_if_exception(should_retry),
+    before_sleep=before_sleep_log(log, logging.WARNING),
+)
+async def ajudge_pair(
+    qa_pair: core.QAPair,
+    flow: JudgeFlow,
+    rate_limiter: AsyncLimiter,
+    raise_on_exception: bool | None = EVAL__RAISE_ON_EXCEPTION,
+) -> T.Tuple[EvaluationResult | None, float, T.List[LLMCallData], Exception | None]:
+    """Get flow's retrieved documents from an Q&A pair asynchronously."""
+    result, run_time, call_data, exception = await exception_catcher(
+        func=flow.ajudge,
+        return_values_on_exception=(None, np.nan, []),
+        raise_on_exception=raise_on_exception,
+        question=qa_pair.question,
+        answer=qa_pair.answer,
+        response=qa_pair.response,
+    )
+    return result, run_time, call_data, exception
+
+
+async def _aeval_judge_pair(
+    qa_pair: core.QAPair,
+    flow: JudgeFlow,
+    evaluators: T.Sequence[BaseEvaluator],
+    rate_limiter: AsyncLimiter,
+    raise_on_exception: bool | None = EVAL__RAISE_ON_EXCEPTION,
+) -> SyftrEvaluationResult:
+    """Evaluate retrieval performance on a single Q&A item."""
+    judge_result, run_time, call_data, exception = await ajudge_pair(
+        qa_pair, flow, rate_limiter
+    )
+    if judge_result:
+        evaluator = evaluators[0]
+        result = await evaluator.aevaluate(
+            query=qa_pair.question,
+            evaluation_result=judge_result,
+            label=qa_pair.label,
+        )
+        return SyftrEvaluationResult(
+            qa_pair=qa_pair,
+            run_time=run_time,
+            generation_exception=exception,
+            evaluation_exception=None,
+            llm_call_data=call_data,
+            passing=result.passing,
+        )
+    else:
+        return SyftrEvaluationResult(
+            qa_pair=qa_pair,
+            run_time=run_time,
+            generation_exception=exception,
+            evaluation_exception=None,
+            llm_call_data=call_data,
+        )
+
+
 async def _aeval_pair_debias(
     qa_pair: core.QAPair,
     flow: Flow,
@@ -443,6 +574,7 @@ async def _aeval_pair_debias(
         generation_exception=generation_exception,
         evaluation_exception=evaluation_exception,
         llm_call_data=call_data,
+        response_text=response.text,
         **(eval_result.model_dump() if eval_result else {}),
     )
 
@@ -483,6 +615,7 @@ async def _aeval_pair_consensus(
         generation_exception=generation_exception,
         evaluation_exception=evaluation_exception,
         llm_call_data=call_data,
+        response_text=response.text,
         **(eval_result.model_dump() if eval_result else {}),
     )
 
@@ -741,18 +874,17 @@ def eval_dataset(
     study_config: T.Union[StudyConfig, AgentStudyConfig],
     dataset_iter,
     flow: Flow,
-    evaluation_mode: T.Literal["single", "random", "consensus", "retriever"] = "single",
+    evaluation_mode: T.Literal[
+        "single", "random", "consensus", "retriever", "judge"
+    ] = "single",
 ) -> T.Dict[str, T.Any]:
     eval_start = datetime.now(timezone.utc).timestamp()
     dataset = list(dataset_iter.iter_examples())
     assert len(dataset) > 2, dataset
     dataset = dataset[: study_config.optimization.num_eval_samples]
-    assert evaluation_mode in {
-        "single",
-        "random",
-        "consensus",
-        "retriever",
-    }, "Evaluation mode should be 'single', 'random', 'consensus', or 'retriever'."
+    assert evaluation_mode in {"single", "random", "consensus", "retriever", "judge"}, (
+        "Evaluation mode should be 'single', 'random', 'consensus', 'retriever' or 'judge'."
+    )
 
     evaluators = CorrectnessEvaluatorFactory(study_config).get_evaluators()
     rate_limiter = AsyncLimiter(
@@ -835,6 +967,19 @@ def eval_dataset(
                 cost_pruner=costout,
                 rate_limiter=rate_limiter,
             )
+        case "judge":
+            results, prune_reason = _async_eval_runner(
+                pair_eval_runner=_aeval_judge_pair,
+                items=dataset,
+                flow=flow,
+                study_config=study_config,
+                evaluators=[JudgeEvaluator()],
+                raise_on_exception=study_config.evaluation.raise_on_exception,
+                pruner=pruner,
+                timeout_pruner=timeout,
+                cost_pruner=costout,
+                rate_limiter=rate_limiter,
+            )
 
     metrics = calculate_metrics(results, study_config) if results else {}
     log.info("Number of evaluations: %d", metrics.get("num_total", 0))
@@ -890,11 +1035,6 @@ def calculate_metrics(
     acc = sum(passing) / num_total
     passing_std = np.std(passing)
 
-    eval_results = {
-        res.qa_pair.id: {"passing": 1 if res.passing else 0, "raw_score": res.score}
-        for res in results
-        if res.qa_pair is not None
-    }
     f1_scores = [
         core.f1_score(result.qa_pair.answer, result.response)
         for result in results
@@ -928,6 +1068,10 @@ def calculate_metrics(
     latency_data = extract_llm_latency_data(results)
     cost_data = extract_cost_data(results)
     token_data = extract_token_data(results)
+    eval_results = extract_eval_results(
+        results, include_responses=study_config.optimization.include_responses
+    )
+    judge_data = extract_judge_results(results) if study_config.is_judge_study else {}
 
     if objective_1 == "accuracy":
         obj1_value = acc
@@ -987,7 +1131,31 @@ def calculate_metrics(
         **cost_data,
         **token_data,
         **latency_data,
+        **judge_data,
     }
+
+
+def extract_eval_results(
+    all_results: T.List[SyftrEvaluationResult], include_responses: bool = False
+) -> T.Dict:
+    if include_responses:
+        return {
+            res.qa_pair.id: {
+                "passing": 1 if res.passing else 0,
+                "raw_score": res.score,
+                "question": res.qa_pair.question,
+                "answer": res.qa_pair.answer,
+                "response": res.response_text,
+            }
+            for res in all_results
+            if res.qa_pair is not None
+        }
+    else:
+        return {
+            res.qa_pair.id: {"passing": 1 if res.passing else 0, "raw_score": res.score}
+            for res in all_results
+            if res.qa_pair is not None
+        }
 
 
 def extract_llm_latency_data(
@@ -1068,4 +1236,58 @@ def extract_token_data(
         "llm_output_tokens_median": float(np.median(run_output_tokens)),
         **total_input_tokens_per_model,
         **total_output_tokens_per_model,
+    }
+
+
+def extract_judge_results(
+    all_results: T.List[SyftrEvaluationResult], include_responses: bool = False
+) -> T.Dict:
+    """Extract result data from judge evaluations."""
+    assert all(result.qa_pair is not None for result in all_results)
+
+    labels = np.array([result.qa_pair.label for result in all_results])  # type: ignore
+    judge_responses = np.array([])
+    for result, label in zip(all_results, labels):
+        if result.passing is None:
+            np.append(judge_responses, None)
+        # Recover judge responses (as 0 or 1) from answer key + result.passing
+        judge_response = label if result.passing else int(not bool(label))
+        judge_responses = np.append(judge_responses, judge_response)
+
+    # Clean out None's (eg. from failed evals)
+    labels = np.array(
+        [
+            label
+            for label, response in zip(labels, judge_responses)
+            if response is not None
+        ]
+    )
+    judge_responses = np.array(
+        [response for response in judge_responses if response is not None]
+    )
+
+    if len(labels) < 5:
+        return {}
+
+    pearson_r, pearson_r_p_value = stats.pearsonr(labels, judge_responses)
+    spearman_r, spearman_r_p_value = stats.spearmanr(labels, judge_responses)
+    kendalltau_r, kendalltau_r_p_value = stats.kendalltau(labels, judge_responses)
+    cohens_kappa = metrics.cohen_kappa_score(labels, judge_responses)
+    score_judge_mean = labels.mean()
+    score_human_mean = judge_responses.mean()
+
+    return {
+        "pearson_r": pearson_r,
+        "pearson_r_p_value": pearson_r_p_value,
+        "spearman_r": spearman_r,
+        "spearman_r_p_value": spearman_r_p_value,
+        "kendalltau_r": kendalltau_r,
+        "kendalltau_r_p_value": kendalltau_r_p_value,
+        "cohens_kappa": cohens_kappa,
+        "score_judge_mean": score_judge_mean,
+        "score_human_mean": score_human_mean,
+        "score_judge_std": judge_responses.std(),
+        "score_human_std": labels.std(),
+        "score_difference_mean": score_judge_mean - score_human_mean,
+        "score_difference_std": (judge_responses - labels).std(),
     }
