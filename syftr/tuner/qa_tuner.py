@@ -483,7 +483,7 @@ def objective(
     search_space = study_config.search_space
     params: dict[str, str | bool | int | float]
     for i in range(study_config.optimization.num_retries_unique_params):
-        params = search_space.sample(trial, components)
+        params = search_space.sample(trial, components)  # type: ignore
         if not study_config.optimization.skip_existing:
             logger.info("Using generated parameter combination without check")
             break

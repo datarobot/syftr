@@ -1279,9 +1279,7 @@ class RetrieverSearchSpace(BaseModel):
 
         return distributions
 
-    def sample(
-        self, trial: Trial, components: T.List[str], prefix: str = ""
-    ) -> ParamDict:
+    def sample(self, trial: Trial, prefix: str = "") -> ParamDict:
         params: ParamDict = {
             "rag_mode": trial.suggest_categorical("rag_mode", self.rag_modes),
             "response_synthesizer_llm_name": trial.suggest_categorical(
@@ -1536,9 +1534,7 @@ class JudgeSearchSpace(BaseModel):
 
         return distributions
 
-    def sample(
-        self, trial: Trial, components: T.List[str], prefix: str = ""
-    ) -> ParamDict:
+    def sample(self, trial: Trial, prefix: str = "") -> ParamDict:
         params: ParamDict = {
             "judge_type": trial.suggest_categorical("judge_type", self.judge_types),
             "judge_prompt": trial.suggest_categorical(

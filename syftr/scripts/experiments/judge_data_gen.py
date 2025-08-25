@@ -16,8 +16,8 @@ from syftr.storage import (
     MultiHopRAGHF,
 )
 from syftr.studies import (
+    LLM_NAMES,
     LOCAL_EMBEDDING_MODELS,  # noqa
-    LOCAL_LLMS,
     Block,
     CritiqueRAGAgent,
     Evaluation,
@@ -81,7 +81,7 @@ BLOCKS = [
     ),
 ]
 
-LLMS: T.List[str] = LOCAL_LLMS
+LLMS: T.List[str] = LLM_NAMES
 
 EMBEDDING_MODELS = [
     "BAAI/bge-small-en-v1.5",
