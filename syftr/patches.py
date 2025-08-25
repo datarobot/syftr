@@ -33,9 +33,6 @@ def _get_model_kwargs_responses(self, **kwargs: Any) -> Dict[str, Any]:
         "store": self.store,
         "temperature": self.temperature,
         "tools": [*initial_tools, *kwargs.pop("tools", [])],
-        # Hardcode auto tool choice to override other settings
-        # Responses API only supports auto tool choice
-        "tool_choice": "auto",
         "top_p": self.top_p,
         "truncation": self.truncation,
         "user": self.user,
@@ -49,5 +46,8 @@ def _get_model_kwargs_responses(self, **kwargs: Any) -> Dict[str, Any]:
 
     kwargs = kwargs or {}
     model_kwargs.update(kwargs)
+    # Hardcode auto tool choice to override other settings
+    # Responses API only supports auto tool choice
+    model_kwargs["tool_choice"] = "auto"
 
     return model_kwargs
