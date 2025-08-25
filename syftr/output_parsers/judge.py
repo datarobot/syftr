@@ -15,17 +15,21 @@ def parse_correctness_evaluation(
     )
 
 
-def parse_correctness_evaluation_ten(query: str, response: str) -> EvaluationResult:
-    return parse_correctness_evaluation(query, response, threshold=8.0)
+def parse_correctness_evaluation_ten(
+    query: str, response: str, threshold: float = 8.0
+) -> EvaluationResult:
+    return parse_correctness_evaluation(query, response, threshold=threshold)
 
 
 def parse_correctness_evaluation_comparison(
-    query: str, response: str
+    query: str, response: str, threshold: float = 2.0
 ) -> EvaluationResult:
-    return parse_correctness_evaluation(query, response, threshold=2.0)
+    return parse_correctness_evaluation(query, response, threshold=threshold)
 
 
-def parse_correctness_evaluation_simple(query: str, response: str) -> EvaluationResult:
+def parse_correctness_evaluation_simple(
+    query: str, response: str, threshold: float = 0.0
+) -> EvaluationResult:
     passing = "YES" in response
     feedback = response
     return EvaluationResult(

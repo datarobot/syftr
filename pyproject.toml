@@ -38,7 +38,7 @@ dependencies = [
     "llama-index-agent-openai",
     "llama-index-callbacks-arize-phoenix",
     "llama-index-cli",
-    "llama-index-core",
+    "llama-index-core>=0.12.52",
     "llama-index-embeddings-azure-openai",
     "llama-index-embeddings-fastembed",
     "llama-index-embeddings-huggingface",
@@ -105,6 +105,7 @@ dependencies = [
     "types-protobuf",
     "types-pytz",
     "types-tabulate",
+    "uv-dynamic-versioning",
     "vertexai==1.68.0",
     "torch==2.7.0",
 ]

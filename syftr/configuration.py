@@ -372,7 +372,8 @@ class LLMCostHourly(BaseModel):
 
 class LLMConfig(BaseModel):
     model_name: str = Field(description="Name of the LLM to use")
-    temperature: float = Field(default=0.0, description="LLM temperature setting")
+    temperature: float = Field(default=0, description="LLM temperature setting")
+    top_p: float = Field(default=0.95, description="LLM top_p setting")
     max_tokens: int = Field(default=2048, description="Max output tokens")
     system_prompt: T.Optional[str] = Field(
         default=None, description="Custom system prompt"
@@ -562,6 +563,8 @@ class LocalOpenAILikeModel(BaseModel, APIKeySerializationMixin):
     model_name: str
     api_base: str
     api_key: SecretStr | None = None
+    temperature: float = 0.1
+    top_p: float = 0.95
     max_tokens: int
     context_window: int
     is_chat_model: bool = True

@@ -1,9 +1,8 @@
-import math
 import os
 import typing as T
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from itertools import combinations
+from itertools import combinations, combinations_with_replacement
 from pathlib import Path
 
 import pandas as pd
@@ -34,7 +33,7 @@ from syftr.helpers import (
     get_unique_bools,
     get_unique_strings,
 )
-from syftr.llm import LLMs
+from syftr.llm import LLM_NAMES
 from syftr.storage import (
     CragTask3HF,
     DRDocsHF,
@@ -73,30 +72,21 @@ Example Response:
 }
 """
 
-ALL_COMPONENTS = [
-    "rag_retriever",
-    "splitter",
-    "additional_context",
-    "few_shot_retriever",
-    "hyde",
-    "critique_rag_agent",
-    "lats_rag_agent",
-    "react_rag_agent",
-    "rag_mode",
-    "reranker",
-    "response_synthesizer_llm",
-    "sub_question_rag",
-    "template_name",
-]
-
 
 def get_llm_name_combinations(
-    llm_names: T.List[str], n_llms: T.List[int]
+    llm_names: T.List[str],
+    n_llms: T.List[int],
+    with_replacement=True,
 ) -> T.List[str]:
+    generator = (
+        (lambda elements, n: list(combinations_with_replacement(elements, n)))
+        if with_replacement
+        else (lambda elements, n: list(combinations(elements, n)))
+    )
     llm_combinations = []
     for n in n_llms:
         if n <= len(llm_names):
-            llm_combinations_n = [str(c) for c in combinations(llm_names, n)]
+            llm_combinations_n = [str(c) for c in generator(llm_names, n)]
             llm_combinations.extend(llm_combinations_n)
     return llm_combinations
 
@@ -263,100 +253,6 @@ DEFAULT_EMBEDDING_MODELS: T.List[str] = list(
     )
 )
 
-
-ALL_LLMS = list(LLMs.keys())
-
-LOCAL_LLMS = (
-    [model.model_name for model in cfg.local_models.generative]
-    if cfg.local_models.generative
-    else []
-)
-
-DEFAULT_LLMS: T.List[str] = list(
-    set(
-        [
-            "gpt-4o-mini",  # first LLM is the default
-            "anthropic-haiku-35",
-            "gemini-flash",
-            # "gemini-flash2",
-            # "gemini-pro",
-            # "llama-33-70B",   # not enough capacity
-            # "mistral-large",  # not enough capacity
-            # "phi-4",          # not enough capacity
-            # "anthropic-sonnet-35",
-            # "gpt-4o-std",
-            "o3-mini",
-        ]
-        + LOCAL_LLMS
-    )
-)
-assert set(DEFAULT_LLMS).issubset(set(ALL_LLMS))
-
-JUDGE_LLMS: T.List[str] = [
-    "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
-    "Qwen/Qwen3-32B",
-    "google/gemma-3-27b-it",
-]
-
-RESPONSE_SYNTHESIZER_LLMS: T.List[str] = [
-    "gpt-4o-mini",  # first LLM is the default
-    "gpt-4o-std",
-    "gpt-35-turbo",
-    "anthropic-sonnet-35",
-    "anthropic-haiku-35",
-    "llama-33-70B",
-    "gemini-pro",
-    "gemini-flash",
-    "gemini-flash2",
-    # "gemini-flash-think-exp",
-    "mistral-large",
-    "together-r1",
-    "together-V3",
-] + LOCAL_LLMS
-assert set(RESPONSE_SYNTHESIZER_LLMS).issubset(set(ALL_LLMS))
-
-FUNCTION_CALLING_LLMS: T.List[str] = [
-    "gpt-4o-mini",  # first LLM is the default
-    "gpt-4o-std",
-    "gpt-35-turbo",
-    "anthropic-sonnet-35",
-    "anthropic-haiku-35",
-    "llama-33-70B",
-    # "gemini-flash2",
-    # "gemini-pro",
-    # "gemini-flash",
-    # "gemini-flash-think-exp",
-    "mistral-large",
-] + LOCAL_LLMS
-assert set(FUNCTION_CALLING_LLMS).issubset(set(ALL_LLMS))
-
-CHEAP_LLMS: T.List[str] = [
-    "gpt-4o-mini",  # first LLM is the default
-    "anthropic-haiku-35",
-    "gemini-flash2",
-] + LOCAL_LLMS
-assert set(CHEAP_LLMS).issubset(set(ALL_LLMS))
-assert set(CHEAP_LLMS).issubset(set(ALL_LLMS))
-
-NON_REASONING_LLMS: T.List[str] = list(
-    set(
-        [
-            "gpt-4o-mini",  # first LLM is the default
-            "gpt-4o-std",
-            "gpt-35-turbo",
-            "anthropic-sonnet-35",
-            "anthropic-haiku-35",
-            "llama-33-70B",
-            "gemini-pro",
-            "gemini-flash",
-            "gemini-flash2",
-            "mistral-large",
-        ]
-        + LOCAL_LLMS
-    )
-)
-assert set(NON_REASONING_LLMS).issubset(set(ALL_LLMS))
-
 RAG_MODES: T.List[str] = [
     "rag",  #  first mode is the default
     "react_rag_agent",
@@ -386,7 +282,7 @@ PARAMETERS = [
     "critique_rag_agent",
     "lats_rag_agent",
     "react_rag_agent",
-    "response_synthesizer_llm",
+    "response_synthesizer",
     "template_name",
 ]
 
@@ -456,11 +352,75 @@ class Hybrid(BaseModel, SearchSpaceMixin):
         )
 
 
-class QueryDecomposition(BaseModel, SearchSpaceMixin):
+class LLMConfig(BaseModel, SearchSpaceMixin):
     llm_names: T.List[str] = Field(
-        default_factory=lambda: NON_REASONING_LLMS,
-        description="List of LLM names to be used for query decomposition.",
+        default_factory=lambda: LLM_NAMES,
+        description="List of LLM names to be used.",
     )
+    llm_temperature_min: float = Field(
+        default=0.0, description="Minimum temperature for LLMs."
+    )
+    llm_temperature_max: float = Field(
+        default=2.0, description="Maximum temperature for LLMs."
+    )
+    llm_temperature_step: float = Field(
+        default=0.05, description="Step size for LLM temperature."
+    )
+    llm_top_p_min: float = Field(default=0.0, description="Minimum top_p for LLMs.")
+    llm_top_p_max: float = Field(default=1.0, description="Maximum top_p for LLMs.")
+    llm_top_p_step: float = Field(default=0.05, description="Step size for LLM top_p.")
+    llm_use_reasoning: T.List[bool | None] = Field(
+        default_factory=lambda: [True, False, None],
+        description="Whether to use reasoning for query decomposition.",
+    )
+
+    def defaults(self, prefix: str = "") -> T.Dict[str, T.Any]:
+        return {
+            f"{prefix}llm_name": self.llm_names[0],
+            f"{prefix}llm_temperature": self.llm_temperature_min,
+            f"{prefix}llm_top_p": self.llm_top_p_max,
+            f"{prefix}llm_use_reasoning": self.llm_use_reasoning[0],
+        }
+
+    def build_distributions(self, prefix: str = "") -> T.Dict[str, BaseDistribution]:
+        return {
+            f"{prefix}llm_name": CategoricalDistribution(self.llm_names),
+            f"{prefix}llm_temperature": FloatDistribution(
+                low=self.llm_temperature_min,
+                high=self.llm_temperature_max,
+                step=self.llm_temperature_step,
+            ),
+            f"{prefix}llm_top_p": FloatDistribution(
+                low=self.llm_top_p_min,
+                high=self.llm_top_p_max,
+                step=self.llm_top_p_step,
+            ),
+            f"{prefix}llm_use_reasoning": CategoricalDistribution(
+                self.llm_use_reasoning
+            ),
+        }
+
+    def get_cardinality(self) -> int:
+        return (
+            len(self.llm_names)
+            * get_dist_cardinality(
+                self.llm_temperature_min,
+                self.llm_temperature_max,
+                self.llm_temperature_step,
+            )
+            * get_dist_cardinality(
+                self.llm_top_p_min, self.llm_top_p_max, self.llm_top_p_step
+            )
+            * len(self.llm_use_reasoning)
+        )
+
+
+class QueryDecomposition(BaseModel, SearchSpaceMixin):
+    llm_config: LLMConfig = Field(
+        default_factory=LLMConfig,
+        description="Configuration for the LLM used in query decomposition.",
+    )
+
     num_queries_min: int = Field(
         default=2, description="Minimum number of sub-queries to generate."
     )
@@ -474,22 +434,23 @@ class QueryDecomposition(BaseModel, SearchSpaceMixin):
     def defaults(self, prefix: str = "") -> T.Dict[str, T.Any]:
         return {
             f"{prefix}query_decomposition_enabled": False,
+            **self.llm_config.defaults(prefix=f"{prefix}query_decomposition_"),
         }
 
     def build_distributions(self, prefix: str = "") -> T.Dict[str, BaseDistribution]:
         return {
-            f"{prefix}query_decomposition_llm_name": CategoricalDistribution(
-                self.llm_names
-            ),
             f"{prefix}query_decomposition_num_queries": IntDistribution(
                 self.num_queries_min,
                 self.num_queries_max,
                 step=self.num_queries_step,
             ),
+            **self.llm_config.build_distributions(
+                prefix=f"{prefix}query_decomposition_"
+            ),
         }
 
     def get_cardinality(self) -> int:
-        return len(self.llm_names) * get_dist_cardinality(
+        return self.llm_config.get_cardinality() * get_dist_cardinality(
             self.num_queries_min, self.num_queries_max, self.num_queries_step
         )
 
@@ -661,55 +622,49 @@ class FewShotRetriever(BaseModel, SearchSpaceMixin):
 
 
 class Reranker(BaseModel, SearchSpaceMixin):
-    """
-    Params:
-        reranker_llm_name
-        reranker_top_k
-    """
+    llm_config: LLMConfig = Field(
+        default_factory=LLMConfig,
+        description="Configuration for the LLM used in reranking.",
+    )
 
     top_k: TopK = Field(
         default_factory=lambda: TopK(kmax=128, log=True),
         description="Configuration for the number of items to rerank.",
     )
-    llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS,
-        description="List of LLMs to be used for reranking.",
-    )
 
     def defaults(self, prefix: str = "") -> T.Dict[str, T.Any]:
         return {
-            f"{prefix}reranker_llm_name": self.llms[0],
             **self.top_k.defaults(prefix=f"{prefix}reranker_"),
         }
 
     def build_distributions(self, prefix: str = "") -> T.Dict[str, BaseDistribution]:
         return {
-            f"{prefix}reranker_llm_name": CategoricalDistribution(self.llms),
+            **self.llm_config.build_distributions(prefix=f"{prefix}reranker_"),
             **self.top_k.build_distributions(prefix=f"{prefix}reranker_"),
         }
 
     def get_cardinality(self) -> int:
-        return len(self.llms) * self.top_k.get_cardinality()
+        return self.llm_config.get_cardinality() * self.top_k.get_cardinality()
 
 
 class Hyde(BaseModel, SearchSpaceMixin):
-    llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS,
-        description="List of LLMs to be used for HyDE (Hypothetical Document Embeddings).",
+    llm_config: LLMConfig = Field(
+        default_factory=LLMConfig,
+        description="Configuration for the LLM used in HyDE.",
     )
 
     def defaults(self, prefix: str = "") -> T.Dict[str, T.Any]:
         return {
-            f"{prefix}hyde_llm_name": self.llms[0],
+            **self.llm_config.defaults(prefix=f"{prefix}hyde_"),
         }
 
     def build_distributions(self, prefix: str = "") -> T.Dict[str, BaseDistribution]:
         return {
-            f"{prefix}hyde_llm_name": CategoricalDistribution(self.llms),
+            **self.llm_config.build_distributions(prefix=f"{prefix}hyde_"),
         }
 
     def get_cardinality(self) -> int:
-        return len(self.llms)
+        return self.llm_config.get_cardinality()
 
 
 class AdditionalContext(BaseModel, SearchSpaceMixin):
@@ -737,152 +692,141 @@ class AdditionalContext(BaseModel, SearchSpaceMixin):
 
 
 class ReactRAGAgent(BaseModel, SearchSpaceMixin):
-    subquestion_engine_llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS,
-        description="LLMs for the sub-question engine inside the agent.",
+    subquestion_engine_llm_config: LLMConfig = Field(
+        default_factory=LLMConfig,
+        description="Configuration for the LLM used in the sub-question engine.",
     )
-    subquestion_response_synthesizer_llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS,
-        description="LLMs for synthesizing responses to subquestions.",
-    )
-    # TODO: use a fixed private parameter with value 10 and remove it from the search space.
-    max_iterations_min: int = Field(
-        default=10, description="Minimum number of ReAct agent iterations."
-    )
-    max_iterations_max: int = Field(
-        default=11, description="Maximum number of ReAct agent iterations."
+
+    subquestion_response_synthesizer_llm_config: LLMConfig = Field(
+        default_factory=LLMConfig,
+        description="Configuration for the LLM used in the sub-question response synthesizer.",
     )
 
     def defaults(self, prefix: str = "") -> T.Dict[str, T.Any]:
         return {
-            f"{prefix}subquestion_engine_llm": self.subquestion_engine_llms[0],
-            f"{prefix}subquestion_response_synthesizer_llm": self.subquestion_response_synthesizer_llms[
-                0
-            ],
-            f"{prefix}max_iterations": 10,
+            **self.subquestion_engine_llm_config.defaults(
+                prefix=f"{prefix}subquestion_engine_"
+            ),
+            **self.subquestion_response_synthesizer_llm_config.defaults(
+                prefix=f"{prefix}subquestion_response_synthesizer_"
+            ),
         }
 
     def build_distributions(self, prefix: str = "") -> T.Dict[str, BaseDistribution]:
         return {
-            f"{prefix}subquestion_engine_llm": CategoricalDistribution(
-                self.subquestion_engine_llms
+            **self.subquestion_engine_llm_config.build_distributions(
+                prefix=f"{prefix}subquestion_engine_"
             ),
-            f"{prefix}subquestion_response_synthesizer_llm": CategoricalDistribution(
-                self.subquestion_response_synthesizer_llms
-            ),
-            f"{prefix}max_iterations": IntDistribution(
-                self.max_iterations_min, self.max_iterations_max, step=1
+            **self.subquestion_response_synthesizer_llm_config.build_distributions(
+                prefix=f"{prefix}subquestion_response_synthesizer_"
             ),
         }
 
     def get_cardinality(self) -> int:
-        categorical_dists = [
-            self.subquestion_engine_llms,
-            self.subquestion_response_synthesizer_llms,
-        ]
-        return math.prod([len(dist) for dist in categorical_dists])
+        return (
+            self.subquestion_engine_llm_config.get_cardinality()
+            * self.subquestion_response_synthesizer_llm_config.get_cardinality()
+        )
 
 
 class CritiqueRAGAgent(BaseModel, SearchSpaceMixin):
-    subquestion_engine_llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS,
-        description="LLMs for the sub-question engine inside the agent.",
+    subquestion_engine_llm_config: LLMConfig = Field(
+        default_factory=LLMConfig,
+        description="Configuration for the LLM used in the sub-question engine.",
     )
-    subquestion_response_synthesizer_llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS,
-        description="LLMs for synthesizing responses to subquestions.",
+
+    subquestion_response_synthesizer_llm_config: LLMConfig = Field(
+        default_factory=LLMConfig,
+        description="Configuration for the LLM used in the sub-question response synthesizer.",
     )
-    critique_agent_llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS, description="LLMs for the critique agent."
+
+    critique_agent_llm_config: LLMConfig = Field(
+        default_factory=LLMConfig,
+        description="Configuration for the LLM used in the critique agent.",
     )
-    reflection_agent_llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS,
-        description="LLMs for the reflection agent.",
-    )
-    # TODO: use a fixed private parameter with value 10 and remove it from the search space.
-    max_iterations_min: int = Field(
-        default=10, description="Minimum number of Critique agent iterations."
-    )
-    max_iterations_max: int = Field(
-        default=11, description="Maximum number of Critique agent iterations."
+
+    reflection_agent_llm_config: LLMConfig = Field(
+        default_factory=LLMConfig,
+        description="Configuration for the LLM used in the reflection agent.",
     )
 
     def defaults(self, prefix: str = "") -> T.Dict[str, T.Any]:
         return {
-            f"{prefix}subquestion_engine_llm": self.subquestion_engine_llms[0],
-            f"{prefix}critique_agent_llm": self.critique_agent_llms[0],
-            f"{prefix}reflection_agent_llm": self.reflection_agent_llms[0],
-            f"{prefix}subquestion_response_synthesizer_llm": self.subquestion_response_synthesizer_llms[
-                0
-            ],
-            f"{prefix}max_iterations": 10,
+            **self.subquestion_engine_llm_config.defaults(
+                prefix=f"{prefix}subquestion_engine_"
+            ),
+            **self.critique_agent_llm_config.defaults(
+                prefix=f"{prefix}critique_agent_"
+            ),
+            **self.reflection_agent_llm_config.defaults(
+                prefix=f"{prefix}reflection_agent_"
+            ),
+            **self.subquestion_response_synthesizer_llm_config.defaults(
+                prefix=f"{prefix}subquestion_response_synthesizer_"
+            ),
         }
 
     def build_distributions(self, prefix: str = "") -> T.Dict[str, BaseDistribution]:
         return {
-            f"{prefix}subquestion_engine_llm": CategoricalDistribution(
-                self.subquestion_engine_llms
+            **self.subquestion_engine_llm_config.build_distributions(
+                prefix=f"{prefix}subquestion_engine_"
             ),
-            f"{prefix}critique_agent_llm": CategoricalDistribution(
-                self.critique_agent_llms
+            **self.critique_agent_llm_config.build_distributions(
+                prefix=f"{prefix}critique_agent_"
             ),
-            f"{prefix}reflection_agent_llm": CategoricalDistribution(
-                self.reflection_agent_llms
+            **self.reflection_agent_llm_config.build_distributions(
+                prefix=f"{prefix}reflection_agent_"
             ),
-            f"{prefix}subquestion_response_synthesizer_llm": CategoricalDistribution(
-                self.subquestion_response_synthesizer_llms
-            ),
-            f"{prefix}max_iterations": IntDistribution(
-                self.max_iterations_min, self.max_iterations_max, step=1
+            **self.subquestion_response_synthesizer_llm_config.build_distributions(
+                prefix=f"{prefix}subquestion_response_synthesizer_"
             ),
         }
 
     def get_cardinality(self) -> int:
-        categorical_dists = [
-            self.subquestion_engine_llms,
-            self.critique_agent_llms,
-            self.reflection_agent_llms,
-            self.subquestion_response_synthesizer_llms,
-        ]
-        return math.prod([len(dist) for dist in categorical_dists]) * (
-            self.max_iterations_max - self.max_iterations_min + 1
+        return (
+            self.subquestion_engine_llm_config.get_cardinality()
+            * self.critique_agent_llm_config.get_cardinality()
+            * self.reflection_agent_llm_config.get_cardinality()
+            * self.subquestion_response_synthesizer_llm_config.get_cardinality()
         )
 
 
 class SubQuestionRAGAgent(BaseModel, SearchSpaceMixin):
-    subquestion_engine_llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS,
-        description="LLMs for the sub-question engine.",
+    subquestion_engine_llm_config: LLMConfig = Field(
+        default_factory=LLMConfig,
+        description="Configuration for the LLM used in the sub-question engine.",
     )
-    subquestion_response_synthesizer_llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS,
-        description="LLMs for synthesizing responses to subquestions.",
+
+    subquestion_response_synthesizer_llm_config: LLMConfig = Field(
+        default_factory=LLMConfig,
+        description="Configuration for the LLM used in the sub-question response synthesizer.",
     )
 
     def defaults(self, prefix: str = "") -> T.Dict[str, T.Any]:
         return {
-            f"{prefix}subquestion_engine_llm": self.subquestion_engine_llms[0],
-            f"{prefix}subquestion_response_synthesizer_llm": self.subquestion_response_synthesizer_llms[
-                0
-            ],
+            **self.subquestion_engine_llm_config.defaults(
+                prefix=f"{prefix}subquestion_engine_"
+            ),
+            **self.subquestion_response_synthesizer_llm_config.defaults(
+                prefix=f"{prefix}subquestion_response_synthesizer_"
+            ),
         }
 
     def build_distributions(self, prefix: str = "") -> T.Dict[str, BaseDistribution]:
         return {
-            f"{prefix}subquestion_engine_llm": CategoricalDistribution(
-                self.subquestion_engine_llms
+            **self.subquestion_engine_llm_config.build_distributions(
+                prefix=f"{prefix}subquestion_engine_"
             ),
-            f"{prefix}subquestion_response_synthesizer_llm": CategoricalDistribution(
-                self.subquestion_response_synthesizer_llms
+            **self.subquestion_response_synthesizer_llm_config.build_distributions(
+                prefix=f"{prefix}subquestion_response_synthesizer_"
             ),
         }
 
     def get_cardinality(self) -> int:
-        categorical_dists = [
-            self.subquestion_engine_llms,
-            self.subquestion_response_synthesizer_llms,
-        ]
-        return math.prod([len(dist) for dist in categorical_dists])
+        return (
+            self.subquestion_engine_llm_config.get_cardinality()
+            * self.subquestion_response_synthesizer_llm_config.get_cardinality()
+        )
 
 
 class LATSRagAgent(BaseModel, SearchSpaceMixin):
@@ -975,9 +919,9 @@ class SearchSpace(BaseModel):
         default_factory=lambda: TEMPLATE_NAMES,
         description="List of available prompt template names.",
     )
-    response_synthesizer_llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS,
-        description="List of LLMs for response synthesis.",
+    response_synthesizer_llm_config: LLMConfig = Field(
+        default_factory=LLMConfig,
+        description="Configuration for the response synthesizer LLM.",
     )
     few_shot_enabled: T.List[bool] = Field(
         default_factory=lambda: [True, False],
@@ -1039,11 +983,13 @@ class SearchSpace(BaseModel):
         return {
             "rag_mode": self.rag_modes[0],
             "template_name": self.template_names[0],
-            "response_synthesizer_llm": self.response_synthesizer_llms[0],
             "few_shot_enabled": False,
             "additional_context_enabled": False,
             "hyde_enabled": False,
             "reranker_enabled": False,
+            **self.response_synthesizer_llm_config.defaults(
+                prefix="response_synthesizer_"
+            ),
             **self.rag_retriever.defaults(),
             **self.splitter.defaults(),
             **self.react_rag_agent.defaults(),
@@ -1073,9 +1019,6 @@ class SearchSpace(BaseModel):
         distributions: dict[str, BaseDistribution] = {
             "rag_mode": CategoricalDistribution(self.rag_modes),
             "template_name": CategoricalDistribution(self.template_names),
-            "response_synthesizer_llm": CategoricalDistribution(
-                self.response_synthesizer_llms
-            ),
             "few_shot_enabled": CategoricalDistribution(self.few_shot_enabled),
             "hyde_enabled": CategoricalDistribution(self.hyde_enabled),
             "reranker_enabled": CategoricalDistribution(self.reranker_enabled),
@@ -1083,6 +1026,11 @@ class SearchSpace(BaseModel):
                 self.additional_context_enabled
             ),
         }
+        distributions.update(
+            self.response_synthesizer_llm_config.build_distributions(
+                prefix="response_synthesizer_"
+            )
+        )
         if True in self.few_shot_enabled:
             distributions.update(self.few_shot_retriever.build_distributions())
         if True in self.hyde_enabled:
@@ -1129,12 +1077,18 @@ class SearchSpace(BaseModel):
         else:
             params["template_name"] = defaults["template_name"]
 
-        if "response_synthesizer_llm" in parameters:
-            params["response_synthesizer_llm"] = trial.suggest_categorical(
-                "response_synthesizer_llm", self.response_synthesizer_llms
+        if "response_synthesizer" in parameters:
+            params.update(
+                **self.response_synthesizer_llm_config.sample(
+                    trial, prefix="response_synthesizer_"
+                )
             )
         else:
-            params["response_synthesizer_llm"] = defaults["response_synthesizer_llm"]
+            params.update(
+                **self.response_synthesizer_llm_config.defaults(
+                    prefix="response_synthesizer_"
+                )
+            )
 
         # No-RAG general parameters
         if params["rag_mode"] != "no_rag":
@@ -1214,11 +1168,11 @@ class SearchSpace(BaseModel):
         for rag_mode in self.rag_modes:
             sub_card = (
                 len(self.template_names)
-                * len(self.response_synthesizer_llms)
                 * len(self.few_shot_enabled)
                 * len(self.hyde_enabled)
                 * len(self.additional_context_enabled)
                 * len(self.reranker_enabled)
+                * self.response_synthesizer_llm_config.get_cardinality()
             )
             if rag_mode != "no_rag":
                 sub_card *= self.rag_retriever.get_cardinality()
@@ -1264,7 +1218,7 @@ class RetrieverSearchSpace(BaseModel):
         description="Parameters not part of the hyperparameter search space.",
     )
     response_synthesizer_llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS,
+        default_factory=lambda: LLM_NAMES,
         description="LLMs used for response synthesis.",
     )
     rag_retriever: Retriever = Field(
@@ -1290,7 +1244,7 @@ class RetrieverSearchSpace(BaseModel):
     def defaults(self) -> ParamDict:
         return {
             "rag_mode": self.rag_modes[0],
-            "response_synthesizer_llm": self.response_synthesizer_llms[0],
+            "response_synthesizer_llm_name": self.response_synthesizer_llms[0],
             "additional_context_enabled": False,
             "hyde_enabled": False,
             **self.rag_retriever.defaults(),
@@ -1302,7 +1256,7 @@ class RetrieverSearchSpace(BaseModel):
     ) -> T.Dict[str, BaseDistribution]:
         distributions: dict[str, BaseDistribution] = {
             "rag_mode": CategoricalDistribution(self.rag_modes),
-            "response_synthesizer_llm": CategoricalDistribution(
+            "response_synthesizer_llm_name": CategoricalDistribution(
                 self.response_synthesizer_llms
             ),
             "hyde_enabled": CategoricalDistribution(self.hyde_enabled),
@@ -1326,12 +1280,12 @@ class RetrieverSearchSpace(BaseModel):
         return distributions
 
     def sample(
-        self, trial: Trial, components: T.List[str] = ALL_COMPONENTS, prefix: str = ""
+        self, trial: Trial, components: T.List[str], prefix: str = ""
     ) -> ParamDict:
         params: ParamDict = {
             "rag_mode": trial.suggest_categorical("rag_mode", self.rag_modes),
-            "response_synthesizer_llm": trial.suggest_categorical(
-                "response_synthesizer_llm", self.response_synthesizer_llms
+            "response_synthesizer_llm_name": trial.suggest_categorical(
+                "response_synthesizer_llm_name", self.response_synthesizer_llms
             ),
             "hyde_enabled": trial.suggest_categorical(
                 "hyde_enabled", self.hyde_enabled
@@ -1362,7 +1316,7 @@ class RetrieverSearchSpace(BaseModel):
 class CorrectnessEvaluator(BaseModel):
     model_config = ConfigDict(extra="forbid")  # Forbids unknown fields
     response_synthesizer_llms: T.List[str] = Field(
-        default_factory=lambda: DEFAULT_LLMS,
+        default_factory=lambda: LLM_NAMES,
         description="LLMs used for judgement.",
     )
     temperature_min: float = 0.0
@@ -1418,7 +1372,7 @@ class SingleCorrectnessEvaluator(CorrectnessEvaluator):
 
 class ConsensusCorrectnessEvaluator(CorrectnessEvaluator):
     response_synthesizer_llm_combinations: T.List[str] = Field(
-        default_factory=lambda: get_llm_name_combinations(DEFAULT_LLMS, [3]),
+        default_factory=lambda: get_llm_name_combinations(LLM_NAMES, [3]),
         description="List of combinations of LLMs for consensus judgement.",
     )
 
@@ -1471,7 +1425,7 @@ class ConsensusCorrectnessEvaluator(CorrectnessEvaluator):
 
 class RandomCorrectnessEvaluator(CorrectnessEvaluator):
     response_synthesizer_llm_combinations: T.List[str] = Field(
-        default_factory=lambda: get_llm_name_combinations(DEFAULT_LLMS, [3]),
+        default_factory=lambda: get_llm_name_combinations(LLM_NAMES, [3]),
         description="List of combinations of LLMs for random judgement.",
     )
 
@@ -1583,7 +1537,7 @@ class JudgeSearchSpace(BaseModel):
         return distributions
 
     def sample(
-        self, trial: Trial, components: T.List[str] = ALL_COMPONENTS, prefix: str = ""
+        self, trial: Trial, components: T.List[str], prefix: str = ""
     ) -> ParamDict:
         params: ParamDict = {
             "judge_type": trial.suggest_categorical("judge_type", self.judge_types),
@@ -1851,7 +1805,7 @@ class Evaluation(BaseModel):
     mode: T.Literal["single", "random", "consensus", "retriever", "judge"] = Field(
         default="single", description="Evaluation mode."
     )
-    llms: T.List[str] = Field(
+    llm_names: T.List[str] = Field(
         default_factory=lambda: ["gpt-4o-mini"],
         description="List of LLMs to use for evaluation. If 'single' mode is chosen, the first list item will be used.",
     )
@@ -2022,7 +1976,7 @@ class StudyConfig(BaseSettings):
 
         klass = deepcopy(cls)
         _orig = klass.model_config.pop("yaml_file", None)
-        klass.model_config = SettingsConfigDict(**cls.model_config, yaml_file=path)
+        klass.model_config = SettingsConfigDict(**cls.model_config, yaml_file=path)  # type: ignore
         instance = klass(*args, **kwargs)
         klass.model_config["yaml_file"] = _orig
         return instance
@@ -2036,7 +1990,7 @@ class StudyConfig(BaseSettings):
         assert self.pareto.replacement_llm_name, "No replacement LLM name is set"
 
         replacement_llm_name = self.pareto.replacement_llm_name
-        params["response_synthesizer_llm"] = replacement_llm_name
+        params["response_synthesizer_llm_name"] = replacement_llm_name
 
     @property
     def is_retriever_study(self) -> bool:
@@ -2051,7 +2005,7 @@ class AgentStudyConfig(BaseSettings):
     name: str = Field(description="Name of the agent study.")
     datasets: T.List[  # type: ignore
         T.Annotated[
-            T.Union[*SyftrQADataset.__subclasses__()],
+            T.Union[*SyftrQADataset.__subclasses__()],  # type: ignore
             Field(discriminator="xname"),
         ]
     ] = Field(
@@ -2109,7 +2063,7 @@ class AgentStudyConfig(BaseSettings):
 
         klass = deepcopy(cls)
         _orig = klass.model_config.pop("yaml_file", None)
-        klass.model_config = SettingsConfigDict(**cls.model_config, yaml_file=path)
+        klass.model_config = SettingsConfigDict(**cls.model_config, yaml_file=path)  # type: ignore
         instance = klass(*args, **kwargs)
         klass.model_config["yaml_file"] = _orig
         return instance
@@ -2159,9 +2113,9 @@ def get_pareto_study_config(study_config: StudyConfig) -> StudyConfig:
     # without running a full fledged search but less effective.
     # We need to make sure the that replacement LLM is in the search space.
     if study_config.pareto.replacement_llm_name:
-        pareto_study_config.search_space.response_synthesizer_llms = list(
+        pareto_study_config.search_space.response_synthesizer_llm_config.llm_names = list(
             set(
-                pareto_study_config.search_space.response_synthesizer_llms
+                pareto_study_config.search_space.response_synthesizer_llm_config.llm_names
                 + [study_config.pareto.replacement_llm_name]
             )
         )
@@ -2256,8 +2210,8 @@ def get_template_name(params: T.Dict[str, T.Any], prefix="") -> str:
 
 
 def get_response_synthesizer_llm(params: T.Dict[str, T.Any], prefix="") -> str:
-    if prefix + "response_synthesizer_llm" in params:
-        return params[prefix + "response_synthesizer_llm"]
+    if prefix + "response_synthesizer_llm_name" in params:
+        return params[prefix + "response_synthesizer_llm_name"]
     # backward compatibility
     rag_mode = params[prefix + "rag_mode"]
     match rag_mode:
@@ -2277,6 +2231,41 @@ def get_response_synthesizer_llm(params: T.Dict[str, T.Any], prefix="") -> str:
             raise ValueError(f"Invalid RAG mode: {rag_mode}")
 
 
+def get_llm_config(
+    df_trials: pd.DataFrame, llm_config: LLMConfig, prefix: str
+) -> LLMConfig:
+    return LLMConfig(
+        llm_names=get_unique_strings(df_trials, f"{prefix}llm_name"),
+        llm_temperature_min=get_min_float(
+            df_trials,
+            f"{prefix}llm_temperature",
+            llm_config.llm_temperature_min,
+            ndigits=NDIGITS,
+        ),
+        llm_temperature_max=get_max_float(
+            df_trials,
+            f"{prefix}llm_temperature",
+            llm_config.llm_temperature_max,
+            ndigits=NDIGITS,
+        ),
+        llm_temperature_step=llm_config.llm_temperature_step,
+        llm_top_p_min=get_min_float(
+            df_trials,
+            f"{prefix}llm_top_p",
+            llm_config.llm_top_p_min,
+            ndigits=NDIGITS,
+        ),
+        llm_top_p_max=get_max_float(
+            df_trials,
+            f"{prefix}llm_top_p",
+            llm_config.llm_top_p_max,
+            ndigits=NDIGITS,
+        ),
+        llm_top_p_step=llm_config.llm_top_p_step,
+        llm_use_reasoning=llm_config.llm_use_reasoning,
+    )
+
+
 def get_subspace(df_trials: pd.DataFrame, search_space: SearchSpace) -> SearchSpace:
     """
     Given a results dataframe, return a SearchSpace object that is
@@ -2291,7 +2280,7 @@ def get_subspace(df_trials: pd.DataFrame, search_space: SearchSpace) -> SearchSp
         params["template_names"] = template_names
 
     if response_synthesizer_llms := get_unique_strings(
-        df_trials, "response_synthesizer_llm"
+        df_trials, "response_synthesizer_llm_name"
     ):
         params["response_synthesizer_llms"] = response_synthesizer_llms
 
@@ -2360,8 +2349,10 @@ def get_subspace(df_trials: pd.DataFrame, search_space: SearchSpace) -> SearchSp
             )
             if True in query_decomposition_enabled:
                 retriever_params["rag_query_decomposition"] = QueryDecomposition(
-                    llm_names=get_unique_strings(
-                        df_trials, "rag_query_decomposition_llm_name"
+                    llm_config=get_llm_config(
+                        df_trials=df_trials,
+                        llm_config=search_space.rag_retriever.query_decomposition.llm_config,
+                        prefix="rag_query_decomposition_",
                     ),
                     num_queries_min=get_min_int(
                         df_trials,
@@ -2407,8 +2398,14 @@ def get_subspace(df_trials: pd.DataFrame, search_space: SearchSpace) -> SearchSp
     if reranker_enabled := get_unique_bools(df_trials, "reranker_enabled"):
         params["reranker_enabled"] = reranker_enabled  # type: ignore
         if True in reranker_enabled:
-            if reranker_llm_name := get_unique_strings(df_trials, "reranker_llm_name"):
+            if get_unique_strings(df_trials, "reranker_llm_name"):
+                llm_config = get_llm_config(
+                    df_trials=df_trials,
+                    llm_config=search_space.reranker.llm_config,
+                    prefix="reranker_",
+                )
                 params["reranker"] = Reranker(  # type: ignore
+                    llm_config=llm_config,
                     top_k=TopK(
                         kmax=get_max_int(
                             df_trials,
@@ -2423,16 +2420,17 @@ def get_subspace(df_trials: pd.DataFrame, search_space: SearchSpace) -> SearchSp
                         log=search_space.reranker.top_k.log,
                         step=search_space.reranker.top_k.step,
                     ),
-                    llms=reranker_llm_name,
                 )
 
     if hyde_enabled := get_unique_bools(df_trials, "hyde_enabled"):
         params["hyde_enabled"] = hyde_enabled  # type: ignore
         if True in hyde_enabled:
-            if hyde_llm_name := get_unique_strings(df_trials, "hyde_llm_name"):
-                params["hyde"] = Hyde(  # type: ignore
-                    llms=hyde_llm_name,
-                )
+            llm_config = get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.hyde.llm_config,
+                prefix="hyde_",
+            )
+            params["hyde"] = Hyde(llm_config=llm_config)  # type: ignore
 
     if additional_context_enabled := get_unique_bools(
         df_trials, "additional_context_enabled"
@@ -2454,53 +2452,53 @@ def get_subspace(df_trials: pd.DataFrame, search_space: SearchSpace) -> SearchSp
 
     if "react_rag_agent" in rag_modes:
         params["react_rag_agent"] = ReactRAGAgent(  # type: ignore
-            subquestion_engine_llms=get_unique_strings(
-                df_trials, "subquestion_engine_llm"
+            subquestion_engine_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.sub_question_rag.subquestion_engine_llm_config,
+                prefix="subquestion_engine_",
             ),
-            subquestion_response_synthesizer_llms=get_unique_strings(
-                df_trials, "subquestion_response_synthesizer_llm"
-            ),
-            max_iterations_min=get_min_int(
-                df_trials,
-                "max_iterations",
-                search_space.react_rag_agent.max_iterations_min,
-            ),
-            max_iterations_max=get_max_int(
-                df_trials,
-                "max_iterations",
-                search_space.react_rag_agent.max_iterations_max,
+            subquestion_response_synthesizer_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.sub_question_rag.subquestion_response_synthesizer_llm_config,
+                prefix="subquestion_response_synthesizer_",
             ),
         )
 
     if "critique_rag_agent" in rag_modes:
         params["critique_rag_agent"] = CritiqueRAGAgent(  # type: ignore
-            subquestion_engine_llms=get_unique_strings(
-                df_trials, "subquestion_engine_llm"
+            subquestion_engine_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.critique_rag_agent.subquestion_engine_llm_config,
+                prefix="subquestion_engine_",
             ),
-            subquestion_response_synthesizer_llms=get_unique_strings(
-                df_trials, "subquestion_response_synthesizer_llm"
+            subquestion_response_synthesizer_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.critique_rag_agent.subquestion_response_synthesizer_llm_config,
+                prefix="subquestion_response_synthesizer_",
             ),
-            critique_agent_llms=get_unique_strings(df_trials, "critique_agent_llm"),
-            reflection_agent_llms=get_unique_strings(df_trials, "reflection_agent_llm"),
-            max_iterations_min=get_min_int(
-                df_trials,
-                "max_iterations",
-                search_space.critique_rag_agent.max_iterations_min,
+            critique_agent_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.critique_rag_agent.critique_agent_llm_config,
+                prefix="critique_agent_",
             ),
-            max_iterations_max=get_max_int(
-                df_trials,
-                "max_iterations",
-                search_space.critique_rag_agent.max_iterations_max,
+            reflection_agent_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.critique_rag_agent.reflection_agent_llm_config,
+                prefix="reflection_agent_",
             ),
         )
 
     if "sub_question_rag" in rag_modes:
         params["sub_question_rag"] = SubQuestionRAGAgent(  # type: ignore
-            subquestion_engine_llms=get_unique_strings(
-                df_trials, "subquestion_engine_llm"
+            subquestion_engine_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.sub_question_rag.subquestion_engine_llm_config,
+                prefix="subquestion_engine_",
             ),
-            subquestion_response_synthesizer_llms=get_unique_strings(
-                df_trials, "subquestion_response_synthesizer_llm"
+            subquestion_response_synthesizer_llm_config=get_llm_config(
+                df_trials=df_trials,
+                llm_config=search_space.sub_question_rag.subquestion_response_synthesizer_llm_config,
+                prefix="subquestion_response_synthesizer_",
             ),
         )
 
