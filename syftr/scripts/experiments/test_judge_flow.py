@@ -2,13 +2,19 @@ import typing as T
 from pathlib import Path
 
 import yaml
+
 from syftr.ray.submit import get_client, start_study, tail
 from syftr.storage import JudgeEvalHF
-from syftr.studies import (ConsensusCorrectnessEvaluator, Evaluation,
-                           JudgeSearchSpace, OptimizationConfig,
-                           RandomCorrectnessEvaluator,
-                           SingleCorrectnessEvaluator, StudyConfig,
-                           get_llm_name_combinations)
+from syftr.studies import (
+    ConsensusCorrectnessEvaluator,
+    Evaluation,
+    JudgeSearchSpace,
+    OptimizationConfig,
+    RandomCorrectnessEvaluator,
+    SingleCorrectnessEvaluator,
+    StudyConfig,
+    get_llm_name_combinations,
+)
 
 JUDGE_LLMS: T.List[str] = [
     "gpt-4o-mini",
