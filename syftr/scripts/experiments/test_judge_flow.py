@@ -2,21 +2,13 @@ import typing as T
 from pathlib import Path
 
 import yaml
-
 from syftr.ray.submit import get_client, start_study, tail
 from syftr.storage import JudgeEvalHF
-from syftr.studies import (
-    ConsensusCorrectnessEvaluator,
-    Evaluation,
-    JudgeSearchSpace,
-    OptimizationConfig,
-    RandomCorrectnessEvaluator,
-    SingleCorrectnessEvaluator,
-    StudyConfig,
-    get_llm_name_combinations,
-)
-
-N_JUDGES: T.List[int] = [3, 5]
+from syftr.studies import (ConsensusCorrectnessEvaluator, Evaluation,
+                           JudgeSearchSpace, OptimizationConfig,
+                           RandomCorrectnessEvaluator,
+                           SingleCorrectnessEvaluator, StudyConfig,
+                           get_llm_name_combinations)
 
 JUDGE_LLMS: T.List[str] = [
     "Qwen/Qwen2.5",
@@ -38,6 +30,7 @@ def main():
         dataset=JudgeEvalHF(),
         evaluation=Evaluation(mode="judge"),
         search_space=JudgeSearchSpace(
+            judge_prompts=["detailed", "comparison", "simple"],
             single_correctness_evaluator=SingleCorrectnessEvaluator(
                 response_synthesizer_llms=JUDGE_LLMS
             ),
@@ -55,13 +48,14 @@ def main():
             ),
         ),
         optimization=OptimizationConfig(
-            num_trials=500,
+            num_trials=1500,
             baselines=[],
             num_random_trials=50,
             use_individual_baselines=False,
             use_agent_baselines=False,
             use_variations_of_baselines=False,
             max_concurrent_trials=50,
+            num_eval_samples=1000,
             num_eval_batch=10,
             max_eval_failure_rate=0.05,
         ),

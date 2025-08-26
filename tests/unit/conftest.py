@@ -6,8 +6,8 @@ import optuna
 import pytest
 
 import syftr.baselines as baselines
-from syftr.llm import get_tokenizer
-from syftr.studies import DEFAULT_LLMS, ParamDict, SearchSpace
+from syftr.llm import LLM_NAMES, get_tokenizer
+from syftr.studies import ParamDict, SearchSpace
 
 
 @pytest.fixture(scope="session")
@@ -38,7 +38,7 @@ def search_space_and_trial_params(
     return ss, params
 
 
-@pytest.fixture(params=DEFAULT_LLMS)
+@pytest.fixture(params=LLM_NAMES)
 def tokenizer(request):
     llm_name = request.param
     return get_tokenizer(llm_name)

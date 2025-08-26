@@ -4,7 +4,7 @@ benchmarking/data/financebench/examples/**/cache-**.arrow
 benchmarking/data/cache/**
 **/terraform/.terraform/**
 **/terraform/.terraform.lock.hcl
-runtime-secrets/*
+runtime-secrets*/*
 config.yaml
 *.log.*
 artifacts/*
@@ -216,3 +216,5 @@ notebooks/.nfs*
 *private*
 /flowgen/data/nltk-data
 .nfs*
+data.*
+/datasets

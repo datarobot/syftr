@@ -304,6 +304,19 @@ class TokenTrackingSpan(_Span):
             # Successfully extracted counts
             return
 
+        # OpenAI Responses API
+        if (
+            (raw := getattr(response, "raw", None))
+            and (usage := getattr(raw, "usage", None))
+            and (input_tokens := getattr(usage, "input_tokens", None)) is not None
+            and (output_tokens := getattr(usage, "output_tokens", None)) is not None
+            and (total_tokens := getattr(usage, "total_tokens", None)) is not None
+        ):
+            self[LLM_TOKEN_COUNT_PROMPT] = input_tokens
+            self[LLM_TOKEN_COUNT_COMPLETION] = output_tokens
+            self[LLM_TOKEN_COUNT_TOTAL] = total_tokens
+            return
+
         # GPT models on AzureOpenAI
         if (raw := getattr(response, "raw", None)) and (
             usage := getattr(raw, "usage", None)

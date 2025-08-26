@@ -372,7 +372,8 @@ class LLMCostHourly(BaseModel):
 
 class LLMConfig(BaseModel):
     model_name: str = Field(description="Name of the LLM to use")
-    temperature: float = Field(default=0.0, description="LLM temperature setting")
+    temperature: float = Field(default=0, description="LLM temperature setting")
+    top_p: float = Field(default=0.95, description="LLM top_p setting")
     max_tokens: int = Field(default=2048, description="Max output tokens")
     system_prompt: T.Optional[str] = Field(
         default=None, description="Custom system prompt"
@@ -496,6 +497,26 @@ class OpenAILikeLLM(LLMConfig):
     is_function_calling_model: bool = False
 
 
+class OpenAIResponsesLLM(LLMConfig):
+    provider: T.Literal["openai_responses"] = Field(
+        "openai_responses",
+        description="Provider identifier for OpenAI Responses-compatible APIs.",
+    )
+    api_base: HttpUrl = Field(description="API base URL for the OpenAI-like model.")
+    api_key: SecretStr = Field(description="API key for this endpoint")
+    api_version: T.Optional[str] = Field(
+        default=None, description="API version to use for this endpoint"
+    )
+    timeout: int = Field(
+        default=120, description="Timeout in seconds for API requests."
+    )
+    context_window: int = Field(default=3900, description="Max input tokens")
+    additional_kwargs: T.Dict[str, T.Any] = Field(
+        default_factory=dict,
+        description="Additional keyword arguments for the OpenAI-like model.",
+    )
+
+
 # Update LLMConfigUnion by adding the new classes
 LLMConfigUnion = Annotated[
     T.Union[
@@ -505,6 +526,7 @@ LLMConfigUnion = Annotated[
         AzureAICompletionsLLM,
         CerebrasLLM,
         OpenAILikeLLM,
+        OpenAIResponsesLLM,
     ],
     Field(discriminator="provider"),
 ]
@@ -562,6 +584,8 @@ class LocalOpenAILikeModel(BaseModel, APIKeySerializationMixin):
     model_name: str
     api_base: str
     api_key: SecretStr | None = None
+    temperature: float = 0.1
+    top_p: float = 0.95
     max_tokens: int
     context_window: int
     is_chat_model: bool = True

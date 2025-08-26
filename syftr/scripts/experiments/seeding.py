@@ -7,6 +7,7 @@ import typing as T
 from syftr.configuration import cfg
 from syftr.experiments import iter_all_job_logs
 from syftr.helpers import get_flows_from_trials
+from syftr.llm import LLM_NAMES__LOCAL_MODELS
 from syftr.logger import logger
 from syftr.optimization import user_confirm_delete
 from syftr.optuna_helper import (
@@ -29,15 +30,14 @@ from syftr.storage import (  # noqa
     SyntheticHotPotQAHF,
 )
 from syftr.studies import (  # noqa
-    DEFAULT_LLMS,
     LOCAL_EMBEDDING_MODELS,
-    LOCAL_LLMS,
     Block,
     CritiqueRAGAgent,
     Evaluation,
     FewShotRetriever,
     Hyde,
     LATSRagAgent,
+    LLMConfig,
     OptimizationConfig,
     QueryDecomposition,
     ReactRAGAgent,
@@ -54,39 +54,34 @@ from syftr.studies import (  # noqa
 from syftr.studyconfig_helper import build_configs
 
 # -------------------------------------------------------
-PREFIX = "cerebras"  # this three parameters
-BENCH_NUM = 5  # are used to name
-RUN_NAME = "your run name here"
+PREFIX = "seeding"  # this three parameters
+BENCH_NUM = 1  # are used to name
+RUN_NAME = "testing-transfer"
 # -------------------------------------------------------
-NUM_TRIALS = 0  # total number of optimization trials per submission
-MAX_CONCURRENT_TRIALS = 10
+NUM_TRIALS = 1000  # total number of optimization trials per submission
+NUM_RANDOM_TRIALS = 0
+MAX_CONCURRENT_TRIALS = 25
 NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, exsting studies will be deleted!
 RECREATE_STUDY = (
-    False  # WARNING: do not use with simultaneous runs using the same study!
+    True  # WARNING: do not use with simultaneous runs using the same study!
 )
 EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 MINUTES_BEFORE_NEXT_SUBMISSION = 2
-
-# To seed with silver bullets, you first create the input file with the silver_bullets.ipynb notebook
-CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
-# CUSTOM_BASELINES = "silver"  # "pareto", "all", "silver", None
-OBJ2_NAME = "llm_cost_mean"  # "p80_time", "llm_cost_mean", "retriever_context_length"
+OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
-CUSTOM_BASELINES = None  # "pareto", "all", "silver", None
+# To seed with silver bullets, you first create the input file using silver_bullets.ipynb notebook
+CUSTOM_BASELINES = "transfer"  # valid values are: "pareto", "all", "silver", "transfer", None  # valid values are: "pareto", "all", "silver", "tansfer", None
 BASELINES_BATCH_SIZE = 100  # we require batching of baselines to avoid Ray OOM issues
 BASELINES_START = 0  # you can restrict the number of baselines ...
 BASELINES_END = 100  # ... to start with here to avoid OOM issues
-# -------------------------------------------------------
 BASELINE_STUDIES: T.List[str] = [
-    "silver1--in-sample--bright_hf--earth_science",
-    "silver1--in-sample--bright_hf--economics",
-    # "silver1--in-sample--bright_hf--pony",
-    # "silver1--in-sample--bright_hf--psychology",
-    "silver1--in-sample--bright_hf--robotics",
-    "silver1--in-sample--bright_hf--sustainable_living",
+    "seeding1--training--crag_hf-music--music",
+    "seeding1--training--financebench_hf",
+    "seeding1--training--hotpotqa_hf-train_hard--train_hard",
+    "seeding1--training--multihoprag_hf",
 ]
 
 BLOCKS = [
@@ -104,7 +99,7 @@ BLOCKS = [
             "react_rag_agent",
             "rag_mode",
             "reranker",
-            "response_synthesizer_llm",
+            "response_synthesizer_llm_name",
             "sub_question_rag",
             "template_name",
         ],
@@ -127,13 +122,14 @@ BLOCKS = [
     #         "react_rag_agent",
     #         "rag_mode",
     #         "reranker",
-    #         "response_synthesizer_llm",
+    #         "response_synthesizer_llm_name",
     #         "sub_question_rag",
     #         "template_name",
     #     ],
     # ),
 ]
 
+TRANSFER_LEARNING = None
 BASELINES = []
 if CUSTOM_BASELINES == "pareto":
     for study in BASELINE_STUDIES:
@@ -150,22 +146,19 @@ elif CUSTOM_BASELINES == "all":
 elif CUSTOM_BASELINES == "silver":
     BASELINES = json.load(open(cfg.paths.results_dir / "silver-bullets.json", "r"))
     logger.info(f"We have {len(BASELINES)} silver bullet baselines for seeding")
+elif CUSTOM_BASELINES == "transfer":
+    TRANSFER_LEARNING = TransferLearningConfig(
+        studies=BASELINE_STUDIES,
+        max_fronts=2,
+        max_total=23,
+        success_rate=0.9,
+        embedding_model="BAAI/bge-large-en-v1.5",
+    )
 else:
     logger.info("No custom baselines provided")
 
-# TRANSFER_LEARNING = TransferLearningConfig(
-#     studies=[
-#         "bench14--small-models--crag-music",
-#         "bench14--small-models--drdocs",
-#         "bench14--small-models--financebench",
-#     ],
-#     max_fronts=6,
-#     max_total=37,
-#     success_rate=0.9,
-#     embedding_model="BAAI/bge-large-en-v1.5",
-# )
 
-LLMS: T.List[str] = LOCAL_LLMS
+LLMS: T.List[str] = LLM_NAMES__LOCAL_MODELS
 
 EMBEDDING_MODELS = [
     "BAAI/bge-small-en-v1.5",
@@ -212,35 +205,35 @@ SEARCH_SPACE = SearchSpace(
         "CoT",
         # "finance-expert",
     ],
-    response_synthesizer_llms=LLMS,
+    response_synthesizer_llm_config=LLMConfig(llm_names=LLMS),
     rag_retriever=Retriever(
         embedding_models=EMBEDDING_MODELS,
         methods=["dense", "sparse", "hybrid"],
         top_k=TopK(kmin=1, kmax=10, log=False),
         query_decomposition=QueryDecomposition(
-            llm_names=LLMS,
+            llm_config=LLMConfig(llm_names=LLMS),
             num_queries_min=2,
             num_queries_max=5,
             num_queries_step=1,
         ),
     ),
     react_rag_agent=ReactRAGAgent(
-        subquestion_engine_llms=LLMS,
-        subquestion_response_synthesizer_llms=LLMS,
+        subquestion_engine_llm_config=LLMConfig(llm_names=LLMS),
+        subquestion_response_synthesizer_llm_config=LLMConfig(llm_names=LLMS),
     ),
     sub_question_rag=SubQuestionRAGAgent(
-        subquestion_engine_llms=LLMS,
-        subquestion_response_synthesizer_llms=LLMS,
+        subquestion_engine_llm_config=LLMConfig(llm_names=LLMS),
+        subquestion_response_synthesizer_llm_config=LLMConfig(llm_names=LLMS),
     ),
     critique_rag_agent=CritiqueRAGAgent(
-        subquestion_engine_llms=LLMS,
-        subquestion_response_synthesizer_llms=LLMS,
-        critique_agent_llms=LLMS,
-        reflection_agent_llms=LLMS,
+        subquestion_engine_llm_config=LLMConfig(llm_names=LLMS),
+        subquestion_response_synthesizer_llm_config=LLMConfig(llm_names=LLMS),
+        critique_agent_llm_config=LLMConfig(llm_names=LLMS),
+        reflection_agent_llm_config=LLMConfig(llm_names=LLMS),
     ),
     lats_rag_agent=LATSRagAgent(),
-    reranker=Reranker(llms=LLMS),
-    hyde=Hyde(llms=LLMS),
+    reranker=Reranker(llm_config=LLMConfig(llm_names=LLMS)),
+    hyde=Hyde(llm_config=LLMConfig(llm_names=LLMS)),
     few_shot_retriever=FewShotRetriever(
         embedding_models=EMBEDDING_MODELS,
     ),
@@ -248,31 +241,29 @@ SEARCH_SPACE = SearchSpace(
 
 EVALUATION = Evaluation(
     mode=EVAL_MODE,
-    llms=["gpt-4o-mini"],
     raise_on_exception=False,
 )
+EVALUATION.llm_names = ["gpt-4o-mini"]
 
-DATASETS: T.List[str] = [
-    # BrightHF(subset="biology"),
+DATASETS: T.List[SyftrQADataset] = [
     # CragTask3HF(subset="music"),
-    # CragTask3HF(subset="sports"),
-    # DRDocsHF(),
-    # InfiniteBenchHF(),
-    # MultiHopRAGHF(),
-    # -----------------------------------------------
     # FinanceBenchHF(),
     # HotPotQAHF(subset="train_hard"),
-    # PhantomWikiv050(),
-    # InfiniteBenchHF(),
+    # MultiHopRAGHF(),
     # -----------------------------------------------
-    # BrightHF(subset="stackoverflow"),
-    # BrightHF(subset="pony"),
-    # BrightHF(subset="psychology"),
-    # -----------------------
+    BrightHF(subset="biology"),
+    DRDocsHF(),
+    InfiniteBenchHF(),
+    PhantomWikiv050(),
+    # ###############################################
     # BrightHF(subset="earth_science"),
     # BrightHF(subset="economics"),
+    # BrightHF(subset="pony"),
+    # BrightHF(subset="psychology"),
     # BrightHF(subset="robotics"),
+    # BrightHF(subset="stackoverflow"),
     # BrightHF(subset="sustainable_living"),
+    # CragTask3HF(subset="sports"),
 ]
 assert DATASETS, "No datasets found. Please check the dataset list."
 
@@ -285,18 +276,17 @@ def get_optimization_parameters():
         num_trials=NUM_TRIALS,
         baselines=BASELINES,
         baselines_cycle_llms=True,
-        shuffle_baselines=False,
+        shuffle_baselines=True,
         max_concurrent_trials=MAX_CONCURRENT_TRIALS,
         num_eval_samples=NUM_EVAL_SAMPLES,
         num_eval_batch=5,
-        # rate_limiter_max_coros=30,  # control the number of concurrent evals ...
-        rate_limiter_max_coros=60,  # control the number of concurrent evals ...
+        rate_limiter_max_coros=30,  # control the number of concurrent evals ...
         rate_limiter_period=60,  # ... per given time unit
         max_trial_cost=40.0,
         cpus_per_trial=1,
         seeder_timeout=None,  # None: wait until finished, 0: don't wait
         # -----------------------------------------------
-        num_random_trials=0,
+        num_random_trials=NUM_RANDOM_TRIALS,
         # -----------------------------------------------
         use_individual_baselines=False,
         use_agent_baselines=False,
@@ -304,7 +294,7 @@ def get_optimization_parameters():
         # -----------------------------------------------
         use_pareto_baselines=False,  # required for transfer learning
         # -----------------------------------------------
-        use_pareto_pruner=False,
+        use_pareto_pruner=True,
         use_cost_pruner=True,
         use_runtime_pruner=True,
         # -----------------------------------------------
@@ -360,7 +350,7 @@ def main():
             prefix=PREFIX,
             run_name=RUN_NAME,
             embedding_max_time=EMBEDDING_MAX_TIME,
-            transfer_learning=None,
+            transfer_learning=TRANSFER_LEARNING,
         )
 
         if DRY_RUN:
@@ -380,13 +370,15 @@ def main():
             logger.info("Started job %s", job_id)
             # This might help the checkpointing bug
             sleep_time = 60 * MINUTES_BEFORE_NEXT_SUBMISSION
-            logger.info(f"Sleeping for {sleep_time} seconds before the next submission")
+            logger.info(
+                f"Sleeping for {MINUTES_BEFORE_NEXT_SUBMISSION} minutes before the next submission"
+            )
             time.sleep(int(sleep_time))
 
     # monitor benchmarks
     log_tailers = [client.tail_job_logs(job) for job in job_ids]
 
-    asyncio.run(iter_all_job_logs(log_tailers))
+    asyncio.run(iter_all_job_logs(log_tailers))  # type: ignore
 
 
 if __name__ == "__main__":
