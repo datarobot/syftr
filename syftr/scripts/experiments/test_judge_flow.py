@@ -11,18 +11,25 @@ from syftr.studies import (ConsensusCorrectnessEvaluator, Evaluation,
                            get_llm_name_combinations)
 
 JUDGE_LLMS: T.List[str] = [
-    "Qwen/Qwen2.5",
-    "Qwen/Qwen3-32B",
-    "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
-    "google/gemma-3-27b-it",
-    "microsoft/Phi-4-multimodal-instruct",
-    "nvidia/Llama-3_3-Nemotron-Super-49B",
+    "gpt-4o-mini",
+    "qwen-235b-a22b",
+    "glm-4.5-air",
+    "gpt-oss-120b-low",
+    "gpt-oss-120b-medium",
+    "gpt-oss-120b-high",
+    "gpt-oss-20b-low",
+    "gpt-oss-20b-medium",
+    "gpt-oss-20b-high",
+    "nemotron-super-49b",
+    "qwen3-30b-a3b",
+    "gemma3-27b-it",
+    "phi-4-multimodal-instruct",
 ]
 
 
 def main():
     # name = "judge-eval-consensus"
-    name = "judge-eval-study-16-simplefix"
+    name = "judge-eval-study-17"
     study_config = StudyConfig(
         name=name,
         reuse_study=False,
@@ -32,29 +39,27 @@ def main():
         search_space=JudgeSearchSpace(
             judge_prompts=["detailed", "comparison", "simple"],
             single_correctness_evaluator=SingleCorrectnessEvaluator(
-                response_synthesizer_llms=JUDGE_LLMS
+                response_synthesizer_llm_names=JUDGE_LLMS
             ),
             consensus_correctness_evaluator=ConsensusCorrectnessEvaluator(
-                response_synthesizer_llms=JUDGE_LLMS,
                 response_synthesizer_llm_combinations=get_llm_name_combinations(
-                    JUDGE_LLMS, [3, 5]
+                    JUDGE_LLMS, [3]
                 ),
             ),
             random_correctness_evaluator=RandomCorrectnessEvaluator(
-                response_synthesizer_llms=JUDGE_LLMS,
                 response_synthesizer_llm_combinations=get_llm_name_combinations(
-                    JUDGE_LLMS, [3, 5]
+                    JUDGE_LLMS, [3]
                 ),
             ),
         ),
         optimization=OptimizationConfig(
-            num_trials=1500,
+            num_trials=2000,
             baselines=[],
-            num_random_trials=50,
+            num_random_trials=100,
             use_individual_baselines=False,
             use_agent_baselines=False,
             use_variations_of_baselines=False,
-            max_concurrent_trials=50,
+            max_concurrent_trials=100,
             num_eval_samples=1000,
             num_eval_batch=10,
             max_eval_failure_rate=0.05,
