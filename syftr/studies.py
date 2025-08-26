@@ -1313,7 +1313,7 @@ class RetrieverSearchSpace(BaseModel):
 
 class CorrectnessEvaluator(BaseModel):
     model_config = ConfigDict(extra="forbid")  # Forbids unknown fields
-    response_synthesizer_llms: T.List[str] = Field(
+    response_synthesizer_llm_names: T.List[str] = Field(
         default_factory=lambda: LLM_NAMES,
         description="LLMs used for judgement.",
     )
@@ -1325,18 +1325,18 @@ class CorrectnessEvaluator(BaseModel):
 class SingleCorrectnessEvaluator(CorrectnessEvaluator):
     def defaults(self) -> ParamDict:
         return {
-            "response_synthesizer_llm": self.response_synthesizer_llms[0],
-            "response_synthesizer_temperature": 0.0,
+            "response_synthesizer_llm_name": self.response_synthesizer_llm_names[0],
+            "response_synthesizer_llm_temperature": 0.0,
         }
 
     def build_distributions(
         self, params: T.Dict[str, T.Any] | T.List[str] | None = None
     ) -> T.Dict[str, BaseDistribution]:
         distributions: dict[str, BaseDistribution] = {
-            "response_synthesizer_llm": CategoricalDistribution(
-                self.response_synthesizer_llms
+            "response_synthesizer_llm_name": CategoricalDistribution(
+                self.response_synthesizer_llm_names
             ),
-            "response_synthesizer_temperature": FloatDistribution(
+            "response_synthesizer_llm_temperature": FloatDistribution(
                 self.temperature_min,
                 self.temperature_max,
                 step=self.temperature_step,
@@ -1346,11 +1346,11 @@ class SingleCorrectnessEvaluator(CorrectnessEvaluator):
 
     def sample(self, trial: Trial, prefix: str = "") -> ParamDict:
         params: ParamDict = {
-            "response_synthesizer_llm": trial.suggest_categorical(
-                "response_synthesizer_llm", self.response_synthesizer_llms
+            "response_synthesizer_llm_name": trial.suggest_categorical(
+                "response_synthesizer_llm_name", self.response_synthesizer_llm_names
             ),
-            "response_synthesizer_temperature": trial.suggest_float(
-                "response_synthesizer_temperature",
+            "response_synthesizer_llm_temperature": trial.suggest_float(
+                "response_synthesizer_llm_temperature",
                 self.temperature_min,
                 self.temperature_max,
                 step=self.temperature_step,
@@ -1359,7 +1359,7 @@ class SingleCorrectnessEvaluator(CorrectnessEvaluator):
         return params
 
     def get_cardinality(self) -> int:
-        llms = len(self.response_synthesizer_llms)
+        llms = len(self.response_synthesizer_llm_names)
         temperature_card = get_dist_cardinality(
             self.temperature_min,
             self.temperature_max,
@@ -1379,7 +1379,7 @@ class ConsensusCorrectnessEvaluator(CorrectnessEvaluator):
             "response_synthesizer_llm_combination": self.response_synthesizer_llm_combinations[
                 0
             ],
-            "response_synthesizer_temperature": 0.0,
+            "response_synthesizer_llm_temperature": 0.0,
         }
 
     def build_distributions(
@@ -1389,7 +1389,7 @@ class ConsensusCorrectnessEvaluator(CorrectnessEvaluator):
             "response_synthesizer_llm_combination": CategoricalDistribution(
                 self.response_synthesizer_llm_combinations
             ),
-            "response_synthesizer_temperature": FloatDistribution(
+            "response_synthesizer_llm_temperature": FloatDistribution(
                 self.temperature_min,
                 self.temperature_max,
                 step=self.temperature_step,
@@ -1403,8 +1403,8 @@ class ConsensusCorrectnessEvaluator(CorrectnessEvaluator):
                 "response_synthesizer_llm_combination",
                 self.response_synthesizer_llm_combinations,
             ),
-            "response_synthesizer_temperature": trial.suggest_float(
-                "response_synthesizer_temperature",
+            "response_synthesizer_llm_temperature": trial.suggest_float(
+                "response_synthesizer_llm_temperature",
                 self.temperature_min,
                 self.temperature_max,
                 step=self.temperature_step,
@@ -1432,7 +1432,7 @@ class RandomCorrectnessEvaluator(CorrectnessEvaluator):
             "response_synthesizer_llm_combination": self.response_synthesizer_llm_combinations[
                 0
             ],
-            "response_synthesizer_temperature": 0.0,
+            "response_synthesizer_llm_temperature": 0.0,
         }
 
     def build_distributions(
@@ -1442,7 +1442,7 @@ class RandomCorrectnessEvaluator(CorrectnessEvaluator):
             "response_synthesizer_llm_combination": CategoricalDistribution(
                 self.response_synthesizer_llm_combinations
             ),
-            "response_synthesizer_temperature": FloatDistribution(
+            "response_synthesizer_llm_temperature": FloatDistribution(
                 self.temperature_min,
                 self.temperature_max,
                 step=self.temperature_step,
@@ -1456,8 +1456,8 @@ class RandomCorrectnessEvaluator(CorrectnessEvaluator):
                 "response_synthesizer_llm_combination",
                 self.response_synthesizer_llm_combinations,
             ),
-            "response_synthesizer_temperature": trial.suggest_float(
-                "response_synthesizer_temperature",
+            "response_synthesizer_llm_temperature": trial.suggest_float(
+                "response_synthesizer_llm_temperature",
                 self.temperature_min,
                 self.temperature_max,
                 step=self.temperature_step,
