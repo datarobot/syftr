@@ -13,7 +13,7 @@ from llama_index.retrievers.bm25 import BM25Retriever
 
 from syftr.hf_endpoint_embeddings import HFEndpointEmbeddings
 from syftr.huggingface_helper import get_embedding_model
-from syftr.llm import get_llm
+from syftr.llm import LLM_NAMES, get_llm
 from syftr.logger import logger
 from syftr.retrievers.storage import get_cached, index_cache_lock, put_cache
 from syftr.studies import ParamDict, StudyConfig
@@ -187,7 +187,7 @@ def build_rag_retriever(
         retriever_weights = [1]
 
     fusion_retriever_params = {
-        "llm": get_llm("gpt-4o-mini"),  # Not used without query decomposition enabled
+        "llm": get_llm(LLM_NAMES[0]),  # Not used without query decomposition enabled
         "mode": FUSION_MODES(params["rag_fusion_mode"]),
         "use_async": False,
         "verbose": True,
