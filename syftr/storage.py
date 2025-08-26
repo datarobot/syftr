@@ -1267,6 +1267,25 @@ class CustomDataset(SyftrQADataset):
         "This dataset loads QA pairs from a local CSV file and grounding data from a local directory."
     )
 
+    sample_size: int = 10
+    training_size: int = 100
+    testing_size: int = 100
+    holdout_size: int = 0
+
+    def _get_partition_range(self, partition: str):
+        partition_ranges = {
+            "sample": range(0, self.sample_size),
+            "train": range(0, self.training_size),
+            "test": range(self.training_size, self.training_size + self.testing_size),
+            "holdout": range(
+                self.training_size + self.testing_size,
+                self.training_size + self.testing_size + self.holdout_size,
+            ),
+        }
+        if partition in partition_ranges:
+            return partition_ranges[partition]
+        raise ValueError(f"Unknown partition: {partition}")
+
     @field_validator("qa_csv_path", "grounding_data_dir", mode="after")
     @classmethod
     def check_paths_are_absolute(cls, v: Path) -> Path:
@@ -1294,15 +1313,13 @@ class CustomDataset(SyftrQADataset):
 
     def _load_qa_dataset(self, partition: str = "test") -> datasets.Dataset:
         """
-        This method reads a CSV file of QA pairs and returns all examples as the 'test' partition.
-        Other partitions ('sample', 'train', 'holdout') are not supported.
+        This method reads a CSV file of QA pairs and returns data of the requested partition.
         """
-        if partition != "test":
-            raise ValueError(
-                f"Only 'test' partition is supported in CustomLocalDataset (got '{partition}')"
-            )
-        dataset = pd.read_csv(self._get_qa_abspath())
-        return datasets.Dataset.from_pandas(dataset)
+
+        df: pd.DataFrame = pd.read_csv(self._get_qa_abspath())
+        partition_range = self._get_partition_range(partition)
+        df_partition = df.iloc[list(partition_range)]
+        return datasets.Dataset.from_pandas(df_partition)
 
     def _load_grounding_dataset(self) -> datasets.DatasetDict:
         reader = SimpleDirectoryReader(input_dir=self._get_grounding_dir_abspath())
