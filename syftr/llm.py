@@ -17,6 +17,7 @@ from llama_index.llms.anthropic import Anthropic
 from llama_index.llms.azure_inference import AzureAICompletionsModel
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.cerebras import Cerebras
+from llama_index.llms.openai import OpenAIResponses
 from llama_index.llms.openai_like import OpenAILike
 from llama_index.llms.vertex import Vertex
 from mypy_extensions import DefaultNamedArg
@@ -28,12 +29,13 @@ from syftr.configuration import (
     AzureOpenAILLM,
     CerebrasLLM,
     OpenAILikeLLM,
+    OpenAIResponsesLLM,
     Settings,
     VertexAILLM,
     cfg,
 )
 from syftr.logger import logger
-from syftr.patches import _get_all_kwargs
+from syftr.patches import _get_all_kwargs, _get_model_kwargs_responses
 
 BASELINE_RAG_EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 
@@ -84,7 +86,6 @@ def add_scoped_credentials_anthropic(anthropic_llm: Anthropic) -> Anthropic:
 
 def _construct_azure_openai_llm(name: str, llm_config: AzureOpenAILLM) -> AzureOpenAI:
     llm_config.additional_kwargs = llm_config.additional_kwargs or {}
-    llm_config.additional_kwargs
     return AzureOpenAI(
         model=llm_config.model_name,
         temperature=llm_config.temperature,
@@ -191,6 +192,25 @@ def _construct_openai_like_llm(name: str, llm_config: OpenAILikeLLM) -> OpenAILi
     )
 
 
+def _construct_openai_responses_llm(
+    name: str, llm_config: OpenAIResponsesLLM
+) -> OpenAIResponses:
+    OpenAIResponses._get_model_kwargs = _get_model_kwargs_responses
+    return OpenAIResponses(
+        model=llm_config.model_name,
+        temperature=llm_config.temperature,
+        max_output_tokens=llm_config.max_tokens,
+        max_retries=0,
+        system_prompt=llm_config.system_prompt,
+        api_base=str(llm_config.api_base),
+        api_key=llm_config.api_key.get_secret_value(),
+        api_version=llm_config.api_version,  # type: ignore
+        context_window=llm_config.context_window,
+        timeout=llm_config.timeout,
+        additional_kwargs=llm_config.additional_kwargs or {},
+    )
+
+
 LLM_NAMES__LOCAL_MODELS: T.List[str] = [
     model.model_name for model in cfg.local_models.generative or []
 ]
@@ -252,6 +272,10 @@ def get_generative_llm(
         llm_instance = _construct_cerebras_llm(name, llm_config_instance)
     elif provider == "openai_like" and isinstance(llm_config_instance, OpenAILikeLLM):
         llm_instance = _construct_openai_like_llm(name, llm_config_instance)
+    elif provider == "openai_responses" and isinstance(
+        llm_config_instance, OpenAIResponsesLLM
+    ):
+        llm_instance = _construct_openai_responses_llm(name, llm_config_instance)
     else:
         raise ValueError(
             f"Unsupported provider type '{provider}' or "

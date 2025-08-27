@@ -101,4 +101,8 @@ def test_coa_agent_flow_math(coa_agent_flow, llama_debug):
         "what is 123.123*101.101 and what is its product with 12345. "
         "then what is 415.151 - 128.24 and what is its product with the previous product?"
     )
-    assert str((123.123 * 101.101) * 12345 * (415.151 - 128.24)) in response.text
+    answer = (123.123 * 101.101) * 12345 * (415.151 - 128.24)
+    valid_answers = [str(answer), f"{answer:,}", f"{answer:,}".replace(",", "\u202f")]
+    assert any(answer in response.text for answer in valid_answers), (
+        f"{valid_answers=}, {response.text=}"
+    )

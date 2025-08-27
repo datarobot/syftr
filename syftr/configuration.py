@@ -129,6 +129,7 @@ class Paths(BaseModel):
         if os.getenv("SYFTR_WORKER_JOB", "false").lower() == "true"
         else Path(f"/tmp/syftr_{getpass.getuser()}")  # syftr tmp dir for local jobs
     )
+
     huggingface_cache: Annotated[Path, Field(validate_default=True)] = (
         tmp_dir / "huggingface"
     )
@@ -497,6 +498,26 @@ class OpenAILikeLLM(LLMConfig):
     is_function_calling_model: bool = False
 
 
+class OpenAIResponsesLLM(LLMConfig):
+    provider: T.Literal["openai_responses"] = Field(
+        "openai_responses",
+        description="Provider identifier for OpenAI Responses-compatible APIs.",
+    )
+    api_base: HttpUrl = Field(description="API base URL for the OpenAI-like model.")
+    api_key: SecretStr = Field(description="API key for this endpoint")
+    api_version: T.Optional[str] = Field(
+        default=None, description="API version to use for this endpoint"
+    )
+    timeout: int = Field(
+        default=120, description="Timeout in seconds for API requests."
+    )
+    context_window: int = Field(default=3900, description="Max input tokens")
+    additional_kwargs: T.Dict[str, T.Any] = Field(
+        default_factory=dict,
+        description="Additional keyword arguments for the OpenAI-like model.",
+    )
+
+
 # Update LLMConfigUnion by adding the new classes
 LLMConfigUnion = Annotated[
     T.Union[
@@ -506,6 +527,7 @@ LLMConfigUnion = Annotated[
         AzureAICompletionsLLM,
         CerebrasLLM,
         OpenAILikeLLM,
+        OpenAIResponsesLLM,
     ],
     Field(discriminator="provider"),
 ]
