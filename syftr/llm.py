@@ -86,7 +86,6 @@ def add_scoped_credentials_anthropic(anthropic_llm: Anthropic) -> Anthropic:
 
 def _construct_azure_openai_llm(name: str, llm_config: AzureOpenAILLM) -> AzureOpenAI:
     llm_config.additional_kwargs = llm_config.additional_kwargs or {}
-    llm_config.additional_kwargs
     return AzureOpenAI(
         model=llm_config.model_name,
         temperature=llm_config.temperature,
