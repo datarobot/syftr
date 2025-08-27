@@ -53,23 +53,23 @@ from syftr.studies import (  # noqa
 from syftr.studyconfig_helper import build_configs
 
 # -------------------------------------------------------
-PREFIX = "llm"  # this three parameters
-BENCH_NUM = 2  # are used to name
+PREFIX = "gpt-oss"  # this three parameters
+BENCH_NUM = 1  # are used to name
 # RUN_NAME = "thinking"
-RUN_NAME = "test"
+RUN_NAME = "latency"
 # -------------------------------------------------------
-NUM_TRIALS = 30  # total number of optimization trials per submission
+NUM_TRIALS = 3000  # total number of optimization trials per submission
 NUM_RANDOM_TRIALS = 100
-MAX_CONCURRENT_TRIALS = 100
+MAX_CONCURRENT_TRIALS = 20
 NUM_EVAL_SAMPLES = 50
 REUSE_STUDY = True  # WARNING: if set to False, existing studies will be deleted!
 RECREATE_STUDY = (
     True  # WARNING: do not use with simultaneous runs using the same study!
 )
-EVAL_MODE: T.Literal["single", "random", "consensus"] = "random"
+EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
-MINUTES_BEFORE_NEXT_SUBMISSION = 2
+MINUTES_BEFORE_NEXT_SUBMISSION = 1
 OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
 # To seed with silver bullets, you first create the input file using silver_bullets.ipynb notebook
@@ -159,18 +159,18 @@ else:
 
 
 LLMS: T.List[str] = [
-    # "qwen3-235b-a22b-thinking-2507",
-    # "glm-4.5-air",
+    "qwen3-235b-a22b",
+    "glm-4.5-air",
     "gpt-oss-120b-low",
     "gpt-oss-120b-medium",
     "gpt-oss-120b-high",
     "gpt-oss-20b-low",
     "gpt-oss-20b-medium",
     "gpt-oss-20b-high",
-    # "nemotron-super-49b",
-    # "qwen3-30b-a3b",
-    # "gemma3-27b-it",
-    # "phi-4-multimodal-instruct",
+    "nemotron-super-49b",
+    "qwen3-30b-a3b",
+    "gemma3-27b-it",
+    "phi-4-multimodal-instruct",
 ]
 
 
@@ -213,8 +213,8 @@ SEARCH_SPACE = SearchSpace(
     ),
     rag_modes=[
         # "no_rag",
-        # "rag",
-        # "lats_rag_agent",
+        "rag",
+        "lats_rag_agent",
         "react_rag_agent",
         "critique_rag_agent",
         "sub_question_rag",
@@ -251,7 +251,7 @@ SEARCH_SPACE = SearchSpace(
         critique_agent_llm_config=LLMConfig(llm_names=LLMS),
         reflection_agent_llm_config=LLMConfig(llm_names=LLMS),
     ),
-    # lats_rag_agent=LATSRagAgent(),
+    lats_rag_agent=LATSRagAgent(),
     reranker=Reranker(llm_config=LLMConfig(llm_names=LLMS)),
     hyde=Hyde(llm_config=LLMConfig(llm_names=LLMS)),
     few_shot_retriever=FewShotRetriever(
@@ -268,14 +268,14 @@ EVALUATION.llm_names = ["gpt-4o-mini"]
 
 DATASETS: T.List[SyftrQADataset] = [
     # CragTask3HF(subset="music"),
-    # FinanceBenchHF(),
-    # HotPotQAHF(subset="train_hard"),
-    # MultiHopRAGHF(),
+    FinanceBenchHF(),
+    HotPotQAHF(subset="train_hard"),
+    MultiHopRAGHF(),
     # -----------------------------------------------
     # BrightHF(subset="biology"),
-    DRDocsHF(),
+    # DRDocsHF(),
     # InfiniteBenchHF(),
-    # PhantomWikiv050(),
+    PhantomWikiv050(),
     # ###############################################
     # BrightHF(subset="earth_science"),
     # BrightHF(subset="economics"),
