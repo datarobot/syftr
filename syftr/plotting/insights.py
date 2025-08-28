@@ -95,9 +95,9 @@ def get_objective_2_unit(data: pd.DataFrame | None = None, is_cost: bool | None 
 discrete_cmap = plt.get_cmap("tab20")
 baseline_cmap = plt.get_cmap("copper")
 continuous_cmap = plt.get_cmap("copper_r")
-grey_face_color = "0.9"
-grey_edge_color = "0.7"
-fore_color = "0.0"
+grey_face_color = "0.7"
+grey_edge_color = "0.5"
+fore_color = "0.5"
 
 normal_to_red = LinearSegmentedColormap.from_list(
     "normal_to_red", ["white", "red", "darkred"]
@@ -1080,10 +1080,10 @@ def plot_pareto_plot(
             df_trials["values_1"],
             df_trials["values_0"],
             "o",
-            color=trials_face_color,
-            markeredgecolor=trials_edge_color,
+            color=trials_face_color,  # darker gray
+            markeredgecolor=trials_edge_color,  # even darker edge
             markeredgewidth=0.5,
-            alpha=0.25,
+            alpha=0.2,
             label=trials_label,
             markersize=markersize,
         )
