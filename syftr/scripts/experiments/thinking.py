@@ -56,7 +56,7 @@ from syftr.studyconfig_helper import build_configs
 PREFIX = "gpt-oss"  # this three parameters
 BENCH_NUM = 1  # are used to name
 # RUN_NAME = "thinking"
-RUN_NAME = "latency"
+RUN_NAME = "cost"
 # -------------------------------------------------------
 NUM_TRIALS = 3000  # total number of optimization trials per submission
 NUM_RANDOM_TRIALS = 100
@@ -70,7 +70,7 @@ EVAL_MODE: T.Literal["single", "random", "consensus"] = "single"
 DRY_RUN = False  #  a dry run will not submit jobs but create the study configs
 EMBEDDING_MAX_TIME = 3600 * 8
 MINUTES_BEFORE_NEXT_SUBMISSION = 1
-OBJ2_NAME = "p80_time"  # "p80_time", "llm_cost_mean", "retriever_context_length"
+OBJ2_NAME = "llm_cost_mean"  # "p80_time", "llm_cost_mean", "retriever_context_length"
 # -------------------------------------------------------
 # To seed with silver bullets, you first create the input file using silver_bullets.ipynb notebook
 CUSTOM_BASELINES = None  # valid values are: "pareto", "all", "silver", "transfer", None  # valid values are: "pareto", "all", "silver", "tansfer", None
