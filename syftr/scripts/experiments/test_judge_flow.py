@@ -39,11 +39,16 @@ def main():
     study_config = StudyConfig(
         name=name,
         reuse_study=False,
-        recreate_study=False,
+        recreate_study=True,
         dataset=JudgeEvalHF(),
         evaluation=Evaluation(mode="judge"),
         search_space=JudgeSearchSpace(
-            judge_prompts=["detailed", "comparison", "simple"],
+            judge_prompts=[
+                "default",
+                "simple",
+                "out_of_ten",
+                "detailed",
+            ],
             single_correctness_evaluator=SingleCorrectnessEvaluator(
                 response_synthesizer_llm_names=JUDGE_LLMS
             ),
@@ -61,11 +66,11 @@ def main():
         optimization=OptimizationConfig(
             num_trials=2000,
             baselines=[],
-            num_random_trials=100,
+            num_random_trials=50,
             use_individual_baselines=False,
             use_agent_baselines=False,
             use_variations_of_baselines=False,
-            max_concurrent_trials=100,
+            max_concurrent_trials=50,
             num_eval_samples=1000,
             num_eval_batch=10,
             max_eval_failure_rate=0.05,
