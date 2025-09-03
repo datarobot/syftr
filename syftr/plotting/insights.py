@@ -212,6 +212,7 @@ def descriptive_name(param_col, is_cost=None):
         "params_sub_question_engine_llm": "Subquestion Engine LLM",
         "params_sub_question_response_synthesizer_llm": "Subquestion Response Synthesizer LLM",
         "params_template_name": "Prompt Template",
+        # new param names for LLMs
     }
     if isinstance(param_col, str):
         if param_col not in column_name_map:
