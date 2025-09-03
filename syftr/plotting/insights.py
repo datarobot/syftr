@@ -27,7 +27,7 @@ from syftr.helpers import is_numeric
 from syftr.llm import get_llm
 from syftr.studies import get_response_synthesizer_llm, get_template_name
 
-SHOW_TITLE = False
+SHOW_TITLE = True
 CACHE = diskcache.Cache(".insights_cache/")
 
 
@@ -813,7 +813,7 @@ def get_baselines(df):
     # Define the baseline by filtering for specifc parameters
     baseline_params = [
         {
-            "params_response_synthesizer_llm": "gemini-flash",
+            "params_response_synthesizer_llm_name": "gpt-oss-20b-low",
             "params_rag_mode": "rag",
             "params_template_name": "default",
             "params_splitter_method": "sentence",
@@ -829,7 +829,7 @@ def get_baselines(df):
         {
             "params_rag_mode": "rag",
             "params_template_name": "default",
-            "params_response_synthesizer_llm": "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
+            "params_response_synthesizer_llm_name": "gpt-oss-20b-low",
             "params_few_shot_enabled": False,
             "params_reranker_enabled": False,
             "params_hyde_enabled": False,
@@ -1123,9 +1123,10 @@ def plot_pareto_plot(
     # plot each individual trial on the Pareto-frontier
     ax.plot(px, py, "-", color=trials_edge_color, label=pareto_label)
     labels = df_pareto_desc["Title"].unique()
+    palette = sns.color_palette("tab20", len(labels))
     for i, label in enumerate(labels):
         if color_dict is None:
-            color = discrete_cmap(i / max(10, len(labels)))
+            color = palette[i % len(palette)]
         else:
             color = color_dict[label]
 
@@ -1960,7 +1961,14 @@ def param_plot_all_studies(df: pd.DataFrame, study_name, param_cols):
 
 
 @log_function_call
-def param_pareto_plot(df: pd.DataFrame, study_name, param_col, titles=None):
+def param_pareto_plot(
+    df: pd.DataFrame,
+    study_name,
+    param_col,
+    titles=None,
+    show_trials=False,
+    show_overall_pareto=True,
+):
     df = df[np.isfinite(df["values_1"])]
     df = df.dropna(subset=["values_0", "values_1"])
 
@@ -1981,44 +1989,59 @@ def param_pareto_plot(df: pd.DataFrame, study_name, param_col, titles=None):
         )
     bin_values = temp[bin_col].unique()
 
+    ncols = 2 if show_overall_pareto else 1
+    figsize = (10, 3) if show_overall_pareto else (8, 6)
     fig, axes = plt.subplots(
-        nrows=1, ncols=2, dpi=300, figsize=(10, 3), sharex=True, sharey=True
+        nrows=1, ncols=ncols, dpi=300, figsize=figsize, sharex=True, sharey=True
     )
+    axes = axes if show_overall_pareto else [axes]
 
     # plot Pareto-frontier for each individual parameter value
-    plot_param_pareto_fronts(temp, bin_col, bin_values, axes[0])
-
-    if SHOW_TITLE:
-        axes[0].set_title(f"{descriptive_name(param_col)} Pareto-Frontier")
-
-    # plot the overall pareto front with family labels
-    df_trials = df[df["study_name"] == study_name]
-    objective_2_name = get_objective_2_name(data=df_trials, is_cost=is_cost)
-    df_pareto = df_trials[df_trials["pareto"]].sort_values(
-        ["values_0", "values_1"], ascending=[False, True]
-    )
-    df_pareto = df_pareto.rename(
-        columns={"values_0": "Accuracy", "values_1": objective_2_name}
-    )
-    if len(df_pareto) > 0:
-        df_pareto["Title"] = df_pareto.apply(
-            title_by_rag_mode_minimal, axis=1
-        )  # title_by_rag_mode
-    else:
-        df_pareto["Title"] = ""
-    plot_pareto_plot(
-        df_pareto, study_name, is_cost, df_trials, ax=axes[1], show_title=SHOW_TITLE
+    plot_param_pareto_fronts(
+        temp, bin_col, bin_values, axes[0], show_trials=show_trials
     )
 
     if SHOW_TITLE:
-        axes[1].set_title("Overall Pareto-Frontier")
+        axes[0].set_title(
+            f"{descriptive_name(param_col)} Pareto-Frontier ({get_name(study_name)})"
+        )
+
+    if show_overall_pareto:
+        # plot the overall pareto front with family labels
+        df_trials = df[df["study_name"] == study_name]
+        objective_2_name = get_objective_2_name(data=df_trials, is_cost=is_cost)
+        df_pareto = df_trials[df_trials["pareto"]].sort_values(
+            ["values_0", "values_1"], ascending=[False, True]
+        )
+        df_pareto = df_pareto.rename(
+            columns={"values_0": "Accuracy", "values_1": objective_2_name}
+        )
+        if len(df_pareto) > 0:
+            df_pareto["Title"] = df_pareto.apply(
+                title_by_rag_mode_minimal, axis=1
+            )  # title_by_rag_mode
+        else:
+            df_pareto["Title"] = ""
+
+        plot_pareto_plot(
+            df_pareto,
+            study_name,
+            is_cost,
+            df_trials,
+            ax=axes[1],
+            show_title=SHOW_TITLE,
+            show_baselines=True,
+        )
+
+        if SHOW_TITLE:
+            axes[1].set_title("Overall Pareto-Frontier")
 
     if param_col in ["params_rag_mode"]:
         suptitle = get_name(study_name)
     else:
         suptitle = f"{get_name(study_name)} ({descriptive_name(param_col)})"
 
-    if SHOW_TITLE:
+    if SHOW_TITLE and show_overall_pareto:
         fig.suptitle(suptitle)
 
     fig.tight_layout()
@@ -2043,12 +2066,13 @@ def calc_distances_to_pareto(x1, y1, x2, y2):
     return distances
 
 
-def plot_param_pareto_fronts(temp, bin_col, bin_values, ax):
+def plot_param_pareto_fronts(temp, bin_col, bin_values, ax, show_trials=True):
     is_cost = is_cost_objective(temp)
 
     labels = []
+    palette = sns.color_palette("tab20", len(bin_values))
     for i, bin in enumerate(bin_values):
-        color = discrete_cmap(i / max(10, len(bin_values)))
+        color = palette[i % len(palette)]
         temp_bin = temp[temp[bin_col] == bin]
         temp_bin.loc[:, "values_0"] = temp_bin.loc[:, "values_0"].replace(
             [np.inf, -np.inf], np.nan
@@ -2091,15 +2115,14 @@ def plot_param_pareto_fronts(temp, bin_col, bin_values, ax):
                 linespacing=0.75,
             )
         )
-        ax.scatter(x, y + jitter, c=[color] * len(x), alpha=alphas, s=2.5)
+        if show_trials:
+            ax.scatter(x, y + jitter, c=[color] * len(x), alpha=alphas, s=2.5)
 
     ax.set_xlabel(descriptive_name("values_1", is_cost=is_cost))
     ax.set_ylabel(descriptive_name("values_0"))
     ax.set_xscale("log")
     ax.yaxis.set_major_formatter(mtick.PercentFormatter(1.0))
     ax.tick_params(axis="both", which="major", labelsize=8)
-    # ax.legend(loc="lower right", fontsize=4)
-
     apply_altair_like_styles(ax)
 
 
@@ -3494,9 +3517,15 @@ def escape_latex(filename):
 
 
 async def append_table(
-    pdf: PdfPages, styled_df: pd.io.formats.style.Styler, show=True, title=None
+    pdf: PdfPages,
+    styled_df: pd.io.formats.style.Styler,
+    show=True,
+    title=None,
+    focus_study=None,
 ):
     path = cfg.paths.results_dir / "insights"
+    if focus_study:
+        path /= focus_study
     path.mkdir(parents=True, exist_ok=True)
     path = path.resolve()
 
@@ -3557,15 +3586,22 @@ def get_title(fig: plt.Figure):
 
 
 def append_figure(
-    pdf: PdfPages, fig: plt.Figure, insights_prefix: str, show=True, title=None
+    pdf: PdfPages,
+    fig: plt.Figure,
+    insights_prefix: str,
+    show=True,
+    title=None,
+    focus_study=None,
 ):
     # save as image for latex
     title = title or get_title(fig)
     if len(title) > 0:
         path = cfg.paths.results_dir / "insights"
+        if focus_study:
+            path /= focus_study
         path.mkdir(parents=True, exist_ok=True)
         path = path.resolve()
-        for extension in ["pdf"]:  # , 'png'
+        for extension in ["pdf", "png"]:
             image_filename = (
                 insights_prefix + slugify(f"{escape_latex(title)}") + f".{extension}"
             )
