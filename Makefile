@@ -1,4 +1,4 @@
-.PHONY: install upgrade nltk install-kernel-syftr remove-kernel-syftr mypy pre-commit-run unit-tests functional-tests e2e-tests tests aws-login submit- ray-submit- ray-stop-job ray-experiment- ray-cancel-jobs check tunnel 
+.PHONY: install upgrade nltk install-kernel-syftr remove-kernel-syftr mypy pre-commit-run unit-tests functional-tests e2e-tests tests aws-login submit- ray-submit- ray-stop-job ray-experiment- ray-cancel-jobs check tunnel
 
 export AWS_PROFILE=rd
 OUTFILE := syftr.txt

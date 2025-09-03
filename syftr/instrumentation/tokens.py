@@ -34,6 +34,7 @@ from openinference.instrumentation.llama_index._handler import (
     get_attributes_from_context,
     time_ns,
 )
+from openinference.semconv.trace import OpenInferenceMimeTypeValues
 from opentelemetry.trace import NoOpTracer
 from pydantic import BaseModel, PrivateAttr
 from vertexai.preview.tokenization import get_tokenizer_for_model
@@ -417,9 +418,11 @@ class TokenTrackingSpan(_Span):
                 result.dict(exclude_unset=True), cls=CircularReferenceEncoder
             )
             self[OUTPUT_MIME_TYPE] = JSON
-        except ValueError as e:
-            logger.error(f"Error serializing to JSON: {e}")
-            super().process_output(instance, result)
+        except Exception as e:
+            logger.error(f"Error serializing result to JSON: {e}")
+            # Fallback: convert to string
+            self[OUTPUT_VALUE] = str(result)
+            self[OUTPUT_MIME_TYPE] = OpenInferenceMimeTypeValues.TEXT.value
 
 
 def _is_flow(instance: Any) -> bool:
