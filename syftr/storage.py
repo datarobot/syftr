@@ -14,7 +14,7 @@ from pydantic import BaseModel, field_validator
 from ray._private.utils import get_ray_temp_dir
 
 from syftr.configuration import cfg
-from syftr.core import QAPair
+from syftr.core import QAPair, QARTriplet
 from syftr.utils.locks import distributed_lock
 
 
@@ -1233,6 +1233,70 @@ class PhantomWikiV001HF(SyftrQADataset):
         for i in partition_range:
             row = qa_examples[i]
             yield self._row_to_qapair(row)
+
+
+class JudgeEvalHF(SyftrQADataset):
+    xname: T.Literal["judge_eval"] = "judge_eval"  # type: ignore
+
+    description: str = (
+        "Contains human labeled Question-Answer-Response triplets "
+        "for evaluation of LLM-a-judge flows."
+    )
+
+    def _get_partition_range(self, partition: str):
+        partition_ranges = {
+            "sample": range(0, 20),
+            "train": range(0, 300),
+            "test": range(300, 700),
+            "holdout": range(700, 807),
+        }
+        if partition in partition_ranges:
+            return partition_ranges[partition]
+
+    def _load_grounding_dataset(self) -> datasets.Dataset:
+        raise NotImplementedError("judge_eval does not have a grounding dataset")
+
+    def _load_qa_dataset(self) -> datasets.Dataset:
+        with distributed_lock(
+            self.name, timeout_s=self.load_examples_timeout_s, host_only=True
+        ):
+            dataset = datasets.load_dataset(
+                "DataRobot-Research/judge-eval",
+                cache_dir=cfg.paths.huggingface_cache,
+            )
+
+        # all qapairs are in a split named "train"
+        return dataset["train"]
+
+    @overrides
+    def iter_grounding_data(self, partition="notused") -> T.Iterator[Document]:
+        raise NotImplementedError("judge_eval does not have a grounding dataset")
+
+    def _row_to_qartriplet(self, row):
+        """Dataset-specific conversion of row to QARTriplet."""
+        return QARTriplet(
+            question=row["question"],
+            answer=row["answer"],
+            id=str(row["index"]),
+            context={},
+            supporting_facts=[],
+            difficulty="",
+            qtype="",
+            gold_evidence=[],
+            response=row["response"],
+            label=bool(int(float(row["Human Passing"]))),
+        )
+
+    @overrides
+    def iter_examples(self, partition="test") -> T.Iterator[QAPair]:
+        assert partition in self.storage_partitions
+        partition = self._get_storage_partition(partition)
+        qa_examples = self._load_qa_dataset()
+        partition_range = self._get_partition_range(partition)
+
+        for i in partition_range:
+            row = qa_examples[i]
+            yield self._row_to_qartriplet(row)
 
 
 class CustomDataset(SyftrQADataset):

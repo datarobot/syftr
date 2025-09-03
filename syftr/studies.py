@@ -2,6 +2,7 @@ import os
 import typing as T
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from itertools import combinations, combinations_with_replacement
 from pathlib import Path
 
 import pandas as pd
@@ -70,6 +71,24 @@ Example Response:
   "score": 4.0,
 }
 """
+
+
+def get_llm_name_combinations(
+    llm_names: T.List[str],
+    n_llms: T.List[int],
+    with_replacement=True,
+) -> T.List[str]:
+    generator = (
+        (lambda elements, n: list(combinations_with_replacement(elements, n)))
+        if with_replacement
+        else (lambda elements, n: list(combinations(elements, n)))
+    )
+    llm_combinations = []
+    for n in n_llms:
+        if n <= len(llm_names):
+            llm_combinations_n = [str(c) for c in generator(llm_names, n)]
+            llm_combinations.extend(llm_combinations_n)
+    return llm_combinations
 
 
 class SearchSpaceMixin(ABC):
@@ -1292,6 +1311,251 @@ class RetrieverSearchSpace(BaseModel):
         )
 
 
+class CorrectnessEvaluator(BaseModel):
+    model_config = ConfigDict(extra="forbid")  # Forbids unknown fields
+    response_synthesizer_llm_names: T.List[str] = Field(
+        default_factory=lambda: LLM_NAMES,
+        description="LLMs used for judgement.",
+    )
+    temperature_min: float = 0.0
+    temperature_max: float = 1.0
+    temperature_step: float = 0.1
+
+
+class SingleCorrectnessEvaluator(CorrectnessEvaluator):
+    def defaults(self) -> ParamDict:
+        return {
+            "response_synthesizer_llm_name": self.response_synthesizer_llm_names[0],
+            "response_synthesizer_llm_temperature": 0.0,
+        }
+
+    def build_distributions(
+        self, params: T.Dict[str, T.Any] | T.List[str] | None = None
+    ) -> T.Dict[str, BaseDistribution]:
+        distributions: dict[str, BaseDistribution] = {
+            "response_synthesizer_llm_name": CategoricalDistribution(
+                self.response_synthesizer_llm_names
+            ),
+            "response_synthesizer_llm_temperature": FloatDistribution(
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
+            ),
+        }
+        return distributions
+
+    def sample(self, trial: Trial, prefix: str = "") -> ParamDict:
+        params: ParamDict = {
+            "response_synthesizer_llm_name": trial.suggest_categorical(
+                "response_synthesizer_llm_name", self.response_synthesizer_llm_names
+            ),
+            "response_synthesizer_llm_temperature": trial.suggest_float(
+                "response_synthesizer_llm_temperature",
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
+            ),
+        }
+        return params
+
+    def get_cardinality(self) -> int:
+        llms = len(self.response_synthesizer_llm_names)
+        temperature_card = get_dist_cardinality(
+            self.temperature_min,
+            self.temperature_max,
+            self.temperature_step,
+        )
+        return llms * temperature_card
+
+
+class ConsensusCorrectnessEvaluator(CorrectnessEvaluator):
+    response_synthesizer_llm_combinations: T.List[str] = Field(
+        default_factory=lambda: get_llm_name_combinations(LLM_NAMES, [3]),
+        description="List of combinations of LLMs for consensus judgement.",
+    )
+
+    def defaults(self) -> ParamDict:
+        return {
+            "response_synthesizer_llm_combination": self.response_synthesizer_llm_combinations[
+                0
+            ],
+            "response_synthesizer_llm_temperature": 0.0,
+        }
+
+    def build_distributions(
+        self, params: T.Dict[str, T.Any] | T.List[str] | None = None
+    ) -> T.Dict[str, BaseDistribution]:
+        distributions: dict[str, BaseDistribution] = {
+            "response_synthesizer_llm_combination": CategoricalDistribution(
+                self.response_synthesizer_llm_combinations
+            ),
+            "response_synthesizer_llm_temperature": FloatDistribution(
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
+            ),
+        }
+        return distributions
+
+    def sample(self, trial: Trial, prefix: str = "") -> ParamDict:
+        params: ParamDict = {
+            "response_synthesizer_llm_combination": trial.suggest_categorical(
+                "response_synthesizer_llm_combination",
+                self.response_synthesizer_llm_combinations,
+            ),
+            "response_synthesizer_llm_temperature": trial.suggest_float(
+                "response_synthesizer_llm_temperature",
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
+            ),
+        }
+        return params
+
+    def get_cardinality(self) -> int:
+        temperature_card = get_dist_cardinality(
+            self.temperature_min,
+            self.temperature_max,
+            self.temperature_step,
+        )
+        return len(self.response_synthesizer_llm_combinations) * temperature_card
+
+
+class RandomCorrectnessEvaluator(CorrectnessEvaluator):
+    response_synthesizer_llm_combinations: T.List[str] = Field(
+        default_factory=lambda: get_llm_name_combinations(LLM_NAMES, [3]),
+        description="List of combinations of LLMs for random judgement.",
+    )
+
+    def defaults(self) -> ParamDict:
+        return {
+            "response_synthesizer_llm_combination": self.response_synthesizer_llm_combinations[
+                0
+            ],
+            "response_synthesizer_llm_temperature": 0.0,
+        }
+
+    def build_distributions(
+        self, params: T.Dict[str, T.Any] | T.List[str] | None = None
+    ) -> T.Dict[str, BaseDistribution]:
+        distributions: dict[str, BaseDistribution] = {
+            "response_synthesizer_llm_combination": CategoricalDistribution(
+                self.response_synthesizer_llm_combinations
+            ),
+            "response_synthesizer_llm_temperature": FloatDistribution(
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
+            ),
+        }
+        return distributions
+
+    def sample(self, trial: Trial, prefix: str = "") -> ParamDict:
+        params: ParamDict = {
+            "response_synthesizer_llm_combination": trial.suggest_categorical(
+                "response_synthesizer_llm_combination",
+                self.response_synthesizer_llm_combinations,
+            ),
+            "response_synthesizer_llm_temperature": trial.suggest_float(
+                "response_synthesizer_llm_temperature",
+                self.temperature_min,
+                self.temperature_max,
+                step=self.temperature_step,
+            ),
+        }
+        return params
+
+    def get_cardinality(self) -> int:
+        temperature_card = get_dist_cardinality(
+            self.temperature_min,
+            self.temperature_max,
+            self.temperature_step,
+        )
+        return len(self.response_synthesizer_llm_combinations) * temperature_card
+
+
+class JudgeSearchSpace(BaseModel):
+    model_config = ConfigDict(extra="forbid")  # Forbids unknown fields
+    judge_types: T.List[str] = [
+        "single_correctness_evaluator",
+        "consensus_correctness_evaluator",
+        "random_correctness_evaluator",
+    ]
+    single_correctness_evaluator: SingleCorrectnessEvaluator = Field(
+        default_factory=SingleCorrectnessEvaluator,
+        description="Simple single-llm using standard CorrectnessEvaluator",
+    )
+    consensus_correctness_evaluator: ConsensusCorrectnessEvaluator = Field(
+        default_factory=ConsensusCorrectnessEvaluator,
+        description="Consensus Correctness Evaluator using multiple LLMs",
+    )
+    random_correctness_evaluator: RandomCorrectnessEvaluator = Field(
+        default_factory=RandomCorrectnessEvaluator,
+        description="Random Correctness Evaluator using multiple LLMs",
+    )
+    judge_prompts: T.List[str] = [
+        "default",
+        "simple",
+        "out_of_ten",
+        "detailed",
+        "comparison",
+    ]
+
+    def defaults(self) -> ParamDict:
+        return {
+            "judge_type": self.judge_types[0],
+            "judge_prompt": self.judge_types[0],
+        }
+
+    def build_distributions(
+        self, params: T.Dict[str, T.Any] | T.List[str] | None = None
+    ) -> T.Dict[str, BaseDistribution]:
+        distributions: dict[str, BaseDistribution] = {
+            "judge_type": CategoricalDistribution(self.judge_types),
+            "judge_prompt": CategoricalDistribution(self.judge_prompts),
+        }
+        if "single_correctness_evaluator" in self.judge_types:
+            distributions.update(
+                self.single_correctness_evaluator.build_distributions()
+            )
+        if "consensus_correctness_evaluator" in self.judge_types:
+            distributions.update(
+                self.consensus_correctness_evaluator.build_distributions()
+            )
+        if "random_correctness_evaluator" in self.judge_types:
+            distributions.update(
+                self.random_correctness_evaluator.build_distributions()
+            )
+        if params is not None:
+            reduced_distributions = {
+                key: val for key, val in distributions.items() if key in params
+            }
+            return reduced_distributions
+
+        return distributions
+
+    def sample(self, trial: Trial, prefix: str = "") -> ParamDict:
+        params: ParamDict = {
+            "judge_type": trial.suggest_categorical("judge_type", self.judge_types),
+            "judge_prompt": trial.suggest_categorical(
+                "judge_prompt", self.judge_prompts
+            ),
+        }
+        if params["judge_type"] == "single_correctness_evaluator":
+            params.update(**self.single_correctness_evaluator.sample(trial))
+        if params["judge_type"] == "consensus_correctness_evaluator":
+            params.update(**self.consensus_correctness_evaluator.sample(trial))
+        if params["judge_type"] == "random_correctness_evaluator":
+            params.update(**self.random_correctness_evaluator.sample(trial))
+        return params
+
+    def get_cardinality(self) -> int:
+        card = len(self.judge_types) * len(self.judge_prompts)
+        if "single_correctness_evaluator" in self.judge_types:
+            card *= self.single_correctness_evaluator.get_cardinality()
+        return card
+
+
 class AgentSearchSpace(BaseModel):
     model_config = ConfigDict(extra="forbid")  # Forbids unknown fields
     llms: T.List[str] = [
@@ -1424,7 +1688,8 @@ class OptimizationConfig(BaseModel):
         description="Whether to raise an exception for invalid baselines.",
     )
     baselines_cycle_llms: bool = Field(
-        default=False, description="Whether to cycle through LLMs for baselines."
+        default=False,
+        description="Replaces baseline LLMs with LLMs in the current search space.",
     )
     use_toy_baselines: bool = Field(
         default=False, description="Whether to use toy baselines."
@@ -1461,6 +1726,10 @@ class OptimizationConfig(BaseModel):
     sampler: T.Literal["tpe", "hierarchical"] = Field(
         default="tpe",
         description='Type of sampler to use (e.g., "tpe", "hierarchical").',
+    )
+    include_responses: bool = Field(
+        default=False,
+        description="Whether to include QA pairs and evaluation feedback in eval_results field",
     )
     ############################
     # seeder_timeout settings
@@ -1529,7 +1798,7 @@ class TimeoutConfig(BaseModel):
 
 
 class Evaluation(BaseModel):
-    mode: T.Literal["single", "random", "consensus", "retriever"] = Field(
+    mode: T.Literal["single", "random", "consensus", "retriever", "judge"] = Field(
         default="single", description="Evaluation mode."
     )
     llm_names: T.List[str] = Field(
@@ -1631,7 +1900,7 @@ class StudyConfig(BaseSettings):
         default=True,
         description="Whether to recreate the study if it already exists (potentially deleting old data).",
     )
-    search_space: SearchSpace = Field(
+    search_space: T.Union[SearchSpace, RetrieverSearchSpace, JudgeSearchSpace] = Field(
         default_factory=SearchSpace,
         description="Search space configuration for the optimization.",
     )
@@ -1722,6 +1991,10 @@ class StudyConfig(BaseSettings):
     @property
     def is_retriever_study(self) -> bool:
         return isinstance(self.search_space, RetrieverSearchSpace)
+
+    @property
+    def is_judge_study(self) -> bool:
+        return isinstance(self.search_space, JudgeSearchSpace)
 
 
 class AgentStudyConfig(BaseSettings):

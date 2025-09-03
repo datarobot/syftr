@@ -23,10 +23,13 @@ from syftr.baselines import set_baselines
 from syftr.evaluation.evaluation import eval_dataset
 from syftr.flows import (
     CoAAgentFlow,
+    ConsensusJudgeFlow,
     CritiqueAgentFlow,
     Flow,
+    JudgeFlow,
     LATSAgentFlow,
     RAGFlow,
+    RandomJudgeFlow,
     ReActAgentFlow,
     RetrieverFlow,
     SubQuestionRAGFlow,
@@ -40,6 +43,21 @@ from syftr.optuna_helper import (
     run_flows,
     trial_exists,
     without_non_search_space_params,
+)
+from syftr.output_parsers.judge import (
+    parse_correctness_evaluation,
+    parse_correctness_evaluation_comparison,
+    parse_correctness_evaluation_simple,
+    parse_correctness_evaluation_ten,
+)
+from syftr.prompts.judge import (
+    COMPARISON_JUDGE_QUERY_PROMPT_TEMPLATE,
+    DEFAULT_JUDGE_QUERY_PROMPT_TEMPLATE,
+    DEFAULT_JUDGE_SYSTEM_PROMPT,
+    JUDGE_SYSTEM_PROMPT_COMPARISON,
+    JUDGE_SYSTEM_PROMPT_DETAILED,
+    JUDGE_SYSTEM_PROMPT_SIMPLE,
+    JUDGE_SYSTEM_PROMPT_TEN,
 )
 from syftr.ray.utils import ray_init
 from syftr.retrievers.build import build_rag_retriever
@@ -139,13 +157,71 @@ def evaluate(
 def build_flow(params: T.Dict, study_config: StudyConfig) -> Flow:
     from syftr.llm import get_llm
 
+    enforce_full_evaluation = params.get("enforce_full_evaluation", False)
+    use_reasoning = params.get("use_reasoning")
+
+    if study_config.is_judge_study:
+        prompt = DEFAULT_JUDGE_SYSTEM_PROMPT
+        output_parser = parse_correctness_evaluation
+        template = DEFAULT_JUDGE_QUERY_PROMPT_TEMPLATE
+        if params["judge_prompt"] == "simple":
+            prompt = JUDGE_SYSTEM_PROMPT_SIMPLE
+            output_parser = parse_correctness_evaluation_simple  # type: ignore
+        elif params["judge_prompt"] == "out_of_ten":
+            prompt = JUDGE_SYSTEM_PROMPT_TEN
+            output_parser = parse_correctness_evaluation_ten  # type: ignore
+        elif params["judge_prompt"] == "detailed":
+            prompt = JUDGE_SYSTEM_PROMPT_DETAILED
+            output_parser = parse_correctness_evaluation
+        elif params["judge_prompt"] == "comparison":
+            prompt = JUDGE_SYSTEM_PROMPT_COMPARISON
+            output_parser = parse_correctness_evaluation_comparison  # type: ignore
+            template = COMPARISON_JUDGE_QUERY_PROMPT_TEMPLATE
+
+        if params["judge_type"] == "single_correctness_evaluator":
+            response_synthesizer_llm = get_llm(params["response_synthesizer_llm_name"])
+            return JudgeFlow(
+                response_synthesizer_llm=response_synthesizer_llm,
+                system_prompt=prompt,
+                output_parser=output_parser,
+                query_prompt_template=template,
+                params=params,
+                enforce_full_evaluation=enforce_full_evaluation,
+                temperature=params["response_synthesizer_llm_temperature"],
+            )
+
+        llm_names = ast.literal_eval(params["response_synthesizer_llm_combination"])
+        response_synthesizer_llms = [get_llm(llm_name) for llm_name in llm_names]
+
+        if params["judge_type"] == "random_correctness_evaluator":
+            return RandomJudgeFlow(
+                response_synthesizer_llms=response_synthesizer_llms,  # type: ignore
+                system_prompt=prompt,
+                output_parser=output_parser,
+                query_prompt_template=template,
+                params=params,
+                enforce_full_evaluation=enforce_full_evaluation,
+                temperature=params["response_synthesizer_llm_temperature"],
+            )
+
+        if params["judge_type"] == "consensus_correctness_evaluator":
+            return ConsensusJudgeFlow(
+                response_synthesizer_llms=response_synthesizer_llms,  # type: ignore
+                system_prompt=prompt,
+                output_parser=output_parser,
+                query_prompt_template=template,
+                params=params,
+                enforce_full_evaluation=enforce_full_evaluation,
+                temperature=params["response_synthesizer_llm_temperature"],
+            )
+
+        raise RuntimeError("Unknown judge type: %s" % params["judge_type"])
+
     response_synthesizer_llm = get_llm(
         name=params["response_synthesizer_llm_name"],
         temperature=params.get("response_synthesizer_temperature"),
         top_p=params.get("response_synthesizer_top_p"),
     )
-    enforce_full_evaluation = params.get("enforce_full_evaluation", False)
-    use_reasoning = params.get("use_reasoning")
 
     if study_config.is_retriever_study:
         hyde_llm = (
@@ -422,7 +498,7 @@ def objective(
     search_space = study_config.search_space
     params: dict[str, str | bool | int | float]
     for i in range(study_config.optimization.num_retries_unique_params):
-        params = search_space.sample(trial, components)
+        params = search_space.sample(trial, components)  # type: ignore
         if not study_config.optimization.skip_existing:
             logger.info("Using generated parameter combination without check")
             break
