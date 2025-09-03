@@ -16,6 +16,7 @@ import ray
 from llama_index.core import VectorStoreIndex
 from llama_index.core.retrievers import BaseRetriever
 from llama_index.core.schema import NodeWithScore, TextNode
+from openai import APIConnectionError
 from ray.util import state
 
 from syftr.baselines import set_baselines
@@ -73,6 +74,7 @@ def _get_examples(example_retriever: BaseRetriever, query_str: str):
     return "\n\n".join(result_strs)
 
 
+# HERE
 def _get_example_retriever(params, study_config: StudyConfig, embedding_model):
     assert embedding_model, "No embedding model for dynamic few-shot prompting"
     logger.info("Building few-shot retriever")
@@ -87,9 +89,22 @@ def _get_example_retriever(params, study_config: StudyConfig, embedding_model):
 
     if not isinstance(embedding_model, HFEndpointEmbeddings):
         embedding_model.reset_timeouts(total_chunks=len(few_shot_nodes))
-    logger.info("Building few-shot retriever index")
-    few_shot_index = VectorStoreIndex(nodes=few_shot_nodes, embed_model=embedding_model)
-    logger.info("Built few-shot retriever index")
+    logger.info(
+        f"Building few-shot retriever index using embedding model {embedding_model}"
+    )
+    try:
+        few_shot_index = VectorStoreIndex(
+            nodes=few_shot_nodes, embed_model=embedding_model
+        )
+    except APIConnectionError:
+        logger.error(
+            "Failed to build few-shot retriever index. "
+            f"This is likely due to a timeout with the {embedding_model} embedding model."
+        )
+        raise
+    logger.info(
+        f"Built few-shot retriever index using embedding model {embedding_model}"
+    )
     few_shot_retriever = few_shot_index.as_retriever(
         similarity_top_k=params["few_shot_top_k"], similarity_threshold=None
     )

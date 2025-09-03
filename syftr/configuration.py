@@ -339,7 +339,7 @@ class AzureOAI(BaseModel, APIKeySerializationMixin):
     default_deployment: str = "gpt-4o-mini"
     api_url: HttpUrl = HttpUrl("http://NOT.SET")
 
-    api_version: str = "2024-07-18"
+    api_version: str = "2025-01-01-preview"
     api_type: str = "azure"
 
 
@@ -371,7 +371,7 @@ class LLMCostHourly(BaseModel):
     )
 
 
-class LLMConfig(BaseModel):
+class LLMConfig(BaseModel, APIKeySerializationMixin):
     model_name: str = Field(description="Name of the LLM to use")
     temperature: float = Field(default=0, description="LLM temperature setting")
     top_p: float = Field(default=0.95, description="LLM top_p setting")

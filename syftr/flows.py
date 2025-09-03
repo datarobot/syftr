@@ -52,7 +52,7 @@ from numpy import ceil
 from syftr.configuration import cfg
 from syftr.instrumentation.arize import instrument_arize
 from syftr.instrumentation.tokens import LLMCallData, TokenTrackingEventHandler
-from syftr.llm import get_tokenizer
+from syftr.llm import get_nothink_str, get_tokenizer
 from syftr.logger import logger
 from syftr.studies import get_critique_template, get_react_template
 
@@ -123,8 +123,9 @@ class Flow:
     def set_thinking(self, query: str) -> str:
         if self.use_reasoning is None:
             return query
-        thinking = "/think" if self.use_reasoning else "/no_think"
-        return f"{thinking} {query}"
+        no_think = get_nothink_str(self.response_synthesizer_llm)
+        thinking = "/think" if self.use_reasoning else no_think
+        return f"{query} {thinking}"
 
     def generate(
         self, query: str
@@ -472,6 +473,11 @@ class AgenticRAGFlow(RAGFlow):
         except TypeError:
             logger.error("Incorrect response from an agent: %s", response)
             raise
+        except Exception:
+            logger.error(
+                f"Agent {type(super()).__name__} failed to generate a response using parameters: {self.params}."
+            )
+            raise
         duration = time.perf_counter() - start_time
         return completion_response, duration
 
@@ -488,6 +494,11 @@ class AgenticRAGFlow(RAGFlow):
             completion_response = CompletionResponse(text=response.response)
         except TypeError:
             logger.error("Incorrect response from an agent: %s", response)
+            raise
+        except Exception:
+            logger.error(
+                f"Agent {type(super()).__name__} failed to generate a response using parameters: {self.params}."
+            )
             raise
         duration = time.perf_counter() - start_time
         return completion_response, duration
