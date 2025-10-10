@@ -13,6 +13,7 @@ from llama_index.core.prompts import PromptType
 from llama_index.core.query_engine import RetrieverQueryEngine, TransformQueryEngine
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 
+from syftr.agents.react import ReActAgent as ReActAgentV2
 from syftr.logger import logger
 
 
@@ -152,6 +153,46 @@ class LlamaIndexReactRAGAgentFlow(AgentFlow, AgentMixin):
         ]
         self.agent = ReActAgent.from_tools(
             query_engine_tools,  # type: ignore
+            llm=self.llm,
+            verbose=True,
+        )
+        if system_prompt:
+            self.agent.update_prompts({"agent_worker:system_prompt": system_prompt})
+            self.agent.reset()
+
+
+class LlamaIndexReactRAGAgentFlowV2(AgentFlow, AgentMixin):
+    def __init__(
+        self: AgentProtocol,
+        indexes: T.List[T.Tuple[str, str, VectorStoreIndex]],
+        llm: FunctionCallingLLM,
+        system_prompt: PromptTemplate | None = None,
+        template: str | None = None,
+        **kwargs,
+    ):
+        super().__init__(llm=llm, template=template, **kwargs)  # type: ignore
+
+        prompt_template: PromptTemplate = self.get_prompt_template()
+        query_engines = [
+            index.as_query_engine(
+                llm=self.llm,
+                text_qa_template=prompt_template,
+                node_postprocessors=self.node_postprocessors,
+            )
+            for _, _, index in indexes
+        ]
+        query_engine_tools = [
+            QueryEngineTool(
+                query_engine=query_engine,
+                metadata=ToolMetadata(
+                    name="Grounding_%s" % name,
+                    description="Grounding data related to %s" % desc,
+                ),
+            )
+            for (name, desc, _), query_engine in zip(indexes, query_engines)
+        ]
+        self.agent = ReActAgentV2(
+            tools=query_engine_tools,  # type: ignore
             llm=self.llm,
             verbose=True,
         )

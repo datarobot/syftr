@@ -7,14 +7,15 @@ from enum import Enum
 from uuid import uuid4
 
 import llama_index.core.instrumentation as instrument
-from llama_index.agent.introspective import (
-    IntrospectiveAgentWorker,
-    ToolInteractiveReflectionAgentWorker,
-)
-from llama_index.agent.introspective.reflective.tool_interactive_reflection import (
-    StoppingCallable,
-)
-from llama_index.agent.lats import LATSAgentWorker
+
+# from llama_index.agent.introspective import (
+#    IntrospectiveAgentWorker,
+#    ToolInteractiveReflectionAgentWorker,
+# )
+# from llama_index.agent.introspective.reflective.tool_interactive_reflection import (
+#    StoppingCallable,
+# )
+# from llama_index.agent.lats import LATSAgentWorker
 from llama_index.core import (
     PromptTemplate,
     QueryBundle,
@@ -23,14 +24,19 @@ from llama_index.core import (
 )
 from llama_index.core.agent import (
     AgentChatResponse,
-    AgentRunner,
-    FunctionCallingAgentWorker,
+    AgentWorkflow,
+    FunctionAgent,
     ReActAgent,
 )
 from llama_index.core.agent.react.formatter import ReActChatFormatter
 from llama_index.core.evaluation import EvaluationResult
 from llama_index.core.indices.query.query_transform.base import HyDEQueryTransform
-from llama_index.core.llms import ChatMessage, CompletionResponse, MessageRole
+from llama_index.core.llms import (
+    ChatMessage,
+    ChatResponse,
+    CompletionResponse,
+    MessageRole,
+)
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.llms.llm import LLM
 from llama_index.core.postprocessor import LLMRerank, PrevNextNodePostprocessor
@@ -47,9 +53,17 @@ from llama_index.core.retrievers import BaseRetriever
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.storage.docstore.types import BaseDocumentStore
 from llama_index.core.tools import BaseTool, FunctionTool, QueryEngineTool, ToolMetadata
-from llama_index.packs.agents_coa import CoAAgentPack
+
+# from llama_index.packs.agents_coa import CoAAgentPack
 from numpy import ceil
 
+from syftr.agents.react import (
+    CoAAgentPack,
+    IntrospectiveAgentWorker,
+    LATSAgentWorker,
+    ToolInteractiveReflectionAgentWorker,
+)
+from syftr.agents.react import ReActAgent as ReActAgentV2
 from syftr.configuration import cfg
 from syftr.instrumentation.arize import instrument_arize
 from syftr.instrumentation.tokens import LLMCallData, TokenTrackingEventHandler
@@ -671,7 +685,7 @@ class AgenticRAGFlow(RAGFlow):
         ]
 
     @property
-    def agent(self) -> AgentRunner:
+    def agent(self) -> AgentWorkflow:
         raise NotImplementedError()
 
     @dispatcher.span
@@ -682,9 +696,9 @@ class AgenticRAGFlow(RAGFlow):
     ) -> T.Tuple[CompletionResponse, float]:
         start_time = time.perf_counter()
         query = self.set_thinking(query)
-        response: AgentChatResponse = self.agent.chat(query)
+        response: AgentChatResponse | ChatResponse = self.agent.chat(query)
         try:
-            completion_response = CompletionResponse(text=response.response)
+            completion_response = CompletionResponse(text=str(response))
         except TypeError:
             logger.error("Incorrect response from an agent: %s", response)
             raise
@@ -731,7 +745,7 @@ class ReActAgentFlow(AgenticRAGFlow):
         return f"{self.name}: {self.params}"
 
     @property
-    def agent(self) -> AgentRunner:
+    def agent(self) -> AgentWorkflow:
         synth = get_response_synthesizer(
             llm=self.subquestion_response_synthesizer_llm,
             use_async=True,
@@ -768,6 +782,54 @@ class ReActAgentFlow(AgenticRAGFlow):
 
 
 @dataclass(kw_only=True)
+class ReActAgentFlowV2(AgenticRAGFlow):
+    react_prompt: str = get_react_template()
+    subquestion_engine_llm: LLM
+    max_iterations: int = 10
+    name: str = "ReAct Agentic RAG Flow"
+    subquestion_response_synthesizer_llm: LLM
+
+    def __repr__(self):
+        return f"{self.name}: {self.params}"
+
+    @property
+    def agent(self) -> AgentWorkflow:
+        synth = get_response_synthesizer(
+            llm=self.subquestion_response_synthesizer_llm,
+            use_async=True,
+            response_mode=ResponseMode.TREE_SUMMARIZE,
+            text_qa_template=self.prompt_template,
+        )
+        sub_question_engine = SubQuestionQueryEngine.from_defaults(
+            query_engine_tools=self.tools,  # type: ignore
+            llm=self.subquestion_engine_llm,
+            verbose=self.verbose,
+            response_synthesizer=synth,
+            use_async=False,
+        )
+
+        tools = [
+            QueryEngineTool(
+                query_engine=sub_question_engine,
+                metadata=ToolMetadata(
+                    name=self.dataset_name.replace("/", "_"),
+                    description=self.dataset_description,
+                ),
+            )
+        ]
+
+        formatter = ReActChatFormatter.from_defaults(system_header=self.react_prompt)
+        return ReActAgentV2(
+            tools=tools,  # type: ignore
+            llm=self.response_synthesizer_llm,
+            max_iterations=self.max_iterations,
+            react_chat_formatter=formatter,
+            default_tool_choice="auto",
+            verbose=self.verbose,
+        )
+
+
+@dataclass(kw_only=True)
 class CritiqueAgentFlow(AgenticRAGFlow):
     subquestion_engine_llm: LLM
     subquestion_response_synthesizer_llm: LLM
@@ -775,18 +837,18 @@ class CritiqueAgentFlow(AgenticRAGFlow):
     reflection_agent_llm: FunctionCallingLLM
     max_iterations: int = 10
     critique_template = get_critique_template()
-    stopping_condition: StoppingCallable = lambda critique_str: "PASS" in critique_str
+    stopping_condition: T.Callable = lambda critique_str: "PASS" in critique_str
     name: str = "Critique Agentic RAG Flow"
 
     def __repr__(self):
         return f"{self.name}: {self.params}"
 
     @property
-    def agent(self) -> AgentRunner:
+    def agent(self) -> AgentWorkflow:
         assert isinstance(self.response_synthesizer_llm, FunctionCallingLLM), (
             f"CritiqueAgentFlow requires FunctionCallingLLM. Got {type(self.response_synthesizer_llm)=}"
         )
-        main_worker = FunctionCallingAgentWorker.from_tools(
+        main_worker = FunctionAgent.from_tools(
             tools=self.tools, llm=self.response_synthesizer_llm, verbose=self.verbose
         )
         synth = get_response_synthesizer(
@@ -813,7 +875,7 @@ class CritiqueAgentFlow(AgenticRAGFlow):
             )
         ]
 
-        critique_agent_worker = FunctionCallingAgentWorker.from_tools(
+        critique_agent_worker = FunctionAgent.from_tools(
             tools=tools,  # type: ignore
             llm=self.critique_agent_llm,
             verbose=self.verbose,
@@ -872,7 +934,7 @@ class LATSAgentFlow(AgenticRAGFlow):
         ]
 
     @property
-    def agent(self) -> AgentRunner:
+    def agent(self) -> AgentWorkflow:
         agent_worker = LATSAgentWorker.from_tools(
             self.tools,
             llm=self.response_synthesizer_llm,
@@ -928,7 +990,7 @@ class CoAAgentFlow(AgenticRAGFlow):
         return tools
 
     @property
-    def agent(self) -> AgentRunner:
+    def agent(self) -> AgentWorkflow:
         pack = CoAAgentPack(
             tools=self.tools,
             llm=self.response_synthesizer_llm,
