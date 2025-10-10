@@ -1,21 +1,31 @@
 name: financebench-pepsi
 dataset:
   xname: financebench_hf
+  subset: "dev"
   partition_map:
-    test: pepsi
+    test: "sample"
 
 search_space:
-  response_synthesizer_llms:
-    - gpt-4o-mini
-    - anthropic-haiku-35
-    - gemini-flash
+  response_synthesizer_llm_config:
+    llm_names:
+        - gpt-4o-mini
+        - anthropic-haiku-35
+        - gemini-flash
   reranker:
-    llms:
-    - gpt-4o-mini
-    - anthropic-haiku-35
-    - gemini-flash
+    llm_config:
+      llm_names:
+        - gpt-4o-mini
+        - anthropic-haiku-35
+        - gemini-flash
   hyde:
-    llms:
+    llm_config:
+      llm_names:
+        - gpt-4o-mini
+        - anthropic-haiku-35
+        - gemini-flash
+
+evaluation:
+  llm_names:
     - gpt-4o-mini
     - anthropic-haiku-35
     - gemini-flash
