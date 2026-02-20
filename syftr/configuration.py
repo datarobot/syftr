@@ -139,6 +139,9 @@ class Paths(BaseModel):
     lock_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "syftr-locks"
     nltk_dir: Annotated[Path, Field(validate_default=True)] = tmp_dir / "nltk-data"
     sqlite_dir: Annotated[Path, Field(validate_default=True)] = Path.home() / ".syftr"
+    secrets_dir: Annotated[Path, Field(validate_default=True)] = (
+        REPO_ROOT / "runtime-secrets"
+    )
 
     @property
     def templates_without_context(self) -> Path:
@@ -733,7 +736,7 @@ class Settings(BaseSettings):
             "config.yaml",
             Path(os.environ.get(SYFTR_CONFIG_FILE_ENV_NAME, "")),
         ],
-        secrets_dir="runtime-secrets",
+        secrets_dir=paths.secrets_dir,
         env_file=".env",
         env_prefix="SYFTR_",
         env_nested_delimiter="__",
