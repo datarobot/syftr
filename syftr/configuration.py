@@ -496,6 +496,7 @@ class OpenAILikeLLM(LLMConfig):
     )
     is_chat_model: bool = True
     is_function_calling_model: bool = False
+    verify_ssl: bool = Field(default=True, description="Verify SSL certificates")
 
 
 class OpenAIResponsesLLM(LLMConfig):

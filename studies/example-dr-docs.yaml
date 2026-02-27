@@ -18,11 +18,11 @@ search_space:
   - no_rag
   - rag
   rag_retriever:
-    embedding_models:
-    - BAAI/bge-small-en-v1.5
-    - BAAI/bge-large-en-v1.5
+    # embedding_models:
+    # - BAAI/bge-small-en-v1.5
+    # - BAAI/bge-large-en-v1.5
     methods:
-    - dense
+    # - dense
     - sparse
     query_decomposition_enabled:
     - false
@@ -35,9 +35,7 @@ search_space:
   - false
   response_synthesizer_llm_config:
     llm_names:
-      - gpt-4o-mini
-      - gpt-35-turbo
-      - gpt-4o-std
+      - glm-4.5-air
   template_names:
   - default
   - concise

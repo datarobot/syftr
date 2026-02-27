@@ -55,9 +55,9 @@ dispatcher = instrument.get_dispatcher()
 CorrectnessEvaluator.evaluate = dispatcher.span(CorrectnessEvaluator.evaluate)  # type: ignore
 CorrectnessEvaluator.aevaluate = dispatcher.span(CorrectnessEvaluator.aevaluate)  # type: ignore
 
-RETRY_ATTEMPTS = 3
+RETRY_ATTEMPTS = 10
 RETRY_MIN_SLEEP = 2
-RETRY_MAX_SLEEP = 60
+RETRY_MAX_SLEEP = 300
 
 RETRIABLE_EXCEPTIONS = (
     anthropic.RateLimitError,
@@ -412,7 +412,7 @@ async def _aeval_pair(
         generation_exception=generation_exception,
         evaluation_exception=evaluation_exception,
         llm_call_data=call_data,
-        response_text=response.text,
+        # response_text=response.text,
         **(eval_result.model_dump() if eval_result else {}),
     )
 
@@ -574,7 +574,7 @@ async def _aeval_pair_debias(
         generation_exception=generation_exception,
         evaluation_exception=evaluation_exception,
         llm_call_data=call_data,
-        response_text=response.text,
+        # response_text=response.text,
         **(eval_result.model_dump() if eval_result else {}),
     )
 
@@ -615,7 +615,7 @@ async def _aeval_pair_consensus(
         generation_exception=generation_exception,
         evaluation_exception=evaluation_exception,
         llm_call_data=call_data,
-        response_text=response.text,
+        # response_text=response.text,
         **(eval_result.model_dump() if eval_result else {}),
     )
 

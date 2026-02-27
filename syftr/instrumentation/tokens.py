@@ -224,6 +224,23 @@ class CircularReferenceEncoder(json.JSONEncoder):
             return obj.to_dict()
         if isinstance(obj, ChatCompletionsToolCall):
             return obj.as_dict()
+        # Pydantic v2 models                                                                                                                                       
+        if hasattr(obj, "model_dump"):                                                                                                                             
+            try:                                                                                                                                                   
+                return obj.model_dump(exclude_unset=True)                                                                                                          
+            except Exception:                                                                                                                                      
+                pass  # Fall through to __dict__                                                                                                                   
+        # Pydantic v1 models                                                                                                                                       
+        if hasattr(obj, "dict") and callable(getattr(obj, "dict")):                                                                                                
+            try:                                                                                                                                                   
+                return obj.dict(exclude_unset=True)                                                                                                                
+            except Exception:                                                                                                                                      
+                pass  # Fall through to __dict__                                                                                                                   
+        # Objects with __dict__ (llama_index Response types, etc.)                                                                                                 
+        if hasattr(obj, "__dict__"):                                                                                                                               
+            return {k: v for k, v in obj.__dict__.items() if not k.startswith("_")}                                                                                
+        # Last resort - string representation                                                                                                                      
+        return str(obj)                                                                                                                                            
         return super().default(obj)
 
 
@@ -410,13 +427,26 @@ class TokenTrackingSpan(_Span):
         )
 
     def model_dump_json(self, **kwargs):
-        return json.dumps(self.dict(**kwargs), cls=CircularReferenceEncoder)
+        if hasattr(self, 'model_dump'):
+            result_dict = self.model_dump(**kwargs)
+        elif hasattr(self, 'dict'):
+            result_dict = self.dict(**kwargs)
+        else:
+            raise AttributeError(f"Cannot serialize {type(self).__name__}")
+        return json.dumps(result_dict, cls=CircularReferenceEncoder)
 
     def process_output(self, instance, result):
         try:
-            self[OUTPUT_VALUE] = json.dumps(
-                result.dict(exclude_unset=True), cls=CircularReferenceEncoder
-            )
+            if hasattr(result, 'model_dump'):
+                result_data = result.model_dump(exclude_unset=True)
+            elif hasattr(result, 'dict'):
+                result_data = result.dict(exclude_unset=True)
+            elif isinstance(result, (dict, list, tuple, str, int, float, bool, type(None))):                                                                
+                # Basic JSON-serializable types                                                                                                             
+                result_data = result 
+            else:
+                raise AttributeError(f"Cannot serialize {type(result).__name__}")
+            self[OUTPUT_VALUE] = json.dumps(result_data, cls=CircularReferenceEncoder)
             self[OUTPUT_MIME_TYPE] = JSON
         except Exception as e:
             logger.error(f"Error serializing result to JSON: {e}")

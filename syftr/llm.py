@@ -175,6 +175,12 @@ def _construct_cerebras_llm(name: str, llm_config: CerebrasLLM) -> Cerebras:
 
 
 def _construct_openai_like_llm(name: str, llm_config: OpenAILikeLLM) -> OpenAILike:
+    http_client = None
+    async_http_client = None
+    if not llm_config.verify_ssl:
+        import httpx
+        http_client = httpx.Client(verify=False)
+        async_http_client = httpx.AsyncClient(verify=False)
     return OpenAILike(
         model=llm_config.model_name,
         temperature=llm_config.temperature,
@@ -189,6 +195,8 @@ def _construct_openai_like_llm(name: str, llm_config: OpenAILikeLLM) -> OpenAILi
         is_function_calling_model=llm_config.is_function_calling_model,
         timeout=llm_config.timeout,
         additional_kwargs=llm_config.additional_kwargs or {},
+        http_client=http_client,
+        async_http_client=async_http_client,
     )
 
 
