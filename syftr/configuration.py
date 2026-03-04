@@ -637,6 +637,7 @@ class Database(BaseModel):
             "keepalives_idle": 30,  # Send keepalives after 30s of idle time
             "keepalives_interval": 10,  # Resend after 10s if no response
             "keepalives_count": 5,  # Give up after 5 failed keepalives
+            "options": "-c statement_timeout=60000",
         },
     }
 

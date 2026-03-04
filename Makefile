@@ -61,16 +61,60 @@ ray-cancel-jobs:
 
 tunnel:
 	ssh -NT \
-		-o ServerAliveInterval=60 \
-		-o ServerAliveCountMax=10 \
+		-o ServerAliveInterval=10 \
+		-o ServerAliveCountMax=3 \
 		-o TCPKeepAlive=yes \
 		-o ExitOnForwardFailure=true \
+		-o ControlMaster=auto \
+		-o ControlPath=/tmp/ssh-tunnel-%r@%h:%p \
+		-o ControlPersist=yes \
 		-L 127.0.0.1:10001:localhost:10001 \
 		-L 127.0.0.1:3000:localhost:3000 \
 		-L 127.0.0.1:5432:localhost:5432 \
-		-L 127.0.0.1:8265:localhost:8265 \
 		-L 127.0.0.1:16686:localhost:16686 \
+		-L 127.0.0.1:8265:localhost:8265 \
 		jump
+
+tunnel-embeds:
+	ssh -J jump \
+	    -o ServerAliveInterval=10 \
+	    -o ServerAliveCountMax=3 \
+	    -o TCPKeepAlive=yes \
+	    -o ExitOnForwardFailure=true \
+            -o ControlMaster=auto \
+            -o ControlPath=/tmp/embeds-tunnel-%r@%h:%p \
+            -o ControlPersist=yes \
+	    -L 127.0.0.1:9001:localhost:8001 \
+	    -L 127.0.0.1:9002:localhost:8002 \
+	    -L 127.0.0.1:9003:localhost:8003 \
+	    -L 127.0.0.1:9004:localhost:8004 \
+	    -L 127.0.0.1:9005:localhost:8005 \
+	    -L 127.0.0.1:9006:localhost:8006 \
+	    -L 127.0.0.1:9007:localhost:8007 \
+	    -L 127.0.0.1:9008:localhost:8008 \
+	    -L 127.0.0.1:9009:localhost:8009 \
+	    -L 127.0.0.1:9010:localhost:8010 \
+	    -L 127.0.0.1:9011:localhost:8011 \
+	    -L 127.0.0.1:9012:localhost:8012 \
+	    -L 127.0.0.1:9013:localhost:8013 \
+	    -L 127.0.0.1:9014:localhost:8014 \
+	    -L 127.0.0.1:9015:localhost:8015 \
+	    -L 127.0.0.1:9016:localhost:8016 \
+	    -L 127.0.0.1:9017:localhost:8017 \
+	    -L 127.0.0.1:9018:localhost:8018 \
+	    gpu-293
+
+reverse-tunnel:
+	ssh -J jump \
+	    -o ServerAliveInterval=10 \
+	    -o ServerAliveCountMax=10 \
+	    -o TCPKeepAlive=yes \
+	    -o ExitOnForwardFailure=true \
+            -o ControlMaster=auto \
+            -o ControlPath=/tmp/reverse-tunnel-%r@%h:%p \
+            -o ControlPersist=yes \
+	    -R 8443:staging.datarobot.com:443 \
+	    gpu-293
 
 check:
 	@python -m syftr.scripts.system_check
