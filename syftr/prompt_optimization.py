@@ -261,7 +261,7 @@ def opt_flow_remote(
 
 def run_pareto_flows_prompt_optimization(study_path: str, remote: bool = False):
     """
-    Main prompt optimzation workflow function.
+    Main prompt optimization workflow function.
 
     Reads study config from a path and initiates a remote or local mode of prompt optmization.
     """
