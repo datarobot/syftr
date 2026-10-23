@@ -98,7 +98,7 @@ Your job is to judge the degree to which the two answers agree with each other.
 Output a syntactically correct JSON string that contains a 'reasoning' field to develop thoughts about what the score should be, followed by a 'score' field.
 
 Follow these guidelines for scoring:
-- Your score has to be between 1 and 3, where 1 is diagreement and 3 is complete agreement.
+- Your score has to be between 1 and 3, where 1 is disagreement and 3 is complete agreement.
 - If the answers disagree, you should give a score of 1.
 - If the answers agree but differ in level of detail, you should give a score of 2.
 - If the answers completely agree, you should give a score of 3

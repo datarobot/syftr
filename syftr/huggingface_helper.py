@@ -71,7 +71,7 @@ def get_hf_embedding_model(
     total_chunks: int = 0,
     device: EmbeddingDeviceType = None,
 ) -> BaseEmbedding | None:
-    """Use generic LLamaIndex HuggingFaceEmbedding model.
+    """Use generic LlamaIndex HuggingFaceEmbedding model.
 
     name: name of the embedding model
     device: Device type to pass in. LlamaIndex uses Torch to autodiscover if None
