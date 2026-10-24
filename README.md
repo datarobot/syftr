@@ -127,7 +127,7 @@ generative_models:
       output: 150.00
       # rate: 12.00
 
-    # LLamaIndex LLMetadata Example - keys and defaults are the same for all models
+    # LlamaIndex LLMMetadata Example - keys and defaults are the same for all models
     metadata:
       model_name: gpt-4.5-preview
       context_window: 100000

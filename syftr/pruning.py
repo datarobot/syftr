@@ -209,7 +209,7 @@ class ParetoPruner(SyftrPruner):
             obj2_confidence=obj2_confidence,
         )
         if self.should_prune():
-            msg = f"Pruned after{step} batch because of lower-than-expected accuracy: {obj1}"
+            msg = f"Pruned after {step} batch because of lower-than-expected accuracy: {obj1}"
             logger.warning(msg)
             return True
         return False
